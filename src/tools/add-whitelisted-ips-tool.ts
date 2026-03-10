@@ -14,15 +14,19 @@ export class AddWhitelistedIpsTool {
           .describe('List of IPv4 addresses to whitelist'),
       },
       async ({ ips }: { ips: string[] }) => {
-        const added = await proxyClient.addWhitelistedIps(ips);
+        await proxyClient.addWhitelistedIps(ips);
+        const allIps = await proxyClient.listWhitelistedIps();
 
-        const formatted = added
-          .map(ip => `- **${ip.ip}** (id: ${ip.id})`)
+        const formatted = allIps
+          .map(ip => `- **${ip.ip}** (id: ${ip.id}, enabled: ${ip.enabled})`)
           .join('\n');
 
         return {
           content: [
-            { type: 'text', text: `Successfully whitelisted ${added.length} IP(s):\n\n${formatted}` },
+            {
+              type: 'text',
+              text: `Successfully added ${ips.length} IP(s). Current whitelist (${allIps.length} total):\n\n${formatted}`,
+            },
           ],
         };
       }

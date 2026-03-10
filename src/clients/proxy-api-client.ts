@@ -17,7 +17,7 @@ export class ProxyApiClient {
 
   private get headers() {
     return {
-      Authorization: `Token ${this.apiKey}`,
+      Authorization: this.apiKey,
       'Content-Type': 'application/json',
     };
   }
@@ -29,13 +29,12 @@ export class ProxyApiClient {
     return res.data;
   };
 
-  addWhitelistedIps = async (ips: string[]): Promise<WhitelistedIp[]> => {
-    const res = await axios.post<WhitelistedIp[]>(
+  addWhitelistedIps = async (ips: string[]): Promise<void> => {
+    await axios.post(
       `${this.baseUrl}/whitelisted-ips`,
       { IPAddressList: ips },
       { headers: this.headers }
     );
-    return res.data;
   };
 
   removeWhitelistedIp = async (id: number): Promise<void> => {
