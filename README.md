@@ -6,7 +6,7 @@
 
 
 <p align="center">
-<a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"><img width="1280" height="552" alt="AI workflows" src="https://github.com/user-attachments/assets/a4abebba-e3e5-4dd1-96a4-5fb5d47a498d" />
+<a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
 
 This repository provides a Model Context Protocol (MCP) server that connects LLMs and applications
 to Decodo's platform. The server facilitates integration between MCP-compatible clients and Decodo's
