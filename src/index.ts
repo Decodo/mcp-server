@@ -8,10 +8,10 @@ if (process.env.ENABLE_MCPS_LOGGER) {
   import('mcps-logger/console');
 }
 
-const parseEnvsOrExit = (): Record<string, string> => {
-  const envs = ['SCRAPER_API_USERNAME', 'SCRAPER_API_PASSWORD'];
+const parseEnvsOrExit = (): { sapiUsername: string; sapiPassword: string; decodoApiKey?: string } => {
+  const requiredEnvs = ['SCRAPER_API_USERNAME', 'SCRAPER_API_PASSWORD'];
 
-  for (const envKey of envs) {
+  for (const envKey of requiredEnvs) {
     if (!process.env[envKey]) {
       exit(`env ${envKey} missing`);
     }
@@ -20,6 +20,7 @@ const parseEnvsOrExit = (): Record<string, string> => {
   return {
     sapiUsername: process.env['SCRAPER_API_USERNAME'] as string,
     sapiPassword: process.env['SCRAPER_API_PASSWORD'] as string,
+    decodoApiKey: process.env['DECODO_API_KEY'],
   };
 };
 
@@ -27,11 +28,12 @@ async function main() {
   const transport = new StdioServerTransport();
 
   // if there are no envs, some MCP clients will fail silently
-  const { sapiUsername, sapiPassword } = parseEnvsOrExit();
+  const { sapiUsername, sapiPassword, decodoApiKey } = parseEnvsOrExit();
 
   const sapiMcpServer = new ScraperAPIMCPServer({
     sapiUsername,
     sapiPassword,
+    decodoApiKey,
   });
   await sapiMcpServer.connect(transport);
 
