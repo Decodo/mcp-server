@@ -8,9 +8,11 @@ export class RedditPostTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.registerTool(
       'reddit_post',
@@ -19,6 +21,10 @@ export class RedditPostTool {
         inputSchema: {
           url: z.string().describe('reddit post URL'),
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
@@ -26,7 +32,9 @@ export class RedditPostTool {
           target: SCRAPER_API_TARGETS.REDDIT_POST,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
         const text = JSON.stringify(data, null, 2);
 

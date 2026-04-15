@@ -1,8 +1,7 @@
 import 'dotenv/config';
 
-import { exit } from 'process';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { ScraperAPIMCPServer } from './sapi-mcp-server';
+import { ScraperAPIStdioServer } from './server/sapi-stdio-server';
 
 if (process.env.ENABLE_MCPS_LOGGER) {
   import('mcps-logger/console');
@@ -13,7 +12,8 @@ const parseEnvsOrExit = (): Record<string, string> => {
 
   for (const envKey of envs) {
     if (!process.env[envKey]) {
-      exit(`env ${envKey} missing`);
+      console.error(`env ${envKey} missing`);
+      process.exit(1);
     }
   }
 
@@ -29,7 +29,7 @@ async function main() {
   // if there are no envs, some MCP clients will fail silently
   const { sapiUsername, sapiPassword } = parseEnvsOrExit();
 
-  const sapiMcpServer = new ScraperAPIMCPServer({
+  const sapiMcpServer = new ScraperAPIStdioServer({
     sapiUsername,
     sapiPassword,
   });

@@ -16,23 +16,7 @@
       "version": "1.0.3",
       "transport": {
         "type": "stdio"
-      },
-      "environmentVariables": [
-        {
-          "name": "SCRAPER_API_USERNAME",
-          "description": "Decodo Web Advanced API username",
-          "isRequired": true,
-          "format": "string",
-          "isSecret": false
-        },
-        {
-          "name": "SCRAPER_API_PASSWORD",
-          "description": "Decodo Web Advanced API password",
-          "isRequired": true,
-          "format": "string",
-          "isSecret": true
-        }
-      ]
+      }
     }
   ]
 }

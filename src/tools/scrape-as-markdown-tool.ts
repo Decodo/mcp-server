@@ -39,7 +39,12 @@ export class ScrapeAsMarkdownTool {
     tokenLimit?: number;
     shouldShowFullResponse?: boolean;
   }) => {
-    const markdown = NodeHtmlMarkdown.translate(html, {});
+    let markdown: string;
+    try {
+      markdown = NodeHtmlMarkdown.translate(html, {});
+    } catch {
+      markdown = html;
+    }
 
     if (this.shouldTruncateResponse({ content: markdown, shouldShowFullResponse })) {
       const truncated = this.truncateResponse({
@@ -56,23 +61,33 @@ export class ScrapeAsMarkdownTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
-    server.tool(
+    server.registerTool(
       'scrape_as_markdown',
-      'Scrape the contents of a website and return Markdown-formatted results',
       {
-        url: z.string().describe('URL to scrape'),
-        geo: zodGeo,
-        locale: zodLocale,
-        jsRender: zodJsRender,
-        tokenLimit: zodTokenLimit,
-        fullResponse: zodFullResponse,
+        description: 'Scrape the contents of a website and return Markdown-formatted results',
+        inputSchema: {
+          url: z.string().describe('URL to scrape'),
+          geo: zodGeo,
+          locale: zodLocale,
+          jsRender: zodJsRender,
+          tokenLimit: zodTokenLimit,
+          fullResponse: zodFullResponse,
+        },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
-        const { data } = await sapiClient.scrape({ scrapingParams });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape({ auth, scrapingParams });
 
         const { markdown, isTruncated } = this.transformResponse({
           html: data,

@@ -4,7 +4,7 @@ import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
 import { SCRAPER_API_TARGETS } from '../constants';
 import { removeKeyFromNestedObject } from '../utils';
-import { zodGeo, zodLocale, zodJsRender } from '../zod/zod-types';
+import { zodGeo, zodJsRender } from '../zod/zod-types';
 
 export class AmazonSearchParsedTool {
   static FIELDS_WITH_HIGH_CHAR_COUNT = ['suggested', 'amazons_choices', 'refinements'];
@@ -22,9 +22,11 @@ export class AmazonSearchParsedTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.registerTool(
       'amazon_search_parsed',
@@ -35,6 +37,10 @@ export class AmazonSearchParsedTool {
           geo: zodGeo,
           jsRender: zodJsRender,
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
@@ -43,7 +49,9 @@ export class AmazonSearchParsedTool {
           parse: true,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
         const text = this.transformAutoParsedResponse({ obj: data });
 
