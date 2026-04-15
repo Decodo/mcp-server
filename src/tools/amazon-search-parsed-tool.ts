@@ -4,7 +4,7 @@ import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
 import { SCRAPER_API_TARGETS } from '../constants';
 import { removeKeyFromNestedObject } from '../utils';
-import { zodGeo, zodLocale, zodJsRender } from '../zod/zod-types';
+import { zodGeo, zodJsRender } from '../zod/zod-types';
 
 export class AmazonSearchParsedTool {
   static FIELDS_WITH_HIGH_CHAR_COUNT = ['suggested', 'amazons_choices', 'refinements'];

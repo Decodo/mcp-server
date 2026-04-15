@@ -4,8 +4,6 @@ import { ScraperAPIHttpServer } from './server/sapi-http-server';
 
 const app = express();
 
-const server = new ScraperAPIHttpServer();
-
 app.use(express.json());
 
 app.get('/mcp', (_req, res) => {
@@ -16,14 +14,20 @@ app.post('/mcp', async (req, res) => {
   const auth = req.headers.authorization;
 
   if (!auth) {
-    return res.status(401).send('Unauthorized');
+    res.status(401).send('Unauthorized');
+    return;
   }
 
-  const [type, token] = auth.split(' ');
+  const parts = auth.split(' ');
 
-  if (type !== 'Basic') {
-    return res.status(401).send("'Basic' authorization required");
+  if (parts.length !== 2 || parts[0] !== 'Basic') {
+    res.status(401).send("Valid 'Basic' authorization required");
+    return;
   }
+
+  const token = parts[1];
+
+  const server = new ScraperAPIHttpServer();
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -51,7 +55,7 @@ app
   .listen(port, () => {
     console.log(`Demo MCP Server running on http://localhost:${port}/mcp`);
   })
-  .on('error', error => {
+  .on('error', (error: Error) => {
     console.error('Server error:', error);
     process.exit(1);
   });

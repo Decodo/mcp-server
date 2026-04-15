@@ -9,7 +9,7 @@
   "mcpName": "io.github.Decodo/mcp-web-scraper",
   "scripts": {
     "build": "tsc && chmod 755 build/server.js",
-    "dev": "tsx src/server.ts",
+    "dev": "nodemon --watch src -e ts --exec 'tsx src/server.ts'",
     "start": "node build/server.js",
     "inspect": "mcp-inspector",
     "test": "jest"
@@ -29,10 +29,12 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.21.1",
+    "@types/express": "^5.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "jest": "^30.0.0",
     "mcps-logger": "^1.0.0",
+    "nodemon": "^3.1.14",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3",
     "zod": "^3.25.57"

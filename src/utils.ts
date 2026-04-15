@@ -13,14 +13,15 @@ export const removeKeyFromNestedObject = ({
     return obj.map(item => removeKeyFromNestedObject({ obj: item, keyToRemove }));
   }
 
-  const newObj = {};
+  const record = obj as Record<string, unknown>;
+  const newObj: Record<string, unknown> = {};
 
-  for (const key in obj) {
+  for (const key in record) {
     if (key === keyToRemove) {
       continue;
     }
 
-    newObj[key] = removeKeyFromNestedObject({ obj: obj[key], keyToRemove });
+    newObj[key] = removeKeyFromNestedObject({ obj: record[key] as object, keyToRemove });
   }
 
   return newObj;

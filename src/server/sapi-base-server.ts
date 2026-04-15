@@ -20,7 +20,7 @@ export class ScraperAPIBaseServer {
   constructor() {
     this.server = new McpServer({
       name: 'decodo',
-      version: '0.1.0',
+      version: '1.0.3',
     });
     this.sapiClient = new ScraperApiClient();
 

@@ -39,7 +39,12 @@ export class ScrapeAsMarkdownTool {
     tokenLimit?: number;
     shouldShowFullResponse?: boolean;
   }) => {
-    const markdown = NodeHtmlMarkdown.translate(html, {});
+    let markdown: string;
+    try {
+      markdown = NodeHtmlMarkdown.translate(html, {});
+    } catch {
+      markdown = html;
+    }
 
     if (this.shouldTruncateResponse({ content: markdown, shouldShowFullResponse })) {
       const truncated = this.truncateResponse({
