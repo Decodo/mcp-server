@@ -29,9 +29,11 @@ export class GoogleSearchParsedTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.registerTool(
       'google_search_parsed',
@@ -51,7 +53,9 @@ export class GoogleSearchParsedTool {
           parse: true,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
         const text = this.transformAutoParsedResponse({ obj: data });
 

@@ -21,6 +21,25 @@ services, streamlining access to our tools and capabilities.
 - Simple integration. Seamless setup with popular MCP clients like Claude Desktop, Cursor, and
   Windsurf.
 
+## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp)
+
+1. Go to [decodo.com](https://decodo.com/scraping/web) and start a Web Scraping API plan (free trials available).
+
+2. Once your plan has started, obtain a Web Scraping API basic authentication token from the [dashboard](https://dashboard.decodo.com/).
+
+3. Open your preferred MCP client and add the following configuration:
+
+```
+{
+  "Decodo": {
+    "url": "https://mcp.decodo.com/mcp",
+    "headers": {
+      "Authorization": "Basic <basic_auth_token>"
+    }
+  }
+}
+```
+
 ## Running the MCP server locally
 
 <details>

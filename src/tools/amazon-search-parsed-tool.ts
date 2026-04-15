@@ -22,9 +22,11 @@ export class AmazonSearchParsedTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.registerTool(
       'amazon_search_parsed',
@@ -43,7 +45,9 @@ export class AmazonSearchParsedTool {
           parse: true,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
         const text = this.transformAutoParsedResponse({ obj: data });
 

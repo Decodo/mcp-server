@@ -3,12 +3,6 @@ import { ScraperApiResponseData } from './types';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 
 export class ScraperApiClient {
-  auth: string;
-
-  constructor({ auth }: { auth: string }) {
-    this.auth = auth;
-  }
-
   transformScrapingParams = ({
     scrapingParams,
   }: {
@@ -26,14 +20,20 @@ export class ScraperApiClient {
     return { ...res, data: content };
   };
 
-  scrape = async <T = string>({ scrapingParams }: { scrapingParams: ScrapingMCPParams }) => {
+  scrape = async <T = string>({
+    auth,
+    scrapingParams,
+  }: {
+    auth: string;
+    scrapingParams: ScrapingMCPParams;
+  }) => {
     const transformedParams = this.transformScrapingParams({ scrapingParams });
 
     const res = await axios.request<ScraperApiResponseData<T>>({
       url: 'https://scraper-api.decodo.com/v2/scrape',
       method: 'POST',
       headers: {
-        authorization: `Basic ${this.auth}`,
+        authorization: `Basic ${auth}`,
         'x-integration': 'mcp',
       },
       data: {

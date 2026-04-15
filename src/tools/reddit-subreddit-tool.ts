@@ -8,9 +8,11 @@ export class RedditSubredditTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.registerTool(
       'reddit_subreddit',
@@ -26,7 +28,9 @@ export class RedditSubredditTool {
           target: SCRAPER_API_TARGETS.REDDIT_SUBREDDIT,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
         const text = JSON.stringify(data, null, 2);
 

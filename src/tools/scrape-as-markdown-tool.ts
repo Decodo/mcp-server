@@ -56,9 +56,11 @@ export class ScrapeAsMarkdownTool {
   static register = ({
     server,
     sapiClient,
+    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
+    getAuthToken: () => string;
   }) => {
     server.tool(
       'scrape_as_markdown',
@@ -72,7 +74,9 @@ export class ScrapeAsMarkdownTool {
         fullResponse: zodFullResponse,
       },
       async (scrapingParams: ScrapingMCPParams) => {
-        const { data } = await sapiClient.scrape({ scrapingParams });
+        const auth = getAuthToken();
+
+        const { data } = await sapiClient.scrape({ auth, scrapingParams });
 
         const { markdown, isTruncated } = this.transformResponse({
           html: data,
