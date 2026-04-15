@@ -6,6 +6,7 @@ export type ScrapingMCPParams = {
   geo?: string;
   locale?: string;
   jsRender?: boolean;
+  headless?: string;
   tokenLimit?: number;
   fullResponse?: boolean;
 };

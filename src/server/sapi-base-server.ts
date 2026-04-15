@@ -7,6 +7,7 @@ import {
   RedditPostTool,
   RedditSubredditTool,
   ScrapeAsMarkdownTool,
+  ScreenshotTool,
 } from '../tools';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
@@ -60,6 +61,11 @@ export class ScraperAPIBaseServer {
     });
     RedditPostTool.register({ server: this.server, sapiClient: this.sapiClient, getAuthToken });
     RedditSubredditTool.register({
+      server: this.server,
+      sapiClient: this.sapiClient,
+      getAuthToken,
+    });
+    ScreenshotTool.register({
       server: this.server,
       sapiClient: this.sapiClient,
       getAuthToken,

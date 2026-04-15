@@ -37,6 +37,10 @@ export class AmazonSearchParsedTool {
           geo: zodGeo,
           jsRender: zodJsRender,
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {

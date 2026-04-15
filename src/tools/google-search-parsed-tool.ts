@@ -45,6 +45,10 @@ export class GoogleSearchParsedTool {
           locale: zodLocale,
           jsRender: zodJsRender,
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {

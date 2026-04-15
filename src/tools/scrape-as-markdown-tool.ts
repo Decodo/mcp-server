@@ -67,16 +67,22 @@ export class ScrapeAsMarkdownTool {
     sapiClient: ScraperApiClient;
     getAuthToken: () => string;
   }) => {
-    server.tool(
+    server.registerTool(
       'scrape_as_markdown',
-      'Scrape the contents of a website and return Markdown-formatted results',
       {
-        url: z.string().describe('URL to scrape'),
-        geo: zodGeo,
-        locale: zodLocale,
-        jsRender: zodJsRender,
-        tokenLimit: zodTokenLimit,
-        fullResponse: zodFullResponse,
+        description: 'Scrape the contents of a website and return Markdown-formatted results',
+        inputSchema: {
+          url: z.string().describe('URL to scrape'),
+          geo: zodGeo,
+          locale: zodLocale,
+          jsRender: zodJsRender,
+          tokenLimit: zodTokenLimit,
+          fullResponse: zodFullResponse,
+        },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const auth = getAuthToken();

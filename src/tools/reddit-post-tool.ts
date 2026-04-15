@@ -21,6 +21,10 @@ export class RedditPostTool {
         inputSchema: {
           url: z.string().describe('reddit post URL'),
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {

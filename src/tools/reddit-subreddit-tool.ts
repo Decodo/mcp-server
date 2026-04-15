@@ -21,6 +21,10 @@ export class RedditSubredditTool {
         inputSchema: {
           url: z.string().describe('URL to subreddit'),
         },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+        },
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {

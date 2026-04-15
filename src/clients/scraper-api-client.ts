@@ -8,8 +8,11 @@ export class ScraperApiClient {
   }: {
     scrapingParams: ScrapingMCPParams;
   }): ScraperAPIParams => {
-    const { jsRender, ...rest } = scrapingParams;
-    const transformed = { ...(jsRender && { headless: 'html' }), ...rest };
+    const { jsRender, headless, ...rest } = scrapingParams;
+    const transformed = {
+      ...(headless ? { headless } : jsRender && { headless: 'html' }),
+      ...rest,
+    };
 
     return transformed;
   };
