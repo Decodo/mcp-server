@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ScraperAPIHttpServer } from './server/sapi-http-server';
@@ -54,6 +55,7 @@ const port = parseInt(process.env.PORT || '3000');
 app
   .listen(port, () => {
     console.log(`Demo MCP Server running on http://localhost:${port}/mcp`);
+    console.log(`API host: ${process.env.DECODO_SAPI_HOST}`);
   })
   .on('error', (error: Error) => {
     console.error('Server error:', error);

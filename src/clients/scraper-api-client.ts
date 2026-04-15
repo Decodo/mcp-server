@@ -32,9 +32,11 @@ export class ScraperApiClient {
   }) => {
     const transformedParams = this.transformScrapingParams({ scrapingParams });
 
+    const url = process.env.DECODO_SAPI_HOST || 'https://scraper-api.decodo.com';
+
     try {
       const res = await axios.request<ScraperApiResponseData<T>>({
-        url: 'https://scraper-api.decodo.com/v2/scrape',
+        url: `${url}/v2/scrape`,
         method: 'POST',
         headers: {
           authorization: `Basic ${auth}`,
