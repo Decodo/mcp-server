@@ -1,6 +1,5 @@
 import 'dotenv/config';
 
-import { exit } from 'process';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ScraperAPIStdioServer } from './server/sapi-stdio-server';
 
