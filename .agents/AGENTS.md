@@ -1,0 +1,1 @@
+- When adding a new tool, make sure that it has tests and that its usage is documented in the readme.
