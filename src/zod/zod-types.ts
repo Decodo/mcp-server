@@ -18,8 +18,3 @@ export const zodTokenLimit = z
     `The number of tokens to return in the response - anything above this limit will be truncated`
   )
   .optional();
-
-export const zodFullResponse = z
-  .boolean()
-  .describe(`If true, content will not be truncated`)
-  .optional();

@@ -96,6 +96,25 @@ The server exposes the following tools:
 | `amazon_search_parsed` | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for toothbrushes.                                                  |
 | `reddit_post`          | Scrapes a specific Reddit post for a given query, and returns parsed results.              | Scrape the following Reddit post: https://www.reddit.com/r/horseracing/comments/1nsrn3/ |
 | `reddit_subreddit`     | Scrapes a specific Reddit subreddit for a given query, and returns parsed results.         | Scrape the top 5 posts on r/Python this week.                                           |
+| `chatgpt`              | Search and interact with ChatGPT for AI-powered responses and conversations.               | Ask ChatGPT to explain quantum computing in simple terms.                               |
+| `perplexity`           | Search and interact with Perplexity for AI-powered responses and conversations.            | Ask Perplexity what the latest trends in web development are.                           |
+
+## Toolsets
+
+Tools are organized into toolsets. You can selectively enable specific toolsets by passing a
+comma-separated list via the `TOOLSETS` environment variable. When no toolsets are specified, all
+tools are registered.
+
+```
+TOOLSETS=web,ai
+```
+
+| Toolset        | Tools                                        |
+| -------------- | -------------------------------------------- |
+| `web`          | `scrape_as_markdown`, `google_search_parsed`  |
+| `ecommerce`    | `amazon_search_parsed`                        |
+| `social_media` | `reddit_post`, `reddit_subreddit`             |
+| `ai`           | `chatgpt`, `perplexity`                       |
 
 ## Parameters
 
@@ -107,7 +126,8 @@ The following parameters are inferred from user prompts:
 | `geo`          | Sets the country from which the request will originate.                                              |
 | `locale`       | Sets the locale of the request.                                                                      |
 | `tokenLimit`   | Truncates the response content up to this limit. Useful if the context window is small.              |
-| `fullResponse` | Skips automatic truncation and returns full content. If context window is small, may throw warnings. |
+| `prompt`       | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                |
+| `search`       | Activates ChatGPT's web search functionality (`chatgpt` only).                                       |
 
 ## Examples
 

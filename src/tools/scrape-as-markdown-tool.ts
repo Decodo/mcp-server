@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { NodeHtmlMarkdown } from 'node-html-markdown';
-import { zodFullResponse, zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../zod/zod-types';
+import { zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../zod/zod-types';
 import { TOOLSET } from '../constants';
 
 export class ScrapeAsMarkdownTool {
@@ -57,7 +57,6 @@ export class ScrapeAsMarkdownTool {
           locale: zodLocale,
           jsRender: zodJsRender,
           tokenLimit: zodTokenLimit,
-          fullResponse: zodFullResponse,
         },
         annotations: {
           readOnlyHint: true,
