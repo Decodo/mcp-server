@@ -102,12 +102,18 @@ The server exposes the following tools:
 ## Toolsets
 
 Tools are organized into toolsets. You can selectively enable specific toolsets by passing a
-comma-separated list via the `TOOLSETS` environment variable. When no toolsets are specified, all
-tools are registered.
+comma-separated list via the `toolsets` query parameter:
 
 ```
-TOOLSETS=web,ai
+    "Decodo MCP Server": {
+      "url": "https://mcp.decodo.com/mcp?toolsets=web,ai",
+      "headers": {
+        "Authorization": "Basic <your_auth_token>"
+      }
+    }
 ```
+
+When no toolsets are specified, all tools are registered.
 
 | Toolset        | Tools                                        |
 | -------------- | -------------------------------------------- |

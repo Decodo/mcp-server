@@ -9,11 +9,12 @@ jest.mock('../clients/scraper-api-client');
 describe('RedditPostTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
+  const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
     server = new McpServer({ name: 'test', version: '1.0' }) as jest.Mocked<McpServer>;
     server.registerTool = jest.fn();
-    sapiClient = new ScraperApiClient({ auth: 'test' }) as jest.Mocked<ScraperApiClient>;
+    sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
   });
 
   it('has social_media toolset', () => {
@@ -21,7 +22,7 @@ describe('RedditPostTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    RedditPostTool.register({ server, sapiClient });
+    RedditPostTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'reddit_post',
@@ -34,12 +35,13 @@ describe('RedditPostTool', () => {
     const mockData = { title: 'Test post', comments: [] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    RedditPostTool.register({ server, sapiClient });
+    RedditPostTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ url: 'https://reddit.com/r/test/comments/abc' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
+      auth,
       scrapingParams: expect.objectContaining({
         url: 'https://reddit.com/r/test/comments/abc',
         target: SCRAPER_API_TARGETS.REDDIT_POST,

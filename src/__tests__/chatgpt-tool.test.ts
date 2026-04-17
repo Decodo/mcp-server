@@ -9,11 +9,12 @@ jest.mock('../clients/scraper-api-client');
 describe('ChatGPTTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
+  const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
     server = new McpServer({ name: 'test', version: '1.0' }) as jest.Mocked<McpServer>;
     server.registerTool = jest.fn();
-    sapiClient = new ScraperApiClient({ auth: 'test' }) as jest.Mocked<ScraperApiClient>;
+    sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
   });
 
   it('has ai toolset', () => {
@@ -21,7 +22,7 @@ describe('ChatGPTTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    ChatGPTTool.register({ server, sapiClient });
+    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'chatgpt',
@@ -34,12 +35,13 @@ describe('ChatGPTTool', () => {
     const mockData = { response: 'Hello! How can I help you?' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    ChatGPTTool.register({ server, sapiClient });
+    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ prompt: 'What is TypeScript?' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
+      auth,
       scrapingParams: expect.objectContaining({
         prompt: 'What is TypeScript?',
         target: SCRAPER_API_TARGETS.CHATGPT,
@@ -56,12 +58,13 @@ describe('ChatGPTTool', () => {
     const mockData = { response: 'Search results...' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    ChatGPTTool.register({ server, sapiClient });
+    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     await handler({ prompt: 'Latest news', search: true });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
+      auth,
       scrapingParams: expect.objectContaining({
         prompt: 'Latest news',
         search: true,

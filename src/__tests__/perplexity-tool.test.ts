@@ -9,11 +9,12 @@ jest.mock('../clients/scraper-api-client');
 describe('PerplexityTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
+  const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
     server = new McpServer({ name: 'test', version: '1.0' }) as jest.Mocked<McpServer>;
     server.registerTool = jest.fn();
-    sapiClient = new ScraperApiClient({ auth: 'test' }) as jest.Mocked<ScraperApiClient>;
+    sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
   });
 
   it('has ai toolset', () => {
@@ -21,7 +22,7 @@ describe('PerplexityTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    PerplexityTool.register({ server, sapiClient });
+    PerplexityTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'perplexity',
@@ -34,12 +35,13 @@ describe('PerplexityTool', () => {
     const mockData = { answer: 'Perplexity response with sources', sources: ['url1', 'url2'] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    PerplexityTool.register({ server, sapiClient });
+    PerplexityTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ prompt: 'What is MCP?' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
+      auth,
       scrapingParams: expect.objectContaining({
         prompt: 'What is MCP?',
         target: SCRAPER_API_TARGETS.PERPLEXITY,
@@ -56,12 +58,13 @@ describe('PerplexityTool', () => {
     const mockData = { answer: 'Local response' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    PerplexityTool.register({ server, sapiClient });
+    PerplexityTool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     await handler({ prompt: 'Weather today', geo: 'United States' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
+      auth,
       scrapingParams: expect.objectContaining({
         prompt: 'Weather today',
         geo: 'United States',
