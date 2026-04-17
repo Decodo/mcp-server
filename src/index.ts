@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { ScraperAPIMCPServer } from './sapi-mcp-server';
+import { ScraperAPIStdioServer } from 'server/sapi-stdio-server';
 import { TOOLSET } from './constants';
 
 if (process.env.ENABLE_MCPS_LOGGER) {
@@ -40,7 +40,7 @@ async function main() {
 
   const toolsets = resolveToolsets(process.env.TOOLSETS);
 
-  const sapiMcpServer = new ScraperAPIMCPServer({
+  const sapiMcpServer = new ScraperAPIStdioServer({
     sapiUsername,
     sapiPassword,
     toolsets,
