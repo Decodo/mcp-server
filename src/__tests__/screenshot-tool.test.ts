@@ -36,10 +36,13 @@ describe('ScreenshotTool', () => {
   });
 
   it('returns an image/png content block', async () => {
-    const base64png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const base64png =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: base64png });
 
-    const result = await registeredHandler({ url: 'https://example.com' }) as { content: { type: string; data: string; mimeType: string }[] };
+    const result = (await registeredHandler({ url: 'https://example.com' })) as {
+      content: { type: string; data: string; mimeType: string }[];
+    };
 
     expect(result.content).toHaveLength(1);
     expect(result.content[0]).toEqual({
@@ -61,7 +64,9 @@ describe('ScreenshotTool', () => {
   });
 
   it('propagates scraper errors', async () => {
-    sapiClient.scrape = jest.fn().mockRejectedValue(new Error('Scraper API request failed (401): Authentication failed.'));
+    sapiClient.scrape = jest
+      .fn()
+      .mockRejectedValue(new Error('Scraper API request failed (401): Authentication failed.'));
 
     await expect(registeredHandler({ url: 'https://example.com' })).rejects.toThrow(
       'Scraper API request failed (401): Authentication failed.'

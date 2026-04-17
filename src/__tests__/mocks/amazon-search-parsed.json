@@ -1,0 +1,73 @@
+{
+  "results": [
+    {
+      "content": {
+        "results": {
+          "url": "https://www.amazon.com/s?k=laptop",
+          "page": 1,
+          "query": "laptop",
+          "results": {
+            "organic": [
+              {
+                "pos": 1,
+                "url": "/dp/B0CX23V2ZK",
+                "asin": "B0CX23V2ZK",
+                "price": 799.99,
+                "title": "Laptop 15.6 inch, 16GB RAM",
+                "rating": 4.5,
+                "currency": "USD",
+                "is_prime": true,
+                "reviews_count": 1234
+              },
+              {
+                "pos": 2,
+                "url": "/dp/B0D1234567",
+                "asin": "B0D1234567",
+                "price": 599.99,
+                "title": "Budget Laptop 14 inch, 8GB RAM",
+                "rating": 4.2,
+                "currency": "USD",
+                "is_prime": false,
+                "reviews_count": 567
+              }
+            ]
+          },
+          "suggested": [
+            {
+              "title": "laptop stand",
+              "url": "/s?k=laptop+stand"
+            },
+            {
+              "title": "laptop bag",
+              "url": "/s?k=laptop+bag"
+            }
+          ],
+          "amazons_choices": [
+            {
+              "pos": 1,
+              "url": "/dp/B0AMAZONCHOICE",
+              "asin": "B0AMAZONCHOICE",
+              "price": 699.99,
+              "title": "Amazon's Choice Laptop"
+            }
+          ],
+          "refinements": {
+            "brands": ["HP", "Dell", "Lenovo", "Apple", "ASUS"],
+            "price_ranges": ["$200 - $400", "$400 - $600", "$600 - $800", "$800+"]
+          },
+          "parse_status_code": 12000
+        },
+        "errors": [],
+        "status_code": 12000,
+        "task_id": "7341006309614950402"
+      },
+      "headers": {},
+      "status_code": 200,
+      "url": "https://www.amazon.com/s?k=laptop",
+      "query": "laptop",
+      "task_id": "7341006309614950402",
+      "created_at": "2025-06-18 07:38:13",
+      "updated_at": "2025-06-18 07:38:15"
+    }
+  ]
+}

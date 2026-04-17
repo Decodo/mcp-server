@@ -14,33 +14,11 @@ export class ScrapeAsMarkdownTool {
     return content.length > this.LARGE_CONTENT_SYMBOL_COUNT;
   };
 
-  static shouldTruncateResponse = ({
-    content,
-    shouldShowFullResponse,
-  }: {
-    content: string;
-    shouldShowFullResponse?: boolean;
-  }) => {
-    if (shouldShowFullResponse) {
-      return false;
-    }
-
-    return this.isResponseOverLimit(content);
-  };
-
   static truncateResponse = ({ content, limit }: { content: string; limit: number }) => {
     return content.substring(0, limit);
   };
 
-  static transformResponse = ({
-    html,
-    tokenLimit,
-    shouldShowFullResponse,
-  }: {
-    html: string;
-    tokenLimit?: number;
-    shouldShowFullResponse?: boolean;
-  }) => {
+  static transformResponse = ({ html, tokenLimit }: { html: string; tokenLimit?: number }) => {
     let markdown: string;
     try {
       markdown = NodeHtmlMarkdown.translate(html, {});
@@ -48,7 +26,7 @@ export class ScrapeAsMarkdownTool {
       markdown = html;
     }
 
-    if (this.shouldTruncateResponse({ content: markdown, shouldShowFullResponse })) {
+    if (tokenLimit || this.isResponseOverLimit(markdown)) {
       const truncated = this.truncateResponse({
         content: markdown,
         limit: tokenLimit || this.LARGE_CONTENT_SYMBOL_COUNT,
@@ -94,7 +72,6 @@ export class ScrapeAsMarkdownTool {
         const { markdown, isTruncated } = this.transformResponse({
           html: data,
           tokenLimit: scrapingParams.tokenLimit,
-          shouldShowFullResponse: scrapingParams.fullResponse,
         });
 
         return {
