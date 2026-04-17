@@ -100,11 +100,11 @@ comma-separated list via the `toolsets` query parameter:
 
 When no toolsets are specified, all tools are registered.
 
-| Toolset        | Tools                                        |
-| -------------- | -------------------------------------------- |
-| `web`          | `scrape_as_markdown`, `google_search_parsed`  |
-| `ecommerce`    | `amazon_search_parsed`                        |
-| `social_media` | `reddit_post`, `reddit_subreddit`             |
+| Toolset        | Tools                                                          |
+| -------------- | -------------------------------------------------------------- |
+| `web`          | `scrape_as_markdown`, `screenshot`, `google_search_parsed`     |
+| `ecommerce`    | `amazon_search_parsed`                                         |
+| `social_media` | `reddit_post`, `reddit_subreddit`                              |
 | `ai`           | `chatgpt`, `perplexity`                       |
 
 ## Tools
