@@ -4,9 +4,11 @@ import { ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { NodeHtmlMarkdown } from 'node-html-markdown';
 import { zodFullResponse, zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../zod/zod-types';
+import { TOOLSET } from '../constants';
 
 export class ScrapeAsMarkdownTool {
-  static LARGE_CONTENT_SYMBOL_COUNT = 10_000;
+  static toolset = TOOLSET.WEB;
+  static LARGE_CONTENT_SYMBOL_COUNT = 100_000;
 
   static isResponseOverLimit = (content: string) => {
     return content.length > this.LARGE_CONTENT_SYMBOL_COUNT;

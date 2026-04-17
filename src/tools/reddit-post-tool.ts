@@ -2,9 +2,10 @@ import z from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
-import { SCRAPER_API_TARGETS } from '../constants';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
 
 export class RedditPostTool {
+  static toolset = TOOLSET.SOCIAL_MEDIA;
   static register = ({
     server,
     sapiClient,

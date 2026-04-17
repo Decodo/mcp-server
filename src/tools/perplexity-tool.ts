@@ -3,24 +3,25 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
+import { zodGeo } from '../zod/zod-types';
 
-export class RedditSubredditTool {
-  static toolset = TOOLSET.SOCIAL_MEDIA;
+export class PerplexityTool {
+  static toolset = TOOLSET.AI;
   static register = ({
     server,
     sapiClient,
-    getAuthToken,
   }: {
     server: McpServer;
     sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
   }) => {
     server.registerTool(
-      'reddit_subreddit',
+      'perplexity',
       {
-        description: 'Scrape Reddit subreddit results with automatic parsing',
+        description:
+          'Search and interact with Perplexity for AI-powered responses and conversations',
         inputSchema: {
-          url: z.string().describe('URL to subreddit'),
+          prompt: z.string().describe('Prompt to send to Perplexity'),
+          geo: zodGeo,
         },
         annotations: {
           readOnlyHint: true,
@@ -30,12 +31,11 @@ export class RedditSubredditTool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.REDDIT_SUBREDDIT,
+          target: SCRAPER_API_TARGETS.PERPLEXITY,
+          parse: true,
         } satisfies ScraperAPIParams;
 
-        const auth = getAuthToken();
-
-        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
+        const { data } = await sapiClient.scrape<object>({ scrapingParams: params });
 
         const text = JSON.stringify(data, null, 2);
 

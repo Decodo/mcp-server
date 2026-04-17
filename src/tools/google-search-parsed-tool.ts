@@ -2,11 +2,12 @@ import z from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
-import { SCRAPER_API_TARGETS } from '../constants';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
 import { removeKeyFromNestedObject } from '../utils';
 import { zodGeo, zodLocale, zodJsRender } from '../zod/zod-types';
 
 export class GoogleSearchParsedTool {
+  static toolset = TOOLSET.WEB;
   static FIELDS_WITH_HIGH_CHAR_COUNT = [
     'images',
     'image_data',
