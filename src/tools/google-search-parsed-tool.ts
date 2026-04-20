@@ -7,7 +7,7 @@ import { removeKeyFromNestedObject } from '../utils';
 import { zodGeo, zodLocale, zodJsRender } from '../zod/zod-types';
 
 export class GoogleSearchParsedTool {
-  static toolset = TOOLSET.WEB;
+  static toolset = TOOLSET.SEARCH;
   static FIELDS_WITH_HIGH_CHAR_COUNT = [
     'images',
     'image_data',
