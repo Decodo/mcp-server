@@ -32,7 +32,7 @@ const resolveToolsets = (toolsets?: string): TOOLSET[] => {
   return toolsets.split(',').map(toolset => toolset as TOOLSET);
 };
 
-async function main() {
+const main = async () => {
   const transport = new StdioServerTransport();
 
   // if there are no envs, some MCP clients will fail silently
@@ -48,7 +48,7 @@ async function main() {
   await sapiMcpServer.connect(transport);
 
   console.error('MCP Server running on stdio');
-}
+};
 
 main().catch(error => {
   console.error('Fatal error in main():', error);
