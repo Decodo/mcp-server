@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ScraperApiClient } from '../clients/scraper-api-client';
-import { ScreenshotTool } from '../tools/screenshot-tool';
-import { ScrapingMCPParams } from '../types';
+import { ScraperApiClient } from '../../../clients/scraper-api-client';
+import { ScreenshotTool } from '../screenshot-tool';
+import { ScrapingMCPParams } from '../../../types';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
-jest.mock('../clients/scraper-api-client');
+jest.mock('../../../clients/scraper-api-client');
 
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
@@ -24,7 +24,8 @@ describe('ScreenshotTool', () => {
       return server;
     });
 
-    ScreenshotTool.register({ server, sapiClient, getAuthToken: () => auth });
+    const tool = new ScreenshotTool();
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
   });
 
   it('registers a tool named "screenshot"', () => {

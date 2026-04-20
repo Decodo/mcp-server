@@ -1,50 +1,52 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ScraperApiClient } from '../clients/scraper-api-client';
-import { ChatGPTTool } from '../tools/chatgpt-tool';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
+import { ScraperApiClient } from '../../../clients/scraper-api-client';
+import { PerplexityTool } from '../perplexity-tool';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
-jest.mock('../clients/scraper-api-client');
+jest.mock('../../../clients/scraper-api-client');
 
-describe('ChatGPTTool', () => {
+describe('PerplexityTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
+  let tool: PerplexityTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
     server = new McpServer({ name: 'test', version: '1.0' }) as jest.Mocked<McpServer>;
     server.registerTool = jest.fn();
     sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
+    tool = new PerplexityTool();
   });
 
   it('has ai toolset', () => {
-    expect(ChatGPTTool.toolset).toBe(TOOLSET.AI);
+    expect(tool.toolset).toBe(TOOLSET.AI);
   });
 
   it('registers with correct tool name', () => {
-    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
-      'chatgpt',
+      'perplexity',
       expect.any(Object),
       expect.any(Function)
     );
   });
 
-  it('calls scrape with CHATGPT target and parse: true', async () => {
-    const mockData = { response: 'Hello! How can I help you?' };
+  it('calls scrape with PERPLEXITY target and parse: true', async () => {
+    const mockData = { answer: 'Perplexity response with sources', sources: ['url1', 'url2'] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
-    const result = await handler({ prompt: 'What is TypeScript?' });
+    const result = await handler({ prompt: 'What is MCP?' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
       auth,
       scrapingParams: expect.objectContaining({
-        prompt: 'What is TypeScript?',
-        target: SCRAPER_API_TARGETS.CHATGPT,
+        prompt: 'What is MCP?',
+        target: SCRAPER_API_TARGETS.PERPLEXITY,
         parse: true,
       }),
     });
@@ -54,21 +56,21 @@ describe('ChatGPTTool', () => {
     expect(JSON.parse(result.content[0].text)).toEqual(mockData);
   });
 
-  it('passes search parameter when provided', async () => {
-    const mockData = { response: 'Search results...' };
+  it('passes geo parameter when provided', async () => {
+    const mockData = { answer: 'Local response' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    ChatGPTTool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
-    await handler({ prompt: 'Latest news', search: true });
+    await handler({ prompt: 'Weather today', geo: 'United States' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
       auth,
       scrapingParams: expect.objectContaining({
-        prompt: 'Latest news',
-        search: true,
-        target: SCRAPER_API_TARGETS.CHATGPT,
+        prompt: 'Weather today',
+        geo: 'United States',
+        target: SCRAPER_API_TARGETS.PERPLEXITY,
         parse: true,
       }),
     });

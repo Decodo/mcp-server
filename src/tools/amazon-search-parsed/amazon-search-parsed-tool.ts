@@ -1,34 +1,24 @@
 import z from 'zod';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { ScraperApiClient } from 'clients/scraper-api-client';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
-import { removeKeyFromNestedObject } from '../utils';
-import { zodGeo, zodJsRender } from '../zod/zod-types';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { removeKeyFromNestedObject } from '../../utils';
+import { zodGeo, zodJsRender } from '../../zod/zod-types';
+import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class AmazonSearchParsedTool {
-  static toolset = TOOLSET.ECOMMERCE;
-  static FIELDS_WITH_HIGH_CHAR_COUNT = ['suggested', 'amazons_choices', 'refinements'];
+export class AmazonSearchParsedTool extends Tool {
+  toolset = TOOLSET.ECOMMERCE;
 
-  static transformAutoParsedResponse = ({ obj }: { obj: object }): string => {
+  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['suggested', 'amazons_choices', 'refinements'];
+
+  transformResponse = ({ data }: { data: object }) => {
     for (const fieldToRemove of AmazonSearchParsedTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
-      obj = removeKeyFromNestedObject({ obj, keyToRemove: fieldToRemove });
+      data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
     }
 
-    const text = JSON.stringify(obj);
-
-    return text;
+    return { data: JSON.stringify(data) };
   };
 
-  static register = ({
-    server,
-    sapiClient,
-    getAuthToken,
-  }: {
-    server: McpServer;
-    sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
-  }) => {
+  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
       'amazon_search_parsed',
       {
@@ -54,7 +44,7 @@ export class AmazonSearchParsedTool {
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
-        const text = this.transformAutoParsedResponse({ obj: data });
+        const { data: text } = this.transformResponse({ data });
 
         return {
           content: [

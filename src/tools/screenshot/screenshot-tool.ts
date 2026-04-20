@@ -1,21 +1,17 @@
 import z from 'zod';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScrapingMCPParams } from 'types';
-import { ScraperApiClient } from '../clients/scraper-api-client';
-import { zodGeo } from '../zod/zod-types';
-import { TOOLSET } from '../constants';
+import { zodGeo } from '../../zod/zod-types';
+import { TOOLSET } from '../../constants';
+import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class ScreenshotTool {
-  static toolset = TOOLSET.WEB;
-  static register = ({
-    server,
-    sapiClient,
-    getAuthToken,
-  }: {
-    server: McpServer;
-    sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
-  }) => {
+export class ScreenshotTool extends Tool {
+  toolset = TOOLSET.WEB;
+
+  transformResponse = ({ data }: { data: string }) => {
+    return { data };
+  };
+
+  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
       'screenshot',
       {

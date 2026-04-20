@@ -11,7 +11,7 @@ import {
   ScrapeAsMarkdownTool,
   ScreenshotTool,
 } from '../tools';
-import { ToolClass } from '../tools/tool';
+import { Tool } from '../tools/tool';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { TOOLSET } from '../constants';
 
@@ -42,15 +42,15 @@ export class ScraperAPIBaseServer {
     this.server.connect(transport);
   }
 
-  static allTools: ToolClass[] = [
-    ScrapeAsMarkdownTool,
-    ScreenshotTool,
-    GoogleSearchParsedTool,
-    AmazonSearchParsedTool,
-    RedditPostTool,
-    RedditSubredditTool,
-    ChatGPTTool,
-    PerplexityTool,
+  static allTools: Tool[] = [
+    new ScrapeAsMarkdownTool(),
+    new ScreenshotTool(),
+    new GoogleSearchParsedTool(),
+    new AmazonSearchParsedTool(),
+    new RedditPostTool(),
+    new RedditSubredditTool(),
+    new ChatGPTTool(),
+    new PerplexityTool(),
   ];
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {

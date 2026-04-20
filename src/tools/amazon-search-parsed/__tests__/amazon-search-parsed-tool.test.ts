@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ScraperApiClient } from '../clients/scraper-api-client';
-import { AmazonSearchParsedTool } from '../tools/amazon-search-parsed-tool';
-import { ScrapingMCPParams } from '../types';
+import { ScraperApiClient } from '../../../clients/scraper-api-client';
+import { AmazonSearchParsedTool } from '../amazon-search-parsed-tool';
+import { ScrapingMCPParams } from '../../../types';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
-jest.mock('../clients/scraper-api-client');
+jest.mock('../../../clients/scraper-api-client');
 
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
@@ -13,6 +13,7 @@ describe('AmazonSearchParsedTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let registeredHandler: (params: ScrapingMCPParams) => Promise<unknown>;
+  let tool: AmazonSearchParsedTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
@@ -24,7 +25,8 @@ describe('AmazonSearchParsedTool', () => {
       return server;
     });
 
-    AmazonSearchParsedTool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool = new AmazonSearchParsedTool();
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
   });
 
   it('registers a tool named "amazon_search_parsed"', () => {
@@ -95,8 +97,9 @@ describe('AmazonSearchParsedTool', () => {
   });
 });
 
-describe('AmazonSearchParsedTool.transformAutoParsedResponse', () => {
+describe('AmazonSearchParsedTool.transformResponse', () => {
   it('removes all high-char-count fields', () => {
+    const tool = new AmazonSearchParsedTool();
     const input = {
       results: [{ title: 'Item' }],
       suggested: 'remove me',
@@ -105,8 +108,8 @@ describe('AmazonSearchParsedTool.transformAutoParsedResponse', () => {
       nested: { suggested: 'nested remove' },
     };
 
-    const text = AmazonSearchParsedTool.transformAutoParsedResponse({ obj: input });
-    const parsed = JSON.parse(text);
+    const { data } = tool.transformResponse({ data: input });
+    const parsed = JSON.parse(data);
 
     expect(parsed.suggested).toBeUndefined();
     expect(parsed.amazons_choices).toBeUndefined();

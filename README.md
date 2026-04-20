@@ -4,7 +4,6 @@
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=Decodo&config=eyJ1cmwiOiJodHRwczovL21jcC5kZWNvZG8uY29tL21jcCIsImhlYWRlcnMiOnsiQXV0aG9yaXphdGlvbiI6IkJhc2ljIDx3ZWJfYWR2YW5jZWRfdG9rZW4%2BIn19)
 [![smithery badge](https://smithery.ai/badge/@Decodo/decodo-mcp-server)](https://smithery.ai/server/@Decodo/decodo-mcp-server)
 
-
 <p align="center">
 <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
 
@@ -23,9 +22,11 @@ services, streamlining access to our tools and capabilities.
 
 ## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp)
 
-1. Go to [decodo.com](https://decodo.com/scraping/web) and start a Web Scraping API plan (free trials available).
+1. Go to [decodo.com](https://decodo.com/scraping/web) and start a Web Scraping API plan (free
+   trials available).
 
-2. Once your plan has started, obtain a Web Scraping API basic authentication token from the [dashboard](https://dashboard.decodo.com/).
+2. Once your plan has started, obtain a Web Scraping API basic authentication token from the
+   [dashboard](https://dashboard.decodo.com/).
 
 3. Open your preferred MCP client and add the following configuration:
 
@@ -100,12 +101,13 @@ comma-separated list via the `toolsets` query parameter:
 
 When no toolsets are specified, all tools are registered.
 
-| Toolset        | Tools                                                          |
-| -------------- | -------------------------------------------------------------- |
-| `web`          | `scrape_as_markdown`, `screenshot`, `google_search_parsed`     |
-| `ecommerce`    | `amazon_search_parsed`                                         |
-| `social_media` | `reddit_post`, `reddit_subreddit`                              |
-| `ai`           | `chatgpt`, `perplexity`                       |
+| Toolset        | Tools                               |
+| -------------- | ----------------------------------- |
+| `web`          | `scrape_as_markdown`, `screenshot`, |
+| `search`       | `google_search_parsed`              |
+| `ecommerce`    | `amazon_search_parsed`              |
+| `social_media` | `reddit_post`, `reddit_subreddit`   |
+| `ai`           | `chatgpt`, `perplexity`             |
 
 ## Tools
 
@@ -126,14 +128,14 @@ The server exposes the following tools:
 
 The following parameters are inferred from user prompts:
 
-| Parameter      | Description                                                                                          |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| `jsRender`     | Renders target URL in a headless browser.                                                            |
-| `geo`          | Sets the country from which the request will originate.                                              |
-| `locale`       | Sets the locale of the request.                                                                      |
-| `tokenLimit`   | Truncates the response content up to this limit. Useful if the context window is small.              |
-| `prompt`       | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                |
-| `search`       | Activates ChatGPT's web search functionality (`chatgpt` only).                                       |
+| Parameter    | Description                                                                             |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `jsRender`   | Renders target URL in a headless browser.                                               |
+| `geo`        | Sets the country from which the request will originate.                                 |
+| `locale`     | Sets the locale of the request.                                                         |
+| `tokenLimit` | Truncates the response content up to this limit. Useful if the context window is small. |
+| `prompt`     | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                   |
+| `search`     | Activates ChatGPT's web search functionality (`chatgpt` only).                          |
 
 ## Examples
 

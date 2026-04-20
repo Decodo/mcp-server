@@ -1,21 +1,17 @@
 import z from 'zod';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { ScraperApiClient } from 'clients/scraper-api-client';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
-import { zodGeo } from '../zod/zod-types';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { zodGeo } from '../../zod/zod-types';
+import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class PerplexityTool {
-  static toolset = TOOLSET.AI;
-  static register = ({
-    server,
-    sapiClient,
-    getAuthToken,
-  }: {
-    server: McpServer;
-    sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
-  }) => {
+export class PerplexityTool extends Tool {
+  toolset = TOOLSET.AI;
+
+  transformResponse = ({ data }: { data: object }) => {
+    return { data: JSON.stringify(data, null, 2) };
+  };
+
+  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
       'perplexity',
       {
@@ -41,7 +37,7 @@ export class PerplexityTool {
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
-        const text = JSON.stringify(data, null, 2);
+        const { data: text } = this.transformResponse({ data });
 
         return {
           content: [

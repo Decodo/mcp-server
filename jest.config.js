@@ -8,4 +8,10 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  moduleNameMapper: {
+    "^types$": "<rootDir>/src/types",
+    "^utils$": "<rootDir>/src/utils",
+    "^server/(.*)$": "<rootDir>/src/server/$1",
+    "^clients/(.*)$": "<rootDir>/src/clients/$1",
+  },
 };

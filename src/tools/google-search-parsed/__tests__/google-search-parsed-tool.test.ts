@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ScraperApiClient } from '../clients/scraper-api-client';
-import { GoogleSearchParsedTool } from '../tools/google-search-parsed-tool';
-import { ScrapingMCPParams } from '../types';
+import { ScraperApiClient } from '../../../clients/scraper-api-client';
+import { GoogleSearchParsedTool } from '../google-search-parsed-tool';
+import { ScrapingMCPParams } from '../../../types';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
-jest.mock('../clients/scraper-api-client');
+jest.mock('../../../clients/scraper-api-client');
 
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
@@ -13,6 +13,7 @@ describe('GoogleSearchParsedTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let registeredHandler: (params: ScrapingMCPParams) => Promise<unknown>;
+  let tool: GoogleSearchParsedTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
@@ -24,7 +25,8 @@ describe('GoogleSearchParsedTool', () => {
       return server;
     });
 
-    GoogleSearchParsedTool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool = new GoogleSearchParsedTool();
+    tool.register({ server, sapiClient, getAuthToken: () => auth });
   });
 
   it('registers a tool named "google_search_parsed"', () => {
@@ -102,8 +104,9 @@ describe('GoogleSearchParsedTool', () => {
   });
 });
 
-describe('GoogleSearchParsedTool.transformAutoParsedResponse', () => {
+describe('GoogleSearchParsedTool.transformResponse', () => {
   it('removes all high-char-count fields including nested ones', () => {
+    const tool = new GoogleSearchParsedTool();
     const input = {
       organic: [{ title: 'Result' }],
       images: 'remove me',
@@ -115,8 +118,8 @@ describe('GoogleSearchParsedTool.transformAutoParsedResponse', () => {
       nested: { images: 'nested remove' },
     };
 
-    const text = GoogleSearchParsedTool.transformAutoParsedResponse({ obj: input });
-    const parsed = JSON.parse(text);
+    const { data } = tool.transformResponse({ data: input });
+    const parsed = JSON.parse(data);
 
     expect(parsed.images).toBeUndefined();
     expect(parsed.nested?.images).toBeUndefined();

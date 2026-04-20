@@ -1,20 +1,23 @@
 import z from 'zod';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { ScraperApiClient } from 'clients/scraper-api-client';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
+import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { Tool, ToolRegistrationArgs } from '../tool';
+import { removeKeyFromNestedObject } from 'utils';
 
-export class RedditSubredditTool {
-  static toolset = TOOLSET.SOCIAL_MEDIA;
-  static register = ({
-    server,
-    sapiClient,
-    getAuthToken,
-  }: {
-    server: McpServer;
-    sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
-  }) => {
+export class RedditSubredditTool extends Tool {
+  toolset = TOOLSET.SOCIAL_MEDIA;
+
+  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['preview', 'media_metadata'];
+
+  transformResponse = ({ data }: { data: object }) => {
+    for (const fieldToRemove of RedditSubredditTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
+      data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
+    }
+
+    return { data: JSON.stringify(data) };
+  };
+
+  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
       'reddit_subreddit',
       {
@@ -37,7 +40,7 @@ export class RedditSubredditTool {
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 
-        const text = JSON.stringify(data, null, 2);
+        const { data: text } = this.transformResponse({ data });
 
         return {
           content: [

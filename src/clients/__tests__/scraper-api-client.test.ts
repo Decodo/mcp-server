@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosHeaders } from 'axios';
-import { ScraperApiClient } from '../clients/scraper-api-client';
+import { ScraperApiClient } from '../scraper-api-client';
 
 const { AxiosError: RealAxiosError } = jest.requireActual<typeof import('axios')>('axios');
 
