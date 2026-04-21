@@ -2,12 +2,13 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import {
-  AmazonSearchParsedTool,
+  AmazonSearchTool,
   ChatGPTTool,
-  GoogleSearchParsedTool,
+  GoogleSearchTool,
   PerplexityTool,
   RedditPostTool,
   RedditSubredditTool,
+  RedditUserTool,
   ScrapeAsMarkdownTool,
   ScreenshotTool,
 } from '../tools';
@@ -45,10 +46,11 @@ export class ScraperAPIBaseServer {
   static allTools: Tool[] = [
     new ScrapeAsMarkdownTool(),
     new ScreenshotTool(),
-    new GoogleSearchParsedTool(),
-    new AmazonSearchParsedTool(),
+    new GoogleSearchTool(),
+    new AmazonSearchTool(),
     new RedditPostTool(),
     new RedditSubredditTool(),
+    new RedditUserTool(),
     new ChatGPTTool(),
     new PerplexityTool(),
   ];

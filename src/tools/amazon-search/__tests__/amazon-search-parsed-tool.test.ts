@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { AmazonSearchParsedTool } from '../amazon-search-parsed-tool';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
-import { GoogleSearchParsedTool } from '../google-search-parsed-tool';
 import { ScrapingMCPParams } from '../../../types';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -9,11 +9,11 @@ jest.mock('../../../clients/scraper-api-client');
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
 
-describe('GoogleSearchParsedTool', () => {
+describe('AmazonSearchParsedTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let registeredHandler: (params: ScrapingMCPParams) => Promise<unknown>;
-  let tool: GoogleSearchParsedTool;
+  let tool: AmazonSearchParsedTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
@@ -25,23 +25,23 @@ describe('GoogleSearchParsedTool', () => {
       return server;
     });
 
-    tool = new GoogleSearchParsedTool();
+    tool = new AmazonSearchParsedTool();
     tool.register({ server, sapiClient, getAuthToken: () => auth });
   });
 
-  it('registers a tool named "google_search_parsed"', () => {
+  it('registers a tool named "amazon_search"', () => {
     expect(server.registerTool).toHaveBeenCalledWith(
-      'google_search_parsed',
-      expect.objectContaining({ description: expect.stringContaining('Google') }),
+      'amazon_search',
+      expect.objectContaining({ description: expect.stringContaining('Amazon') }),
       expect.any(Function)
     );
   });
 
   it('returns a text content block with JSON stringified data', async () => {
-    const mockData = { organic: [{ title: 'Result', url: 'https://example.com' }] };
+    const mockData = { results: [{ title: 'Toothbrush', price: '$5.99' }] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    const result = (await registeredHandler({ query: 'shoes' })) as {
+    const result = (await registeredHandler({ query: 'toothbrush' })) as {
       content: { type: string; text: string }[];
     };
 
@@ -50,18 +50,17 @@ describe('GoogleSearchParsedTool', () => {
     expect(typeof result.content[0].text).toBe('string');
   });
 
-  it('passes google_search target and parse: true to the scraper', async () => {
+  it('passes amazon_search target and parse: true to the scraper', async () => {
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: {} });
 
-    await registeredHandler({ query: 'shoes', geo: 'us', locale: 'en-us' });
+    await registeredHandler({ query: 'shoes', geo: 'us' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
       auth,
       scrapingParams: expect.objectContaining({
         query: 'shoes',
         geo: 'us',
-        locale: 'en-us',
-        target: 'google_search',
+        target: 'amazon_search',
         parse: true,
       }),
     });
@@ -69,13 +68,10 @@ describe('GoogleSearchParsedTool', () => {
 
   it('strips high-char-count fields from the response', async () => {
     const mockData = {
-      organic: [{ title: 'Result' }],
-      images: ['should be removed'],
-      image_data: ['should be removed'],
-      related_searches_urls: ['should be removed'],
-      factoids: ['should be removed'],
-      people_also_buy_from: ['should be removed'],
-      what_people_are_saying: ['should be removed'],
+      results: [{ title: 'Item' }],
+      suggested: ['should be removed'],
+      amazons_choices: ['should be removed'],
+      refinements: ['should be removed'],
     };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
@@ -84,13 +80,10 @@ describe('GoogleSearchParsedTool', () => {
     };
     const parsed = JSON.parse(result.content[0].text);
 
-    expect(parsed.images).toBeUndefined();
-    expect(parsed.image_data).toBeUndefined();
-    expect(parsed.related_searches_urls).toBeUndefined();
-    expect(parsed.factoids).toBeUndefined();
-    expect(parsed.people_also_buy_from).toBeUndefined();
-    expect(parsed.what_people_are_saying).toBeUndefined();
-    expect(parsed.organic).toBeDefined();
+    expect(parsed.suggested).toBeUndefined();
+    expect(parsed.amazons_choices).toBeUndefined();
+    expect(parsed.refinements).toBeUndefined();
+    expect(parsed.results).toBeDefined();
   });
 
   it('propagates scraper errors', async () => {
@@ -104,25 +97,24 @@ describe('GoogleSearchParsedTool', () => {
   });
 });
 
-describe('GoogleSearchParsedTool.transformResponse', () => {
-  it('removes all high-char-count fields including nested ones', () => {
-    const tool = new GoogleSearchParsedTool();
+describe('AmazonSearchParsedTool.transformResponse', () => {
+  it('removes all high-char-count fields', () => {
+    const tool = new AmazonSearchParsedTool();
     const input = {
-      organic: [{ title: 'Result' }],
-      images: 'remove me',
-      image_data: 'remove me',
-      related_searches_urls: 'remove me',
-      factoids: 'remove me',
-      people_also_buy_from: 'remove me',
-      what_people_are_saying: 'remove me',
-      nested: { images: 'nested remove' },
+      results: [{ title: 'Item' }],
+      suggested: 'remove me',
+      amazons_choices: 'remove me',
+      refinements: 'remove me',
+      nested: { suggested: 'nested remove' },
     };
 
     const { data } = tool.transformResponse({ data: input });
     const parsed = JSON.parse(data);
 
-    expect(parsed.images).toBeUndefined();
-    expect(parsed.nested?.images).toBeUndefined();
-    expect(parsed.organic).toBeDefined();
+    expect(parsed.suggested).toBeUndefined();
+    expect(parsed.amazons_choices).toBeUndefined();
+    expect(parsed.refinements).toBeUndefined();
+    expect(parsed.nested?.suggested).toBeUndefined();
+    expect(parsed.results).toBeDefined();
   });
 });

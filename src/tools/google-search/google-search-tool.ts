@@ -1,11 +1,11 @@
 import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { SCRAPER_API_TARGETS, TOOLSET } from 'constants';
 import { removeKeyFromNestedObject } from '../../utils';
 import { zodGeo, zodLocale, zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class GoogleSearchParsedTool extends Tool {
+export class GoogleSearchTool extends Tool {
   toolset = TOOLSET.SEARCH;
 
   static FIELDS_WITH_HIGH_CHAR_COUNT = [
@@ -18,7 +18,7 @@ export class GoogleSearchParsedTool extends Tool {
   ];
 
   transformResponse = ({ data }: { data: object }) => {
-    for (const fieldToRemove of GoogleSearchParsedTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
+    for (const fieldToRemove of GoogleSearchTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
       data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
     }
 
@@ -27,7 +27,7 @@ export class GoogleSearchParsedTool extends Tool {
 
   register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
-      'google_search_parsed',
+      'google_search',
       {
         description: 'Scrape Google Search results with automatic parsing',
         inputSchema: {

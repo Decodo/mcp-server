@@ -1,17 +1,20 @@
 import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
-import { removeKeyFromNestedObject } from '../../utils';
-import { zodGeo, zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { removeKeyFromNestedObject } from 'utils';
 
-export class AmazonSearchParsedTool extends Tool {
-  toolset = TOOLSET.ECOMMERCE;
+export class RedditUserTool extends Tool {
+  toolset = TOOLSET.SOCIAL_MEDIA;
 
-  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['suggested', 'amazons_choices', 'refinements'];
+  private static FIELDS_WITH_HIGH_CHAR_COUNT = [
+    'author_flair_richtext',
+    'preview',
+    'media_metadata',
+  ];
 
   transformResponse = ({ data }: { data: object }) => {
-    for (const fieldToRemove of AmazonSearchParsedTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
+    for (const fieldToRemove of RedditUserTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
       data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
     }
 
@@ -20,13 +23,11 @@ export class AmazonSearchParsedTool extends Tool {
 
   register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
-      'amazon_search_parsed',
+      'reddit_user',
       {
-        description: 'Scrape Amazon Search results with automatic parsing',
+        description: 'Scrape a Reddit user profile and their posts/comments',
         inputSchema: {
-          query: z.string().describe('Search query'),
-          geo: zodGeo,
-          jsRender: zodJsRender,
+          url: z.string().describe('Reddit user profile URL'),
         },
         annotations: {
           readOnlyHint: true,
@@ -36,8 +37,7 @@ export class AmazonSearchParsedTool extends Tool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.AMAZON_SEARCH,
-          parse: true,
+          target: SCRAPER_API_TARGETS.REDDIT_USER,
         } satisfies ScraperAPIParams;
 
         const auth = getAuthToken();
