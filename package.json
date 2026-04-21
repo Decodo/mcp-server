@@ -12,7 +12,8 @@
     "dev": "nodemon --watch src -e ts --exec 'tsx src/server.ts'",
     "start": "node build/server.js",
     "inspect": "mcp-inspector",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src/"
   },
   "keywords": [],
   "author": "",
@@ -28,15 +29,18 @@
     "tsx": "^4.21.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@modelcontextprotocol/inspector": "^0.21.1",
     "@types/express": "^5.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
+    "eslint": "^10.2.1",
     "jest": "^30.0.0",
     "mcps-logger": "^1.0.0",
     "nodemon": "^3.1.14",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.58.2",
     "zod": "^3.25.57"
   }
 }
