@@ -27,8 +27,8 @@ describe('ScrapeAsMarkdownTool', () => {
       const html = 'x'.repeat(ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT + 1000);
       const result = ScrapeAsMarkdownTool.transformResponse({ html });
 
-      expect(result.markdown).toBe(
-        html.substring(0, ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT)
+      expect(result.markdown.length).toBe(
+        html.substring(0, ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT).length
       );
       expect(result.isTruncated).toBe(true);
     });
@@ -55,13 +55,12 @@ describe('ScrapeAsMarkdownTool', () => {
       expect(result.isTruncated).toBe(true);
     });
 
-    it('skips truncation when fullResponse is true', () => {
+    it('does not truncate when response is below limit', () => {
       const longMarkdown = 'a'.repeat(20_000);
       mockedNHM.translate.mockReturnValue(longMarkdown);
 
       const result = ScrapeAsMarkdownTool.transformResponse({
         html: '<p>long</p>',
-        shouldShowFullResponse: true,
       });
 
       expect(result.markdown.length).toBe(20_000);

@@ -3,9 +3,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from 'clients/scraper-api-client';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../constants';
+import { zodGeo } from '../zod/zod-types';
 
-export class RedditSubredditTool {
-  static toolset = TOOLSET.SOCIAL_MEDIA;
+export class ChatGPTTool {
+  static toolset = TOOLSET.AI;
   static register = ({
     server,
     sapiClient,
@@ -16,11 +17,13 @@ export class RedditSubredditTool {
     getAuthToken: () => string;
   }) => {
     server.registerTool(
-      'reddit_subreddit',
+      'chatgpt',
       {
-        description: 'Scrape Reddit subreddit results with automatic parsing',
+        description: 'Search and interact with ChatGPT for AI-powered responses and conversations',
         inputSchema: {
-          url: z.string().describe('URL to subreddit'),
+          prompt: z.string().describe('Prompt to send to ChatGPT'),
+          search: z.boolean().describe("Activates ChatGPT's web search functionality").optional(),
+          geo: zodGeo,
         },
         annotations: {
           readOnlyHint: true,
@@ -30,7 +33,8 @@ export class RedditSubredditTool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.REDDIT_SUBREDDIT,
+          target: SCRAPER_API_TARGETS.CHATGPT,
+          parse: true,
         } satisfies ScraperAPIParams;
 
         const auth = getAuthToken();

@@ -3,42 +3,22 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScrapingMCPParams } from 'types';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { NodeHtmlMarkdown } from 'node-html-markdown';
-import { zodFullResponse, zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../zod/zod-types';
+import { zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../zod/zod-types';
+import { TOOLSET } from '../constants';
 
 export class ScrapeAsMarkdownTool {
-  static LARGE_CONTENT_SYMBOL_COUNT = 10_000;
+  static toolset = TOOLSET.WEB;
+  static LARGE_CONTENT_SYMBOL_COUNT = 100_000;
 
   static isResponseOverLimit = (content: string) => {
     return content.length > this.LARGE_CONTENT_SYMBOL_COUNT;
-  };
-
-  static shouldTruncateResponse = ({
-    content,
-    shouldShowFullResponse,
-  }: {
-    content: string;
-    shouldShowFullResponse?: boolean;
-  }) => {
-    if (shouldShowFullResponse) {
-      return false;
-    }
-
-    return this.isResponseOverLimit(content);
   };
 
   static truncateResponse = ({ content, limit }: { content: string; limit: number }) => {
     return content.substring(0, limit);
   };
 
-  static transformResponse = ({
-    html,
-    tokenLimit,
-    shouldShowFullResponse,
-  }: {
-    html: string;
-    tokenLimit?: number;
-    shouldShowFullResponse?: boolean;
-  }) => {
+  static transformResponse = ({ html, tokenLimit }: { html: string; tokenLimit?: number }) => {
     let markdown: string;
     try {
       markdown = NodeHtmlMarkdown.translate(html, {});
@@ -46,7 +26,7 @@ export class ScrapeAsMarkdownTool {
       markdown = html;
     }
 
-    if (this.shouldTruncateResponse({ content: markdown, shouldShowFullResponse })) {
+    if (tokenLimit || this.isResponseOverLimit(markdown)) {
       const truncated = this.truncateResponse({
         content: markdown,
         limit: tokenLimit || this.LARGE_CONTENT_SYMBOL_COUNT,
@@ -77,7 +57,6 @@ export class ScrapeAsMarkdownTool {
           locale: zodLocale,
           jsRender: zodJsRender,
           tokenLimit: zodTokenLimit,
-          fullResponse: zodFullResponse,
         },
         annotations: {
           readOnlyHint: true,
@@ -92,7 +71,6 @@ export class ScrapeAsMarkdownTool {
         const { markdown, isTruncated } = this.transformResponse({
           html: data,
           tokenLimit: scrapingParams.tokenLimit,
-          shouldShowFullResponse: scrapingParams.fullResponse,
         });
 
         return {

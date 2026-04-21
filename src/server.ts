@@ -2,10 +2,19 @@ import 'dotenv/config';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ScraperAPIHttpServer } from './server/sapi-http-server';
+import { TOOLSET } from './constants';
 
 const app = express();
 
 app.use(express.json());
+
+const resolveToolsets = (toolsets?: string): TOOLSET[] => {
+  if (!toolsets) {
+    return [];
+  }
+
+  return toolsets.split(',').map(toolset => toolset as TOOLSET);
+};
 
 app.get('/mcp', (_req, res) => {
   res.status(200).send('server up, use POST /mcp to see available tools');
@@ -28,7 +37,9 @@ app.post('/mcp', async (req, res) => {
 
   const token = parts[1];
 
-  const server = new ScraperAPIHttpServer();
+  const toolsets = resolveToolsets(req.query.toolsets as string);
+
+  const server = new ScraperAPIHttpServer({ toolsets });
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

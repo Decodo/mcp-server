@@ -1,7 +1,8 @@
 import 'dotenv/config';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { ScraperAPIStdioServer } from './server/sapi-stdio-server';
+import { ScraperAPIStdioServer } from 'server/sapi-stdio-server';
+import { TOOLSET } from './constants';
 
 if (process.env.ENABLE_MCPS_LOGGER) {
   import('mcps-logger/console');
@@ -23,15 +24,26 @@ const parseEnvsOrExit = (): Record<string, string> => {
   };
 };
 
+const resolveToolsets = (toolsets?: string): TOOLSET[] => {
+  if (!toolsets) {
+    return [];
+  }
+
+  return toolsets.split(',').map(toolset => toolset as TOOLSET);
+};
+
 async function main() {
   const transport = new StdioServerTransport();
 
   // if there are no envs, some MCP clients will fail silently
   const { sapiUsername, sapiPassword } = parseEnvsOrExit();
 
+  const toolsets = resolveToolsets(process.env.TOOLSETS);
+
   const sapiMcpServer = new ScraperAPIStdioServer({
     sapiUsername,
     sapiPassword,
+    toolsets,
   });
   await sapiMcpServer.connect(transport);
 

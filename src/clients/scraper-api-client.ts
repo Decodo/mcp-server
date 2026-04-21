@@ -60,7 +60,7 @@ export class ScraperApiClient {
           errorMessage = 'Authentication failed.';
         }
         if (error.response?.status === 429) {
-          errorMessage = 'Rate limit exceeded, please wait before sending another request.';
+          errorMessage = JSON.stringify(error.response?.data);
         }
 
         throw new Error(`Scraper API request failed (${status}): ${errorMessage}`);

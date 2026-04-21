@@ -60,12 +60,14 @@ describe('ScraperApiClient', () => {
 
     it('throws friendly message on 429', async () => {
       mockedAxios.request.mockRejectedValue(
-        createAxiosError({ status: 429, message: 'Too Many Requests' })
+        createAxiosError({
+          status: 429,
+          message: 'Too Many Requests',
+          data: 'Rate limit exceeded',
+        })
       );
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
-        'Scraper API request failed (429): Rate limit exceeded, please wait before sending another request.'
-      );
+      await expect(client.scrape(defaultArgs)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('uses server message on 502', async () => {
