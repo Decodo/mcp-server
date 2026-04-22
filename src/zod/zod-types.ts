@@ -25,3 +25,13 @@ export const zodTokenLimit = z
     `The number of tokens to return in the response - anything above this limit will be truncated`
   )
   .optional();
+
+export const zodCountry = z
+  .string()
+  .describe('Country code for the request (e.g., US, GB, DE)')
+  .optional();
+
+export const zodDeviceType = z
+  .enum(['desktop', 'mobile', 'tablet'])
+  .describe('Device type to emulate for the request')
+  .optional();

@@ -105,7 +105,7 @@ When no toolsets are specified, all tools are registered.
 | -------------- | --------------------------------------------------------------- |
 | `web`          | `scrape_as_markdown`, `screenshot`,                             |
 | `search`       | `google_search`                                                 |
-| `ecommerce`    | `amazon_search`                                                 |
+| `ecommerce`    | `amazon_search`, `tiktok_shop_search`                           |
 | `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post` |
 | `ai`           | `chatgpt`, `perplexity`                                         |
 
@@ -123,6 +123,7 @@ The server exposes the following tools:
 | `reddit_subreddit`   | Scrapes a specific Reddit subreddit for a given query, and returns parsed results.         | Scrape the top 5 posts on r/Python this week.                                           |
 | `reddit_user`        | Scrapes a Reddit user profile and their posts or comments.                                 | Scrape Reddit user u/spez’s profile.                                                    |
 | `tiktok_post`        | Scrapes a TikTok post URL for structured data (e.g. engagement, caption, hashtags).        | Scrape this TikTok post: https://www.tiktok.com/@nba/video/7393013274725403950          |
+| `tiktok_shop_search` | Scrapes TikTok Shop Search for a given query, and returns parsed results.                  | Scrape TikTok Shop Search for phone cases.                                              |
 | `chatgpt`            | Search and interact with ChatGPT for AI-powered responses and conversations.               | Ask ChatGPT to explain quantum computing in simple terms.                               |
 | `perplexity`         | Search and interact with Perplexity for AI-powered responses and conversations.            | Ask Perplexity what the latest trends in web development are.                           |
 

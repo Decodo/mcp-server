@@ -16,6 +16,7 @@ export enum SCRAPER_API_TARGETS {
   REDDIT_USER = 'reddit_user',
 
   TIKTOK_POST = 'tiktok_post',
+  TIKTOK_SHOP_SEARCH = 'tiktok_shop_search',
 
   CHATGPT = 'chatgpt',
   PERPLEXITY = 'perplexity',

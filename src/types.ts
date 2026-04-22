@@ -24,4 +24,5 @@ export type ScraperAPIParams = {
   headless?: string;
   parse?: boolean;
   xhr?: boolean;
+  markdown?: boolean;
 };
