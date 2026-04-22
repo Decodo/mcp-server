@@ -9,6 +9,7 @@ import {
   RedditPostTool,
   RedditSubredditTool,
   RedditUserTool,
+  TiktokPostTool,
   ScrapeAsMarkdownTool,
   ScreenshotTool,
 } from '../tools';
@@ -51,6 +52,7 @@ export class ScraperAPIBaseServer {
     new RedditPostTool(),
     new RedditSubredditTool(),
     new RedditUserTool(),
+    new TiktokPostTool(),
     new ChatGPTTool(),
     new PerplexityTool(),
   ];

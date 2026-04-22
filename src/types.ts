@@ -10,6 +10,7 @@ export type ScrapingMCPParams = {
   jsRender?: boolean;
   headless?: string;
   tokenLimit?: number;
+  xhr?: boolean;
 };
 
 export type ScraperAPIParams = {
@@ -22,4 +23,5 @@ export type ScraperAPIParams = {
   locale?: string;
   headless?: string;
   parse?: boolean;
+  xhr?: boolean;
 };

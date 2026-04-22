@@ -101,13 +101,13 @@ comma-separated list via the `toolsets` query parameter:
 
 When no toolsets are specified, all tools are registered.
 
-| Toolset        | Tools                               |
-| -------------- | ----------------------------------- |
-| `web`          | `scrape_as_markdown`, `screenshot`, |
-| `search`       | `google_search`                     |
-| `ecommerce`    | `amazon_search`                     |
-| `social_media` | `reddit_post`, `reddit_subreddit`   |
-| `ai`           | `chatgpt`, `perplexity`             |
+| Toolset        | Tools                                                           |
+| -------------- | --------------------------------------------------------------- |
+| `web`          | `scrape_as_markdown`, `screenshot`,                             |
+| `search`       | `google_search`                                                 |
+| `ecommerce`    | `amazon_search`                                                 |
+| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post` |
+| `ai`           | `chatgpt`, `perplexity`                                         |
 
 ## Tools
 
@@ -121,6 +121,8 @@ The server exposes the following tools:
 | `amazon_search`      | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for toothbrushes.                                                  |
 | `reddit_post`        | Scrapes a specific Reddit post for a given query, and returns parsed results.              | Scrape the following Reddit post: https://www.reddit.com/r/horseracing/comments/1nsrn3/ |
 | `reddit_subreddit`   | Scrapes a specific Reddit subreddit for a given query, and returns parsed results.         | Scrape the top 5 posts on r/Python this week.                                           |
+| `reddit_user`        | Scrapes a Reddit user profile and their posts or comments.                                 | Scrape Reddit user u/spez’s profile.                                                    |
+| `tiktok_post`        | Scrapes a TikTok post URL for structured data (e.g. engagement, caption, hashtags).        | Scrape this TikTok post: https://www.tiktok.com/@nba/video/7393013274725403950          |
 | `chatgpt`            | Search and interact with ChatGPT for AI-powered responses and conversations.               | Ask ChatGPT to explain quantum computing in simple terms.                               |
 | `perplexity`         | Search and interact with Perplexity for AI-powered responses and conversations.            | Ask Perplexity what the latest trends in web development are.                           |
 
@@ -128,14 +130,15 @@ The server exposes the following tools:
 
 The following parameters are inferred from user prompts:
 
-| Parameter    | Description                                                                             |
-| ------------ | --------------------------------------------------------------------------------------- |
-| `jsRender`   | Renders target URL in a headless browser.                                               |
-| `geo`        | Sets the country from which the request will originate.                                 |
-| `locale`     | Sets the locale of the request.                                                         |
-| `tokenLimit` | Truncates the response content up to this limit. Useful if the context window is small. |
-| `prompt`     | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                   |
-| `search`     | Activates ChatGPT's web search functionality (`chatgpt` only).                          |
+| Parameter    | Description                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| `jsRender`   | Renders target URL in a headless browser.                                                             |
+| `geo`        | Sets the country from which the request will originate.                                               |
+| `locale`     | Sets the locale of the request.                                                                       |
+| `tokenLimit` | Truncates the response content up to this limit. Useful if the context window is small.               |
+| `prompt`     | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                 |
+| `search`     | Activates ChatGPT's web search functionality (`chatgpt` only).                                        |
+| `xhr`        | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`). |
 
 ## Examples
 

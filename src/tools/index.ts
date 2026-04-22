@@ -5,5 +5,6 @@ export * from './perplexity';
 export * from './reddit-post';
 export * from './reddit-subreddit';
 export * from './reddit-user';
+export * from './tiktok-post';
 export * from './scrape-as-markdown';
 export * from './screenshot';

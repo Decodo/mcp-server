@@ -1,40 +1,27 @@
 import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
-import { removeKeyFromNestedObject } from '../../utils';
-import { zodGeo, zodLocale, zodJsRender } from '../../zod/zod-types';
+import { zodXhr } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class GoogleSearchTool extends Tool {
-  toolset = TOOLSET.SEARCH;
-
-  static FIELDS_WITH_HIGH_CHAR_COUNT = [
-    'images',
-    'image_data',
-    'related_searches_urls',
-    'factoids',
-    'people_also_buy_from',
-    'what_people_are_saying',
-  ];
+export class TiktokPostTool extends Tool {
+  toolset = TOOLSET.SOCIAL_MEDIA;
 
   transformResponse = ({ data }: { data: object }) => {
-    for (const fieldToRemove of GoogleSearchTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
-      data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
-    }
-
     return { data: JSON.stringify(data) };
   };
 
   register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
     server.registerTool(
-      'google_search',
+      'tiktok_post',
       {
-        description: 'Scrape Google Search results with automatic parsing',
+        description:
+          'Scrape a TikTok post URL for structured data such as engagement, captions, and hashtags',
         inputSchema: {
-          query: z.string().describe('Search query'),
-          geo: zodGeo,
-          locale: zodLocale,
-          jsRender: zodJsRender,
+          url: z
+            .string()
+            .describe('TikTok post URL, e.g. https://www.tiktok.com/@user/video/1234567890'),
+          xhr: zodXhr,
         },
         annotations: {
           readOnlyHint: true,
@@ -44,8 +31,7 @@ export class GoogleSearchTool extends Tool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.GOOGLE_SEARCH,
-          parse: true,
+          target: SCRAPER_API_TARGETS.TIKTOK_POST,
         } satisfies ScraperAPIParams;
 
         const auth = getAuthToken();
