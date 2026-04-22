@@ -2,15 +2,16 @@ import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject } from '../../utils';
+import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class RedditPostTool extends Tool {
-  toolset = TOOLSET.SOCIAL_MEDIA;
+export class GoogleLensTool extends Tool {
+  toolset = TOOLSET.SEARCH;
 
-  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['author_flair_richtext'];
+  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['url_thumbnail'];
 
   transformResponse = ({ data }: { data: object }) => {
-    for (const fieldToRemove of RedditPostTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
+    for (const fieldToRemove of GoogleLensTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
       data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
     }
 
@@ -19,15 +20,13 @@ export class RedditPostTool extends Tool {
 
   register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
-      'reddit_post',
+      'google_lens',
       {
-        description: 'Scrape a specific Reddit post',
+        description: 'Scrape Google Lens image search results with automatic parsing',
         inputSchema: {
-          url: z
-            .string()
-            .describe(
-              'reddit post URL (eg. https://www.reddit.com/r/hometheater/comments/1jz9xk5/lg_ubk90_only_works_when_plugged_into_tv_via)'
-            ),
+          query: z.string().describe('Image URL for Google Lens search (e.g., "https://example.com/image.jpg")'),
+          jsRender: zodJsRender,
+          deviceType: zodDeviceType,
         },
         annotations: {
           readOnlyHint: true,
@@ -37,7 +36,8 @@ export class RedditPostTool extends Tool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.REDDIT_POST,
+          target: SCRAPER_API_TARGETS.GOOGLE_LENS,
+          parse: true,
         } satisfies ScraperAPIParams;
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });

@@ -1,8 +1,8 @@
 import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { removeKeyFromNestedObject } from '../../utils';
 import { Tool, ToolRegistrationArgs } from '../tool';
-import { removeKeyFromNestedObject } from 'utils';
 
 export class RedditUserTool extends Tool {
   toolset = TOOLSET.SOCIAL_MEDIA;

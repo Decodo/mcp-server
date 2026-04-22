@@ -2,15 +2,26 @@ import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject } from '../../utils';
+import { zodGeo, zodLocale, zodJsRender, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-export class RedditPostTool extends Tool {
-  toolset = TOOLSET.SOCIAL_MEDIA;
+const zodDomain = z
+  .string()
+  .describe('Bing domain (e.g., bing.com, bing.co.uk)')
+  .optional();
 
-  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['author_flair_richtext'];
+const zodPageFrom = z
+  .number()
+  .describe('Starting page number for pagination')
+  .optional();
+
+export class BingSearchTool extends Tool {
+  toolset = TOOLSET.SEARCH;
+
+  private static FIELDS_WITH_HIGH_CHAR_COUNT = ['url'];
 
   transformResponse = ({ data }: { data: object }) => {
-    for (const fieldToRemove of RedditPostTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
+    for (const fieldToRemove of BingSearchTool.FIELDS_WITH_HIGH_CHAR_COUNT) {
       data = removeKeyFromNestedObject({ obj: data, keyToRemove: fieldToRemove });
     }
 
@@ -19,15 +30,17 @@ export class RedditPostTool extends Tool {
 
   register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
-      'reddit_post',
+      'bing_search',
       {
-        description: 'Scrape a specific Reddit post',
+        description: 'Scrape Bing Search results with automatic parsing',
         inputSchema: {
-          url: z
-            .string()
-            .describe(
-              'reddit post URL (eg. https://www.reddit.com/r/hometheater/comments/1jz9xk5/lg_ubk90_only_works_when_plugged_into_tv_via)'
-            ),
+          query: z.string().describe('Search query for Bing (e.g., "laptop")'),
+          geo: zodGeo,
+          locale: zodLocale,
+          jsRender: zodJsRender,
+          domain: zodDomain,
+          deviceType: zodDeviceType,
+          pageFrom: zodPageFrom,
         },
         annotations: {
           readOnlyHint: true,
@@ -37,7 +50,8 @@ export class RedditPostTool extends Tool {
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.REDDIT_POST,
+          target: SCRAPER_API_TARGETS.BING_SEARCH,
+          parse: true,
         } satisfies ScraperAPIParams;
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
