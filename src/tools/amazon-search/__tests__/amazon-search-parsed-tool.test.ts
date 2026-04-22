@@ -26,7 +26,7 @@ describe('AmazonSearchParsedTool', () => {
     });
 
     tool = new AmazonSearchParsedTool();
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
   });
 
   it('registers a tool named "amazon_search"', () => {

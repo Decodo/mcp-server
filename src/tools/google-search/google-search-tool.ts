@@ -25,7 +25,7 @@ export class GoogleSearchTool extends Tool {
     return { data: JSON.stringify(data) };
   };
 
-  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
+  register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
       'google_search',
       {
@@ -47,8 +47,6 @@ export class GoogleSearchTool extends Tool {
           target: SCRAPER_API_TARGETS.GOOGLE_SEARCH,
           parse: true,
         } satisfies ScraperAPIParams;
-
-        const auth = getAuthToken();
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 

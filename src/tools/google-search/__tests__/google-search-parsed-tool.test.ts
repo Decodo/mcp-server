@@ -26,7 +26,7 @@ describe('GoogleSearchParsedTool', () => {
     });
 
     tool = new GoogleSearchParsedTool();
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
   });
 
   it('registers a tool named "google_search"', () => {

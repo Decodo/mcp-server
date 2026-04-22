@@ -24,20 +24,18 @@ export class ScraperAPIBaseServer {
 
   auth: string = '';
 
-  constructor({ toolsets = [] }: { toolsets: TOOLSET[] }) {
+  constructor({ auth, toolsets = [] }: { auth: string; toolsets: TOOLSET[] }) {
     this.server = new McpServer({
       name: 'decodo',
       version: '1.0.3',
     });
     this.sapiClient = new ScraperApiClient();
 
+    this.auth = auth;
+
     this.registerTools({ toolsets });
 
     this.registerResources();
-  }
-
-  setAuthToken(token: string) {
-    this.auth = token;
   }
 
   connect(transport: StdioServerTransport | StreamableHTTPServerTransport) {
@@ -63,21 +61,17 @@ export class ScraperAPIBaseServer {
       return;
     }
 
-    const getAuthToken = () => this.auth;
-
     for (const toolset of toolsets) {
       const tools = ScraperAPIBaseServer.allTools.filter(tool => tool.toolset === toolset);
       for (const tool of tools) {
-        tool.register({ server: this.server, sapiClient: this.sapiClient, getAuthToken });
+        tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
       }
     }
   }
 
   registerAllTools() {
-    const getAuthToken = () => this.auth;
-
     for (const tool of ScraperAPIBaseServer.allTools) {
-      tool.register({ server: this.server, sapiClient: this.sapiClient, getAuthToken });
+      tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
     }
   }
 

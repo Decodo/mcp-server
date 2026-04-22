@@ -39,7 +39,7 @@ app.post('/mcp', async (req, res) => {
 
   const toolsets = resolveToolsets(req.query.toolsets as string);
 
-  const server = new ScraperAPIHttpServer({ toolsets });
+  const server = new ScraperAPIHttpServer({ toolsets, auth: token });
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -49,8 +49,6 @@ app.post('/mcp', async (req, res) => {
   res.on('close', () => {
     transport.close();
   });
-
-  server.setAuthToken(token);
 
   await server.connect(transport);
 

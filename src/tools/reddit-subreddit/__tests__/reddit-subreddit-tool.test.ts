@@ -25,7 +25,7 @@ describe('RedditSubredditTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'reddit_subreddit',
@@ -38,7 +38,7 @@ describe('RedditSubredditTool', () => {
     const mockData = { posts: [{ title: 'Post 1' }, { title: 'Post 2' }] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ url: 'https://reddit.com/r/programming' });

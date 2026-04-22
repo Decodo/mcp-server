@@ -24,7 +24,7 @@ describe('TiktokPostTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'tiktok_post',
@@ -37,7 +37,7 @@ describe('TiktokPostTool', () => {
     const mockData = { desc: 'caption', stats: {} };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const url = 'https://www.tiktok.com/@nba/video/7393013274725403950';
@@ -59,7 +59,7 @@ describe('TiktokPostTool', () => {
   it('forwards xhr when provided', async () => {
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: {} });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     await handler({

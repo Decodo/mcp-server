@@ -24,7 +24,7 @@ describe('PerplexityTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'perplexity',
@@ -37,7 +37,7 @@ describe('PerplexityTool', () => {
     const mockData = { answer: 'Perplexity response with sources', sources: ['url1', 'url2'] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ prompt: 'What is MCP?' });
@@ -60,7 +60,7 @@ describe('PerplexityTool', () => {
     const mockData = { answer: 'Local response' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     await handler({ prompt: 'Weather today', geo: 'United States' });

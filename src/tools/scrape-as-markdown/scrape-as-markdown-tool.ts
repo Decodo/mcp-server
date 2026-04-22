@@ -39,7 +39,7 @@ export class ScrapeAsMarkdownTool extends Tool {
     return { data: markdown, isTruncated: false };
   };
 
-  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
+  register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
       'scrape_as_markdown',
       {
@@ -57,8 +57,6 @@ export class ScrapeAsMarkdownTool extends Tool {
         },
       },
       async (scrapingParams: ScrapingMCPParams) => {
-        const auth = getAuthToken();
-
         const { data } = await sapiClient.scrape({ auth, scrapingParams });
 
         const { data: markdown, isTruncated } = this.transformResponse({

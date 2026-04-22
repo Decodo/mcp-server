@@ -17,7 +17,7 @@ export class RedditPostTool extends Tool {
     return { data: JSON.stringify(data) };
   };
 
-  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
+  register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
       'reddit_post',
       {
@@ -35,8 +35,6 @@ export class RedditPostTool extends Tool {
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.REDDIT_POST,
         } satisfies ScraperAPIParams;
-
-        const auth = getAuthToken();
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 

@@ -11,7 +11,7 @@ export class ScreenshotTool extends Tool {
     return { data };
   };
 
-  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
+  register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
       'screenshot',
       {
@@ -26,8 +26,6 @@ export class ScreenshotTool extends Tool {
         },
       },
       async (scrapingParams: ScrapingMCPParams) => {
-        const auth = getAuthToken();
-
         const { data } = await sapiClient.scrape({
           auth,
           scrapingParams: { ...scrapingParams, headless: 'png' },

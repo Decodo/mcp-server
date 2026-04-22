@@ -24,7 +24,7 @@ describe('ChatGPTTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'chatgpt',
@@ -37,7 +37,7 @@ describe('ChatGPTTool', () => {
     const mockData = { response: 'Hello! How can I help you?' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ prompt: 'What is TypeScript?' });
@@ -60,7 +60,7 @@ describe('ChatGPTTool', () => {
     const mockData = { response: 'Search results...' };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     await handler({ prompt: 'Latest news', search: true });

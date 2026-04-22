@@ -11,7 +11,7 @@ export class PerplexityTool extends Tool {
     return { data: JSON.stringify(data, null, 2) };
   };
 
-  register = ({ server, sapiClient, getAuthToken }: ToolRegistrationArgs) => {
+  register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
     server.registerTool(
       'perplexity',
       {
@@ -32,8 +32,6 @@ export class PerplexityTool extends Tool {
           target: SCRAPER_API_TARGETS.PERPLEXITY,
           parse: true,
         } satisfies ScraperAPIParams;
-
-        const auth = getAuthToken();
 
         const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
 

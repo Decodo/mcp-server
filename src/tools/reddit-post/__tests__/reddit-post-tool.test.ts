@@ -25,7 +25,7 @@ describe('RedditPostTool', () => {
   });
 
   it('registers with correct tool name', () => {
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     expect(server.registerTool).toHaveBeenCalledWith(
       'reddit_post',
@@ -38,7 +38,7 @@ describe('RedditPostTool', () => {
     const mockData = { title: 'Test post', comments: [] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    tool.register({ server, sapiClient, getAuthToken: () => auth });
+    tool.register({ server, sapiClient, auth });
 
     const handler = (server.registerTool as jest.Mock).mock.calls[0][2];
     const result = await handler({ url: 'https://reddit.com/r/test/comments/abc' });

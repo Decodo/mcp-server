@@ -5,7 +5,7 @@ import { TOOLSET } from '../constants';
 export type ToolRegistrationArgs = {
   server: McpServer;
   sapiClient: ScraperApiClient;
-  getAuthToken: () => string;
+  auth: string;
 };
 
 export abstract class Tool {

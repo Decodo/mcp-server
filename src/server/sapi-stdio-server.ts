@@ -8,17 +8,7 @@ export class ScraperAPIStdioServer extends ScraperAPIBaseServer {
 
   sapiClient: ScraperApiClient;
 
-  constructor({
-    sapiUsername,
-    sapiPassword,
-    toolsets = [],
-  }: {
-    sapiUsername: string;
-    sapiPassword: string;
-    toolsets: TOOLSET[];
-  }) {
-    super({ toolsets });
-
-    this.setAuthToken(Buffer.from(`${sapiUsername}:${sapiPassword}`).toString('base64'));
+  constructor({ auth, toolsets = [] }: { auth: string; toolsets: TOOLSET[] }) {
+    super({ auth, toolsets });
   }
 }
