@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { WalmartSearchTool } from '../walmart-search-tool';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
-import { GoogleSearchParsedTool } from '../google-search-parsed-tool';
 import { ScrapingMCPParams } from '../../../types';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -9,11 +9,11 @@ jest.mock('../../../clients/scraper-api-client');
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
 
-describe('GoogleSearchParsedTool', () => {
+describe('WalmartSearchTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let registeredHandler: (params: ScrapingMCPParams) => Promise<unknown>;
-  let tool: GoogleSearchParsedTool;
+  let tool: WalmartSearchTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
@@ -25,23 +25,23 @@ describe('GoogleSearchParsedTool', () => {
       return server;
     });
 
-    tool = new GoogleSearchParsedTool();
+    tool = new WalmartSearchTool();
     tool.register({ server, sapiClient, auth });
   });
 
-  it('registers a tool named "google_search"', () => {
+  it('registers a tool named "walmart_search"', () => {
     expect(server.registerTool).toHaveBeenCalledWith(
-      'google_search',
-      expect.objectContaining({ description: expect.stringContaining('Google') }),
+      'walmart_search',
+      expect.objectContaining({ description: expect.stringContaining('Walmart') }),
       expect.any(Function)
     );
   });
 
   it('returns a text content block with JSON stringified data', async () => {
-    const mockData = { organic: [{ title: 'Result', url: 'https://example.com' }] };
+    const mockData = { results: [{ title: 'Tent', price: '$49.99' }] };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    const result = (await registeredHandler({ query: 'shoes' })) as {
+    const result = (await registeredHandler({ query: 'tent' })) as {
       content: { type: string; text: string }[];
     };
 
@@ -50,47 +50,37 @@ describe('GoogleSearchParsedTool', () => {
     expect(typeof result.content[0].text).toBe('string');
   });
 
-  it('passes google_search target and parse: true to the scraper', async () => {
+  it('passes walmart_search target and markdown: true to the scraper', async () => {
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: {} });
 
-    await registeredHandler({ query: 'shoes', geo: 'us', locale: 'en-us' });
+    await registeredHandler({ query: 'backpack' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
       auth,
       scrapingParams: expect.objectContaining({
-        query: 'shoes',
-        geo: 'us',
-        locale: 'en-us',
-        target: 'google_search',
-        parse: true,
+        query: 'backpack',
+        target: 'walmart_search',
+        markdown: true,
       }),
     });
   });
 
   it('strips high-char-count fields from the response', async () => {
     const mockData = {
-      organic: [{ title: 'Result' }],
-      images: ['should be removed'],
-      image_data: ['should be removed'],
-      related_searches_urls: ['should be removed'],
-      factoids: ['should be removed'],
-      people_also_buy_from: ['should be removed'],
-      what_people_are_saying: ['should be removed'],
+      results: [{ title: 'Item' }],
+      suggested: ['should be removed'],
+      refinements: ['should be removed'],
     };
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: mockData });
 
-    const result = (await registeredHandler({ query: 'shoes' })) as {
+    const result = (await registeredHandler({ query: 'tent' })) as {
       content: { type: string; text: string }[];
     };
     const parsed = JSON.parse(result.content[0].text);
 
-    expect(parsed.images).toBeUndefined();
-    expect(parsed.image_data).toBeUndefined();
-    expect(parsed.related_searches_urls).toBeUndefined();
-    expect(parsed.factoids).toBeUndefined();
-    expect(parsed.people_also_buy_from).toBeUndefined();
-    expect(parsed.what_people_are_saying).toBeUndefined();
-    expect(parsed.organic).toBeDefined();
+    expect(parsed.suggested).toBeUndefined();
+    expect(parsed.refinements).toBeUndefined();
+    expect(parsed.results).toBeDefined();
   });
 
   it('propagates scraper errors', async () => {
@@ -98,31 +88,28 @@ describe('GoogleSearchParsedTool', () => {
       .fn()
       .mockRejectedValue(new Error('Scraper API request failed (401): Authentication failed.'));
 
-    await expect(registeredHandler({ query: 'shoes' })).rejects.toThrow(
+    await expect(registeredHandler({ query: 'tent' })).rejects.toThrow(
       'Scraper API request failed (401): Authentication failed.'
     );
   });
 });
 
-describe('GoogleSearchParsedTool.transformResponse', () => {
-  it('removes all high-char-count fields including nested ones', () => {
-    const tool = new GoogleSearchParsedTool();
+describe('WalmartSearchTool.transformResponse', () => {
+  it('removes all high-char-count fields', () => {
+    const tool = new WalmartSearchTool();
     const input = {
-      organic: [{ title: 'Result' }],
-      images: 'remove me',
-      image_data: 'remove me',
-      related_searches_urls: 'remove me',
-      factoids: 'remove me',
-      people_also_buy_from: 'remove me',
-      what_people_are_saying: 'remove me',
-      nested: { images: 'nested remove' },
+      results: [{ title: 'Item' }],
+      suggested: 'remove me',
+      refinements: 'remove me',
+      nested: { suggested: 'nested remove' },
     };
 
     const { data } = tool.transformResponse({ data: input });
     const parsed = JSON.parse(data);
 
-    expect(parsed.images).toBeUndefined();
-    expect(parsed.nested?.images).toBeUndefined();
-    expect(parsed.organic).toBeDefined();
+    expect(parsed.suggested).toBeUndefined();
+    expect(parsed.refinements).toBeUndefined();
+    expect(parsed.nested?.suggested).toBeUndefined();
+    expect(parsed.results).toBeDefined();
   });
 });

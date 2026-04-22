@@ -101,13 +101,13 @@ comma-separated list via the `toolsets` query parameter:
 
 When no toolsets are specified, all tools are registered.
 
-| Toolset        | Tools                                                           |
-| -------------- | --------------------------------------------------------------- |
-| `web`          | `scrape_as_markdown`, `screenshot`,                             |
-| `search`       | `google_search`                                                 |
-| `ecommerce`    | `amazon_search`, `target_search`, `tiktok_shop_search`          |
-| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post` |
-| `ai`           | `chatgpt`, `perplexity`                                         |
+| Toolset        | Tools                                                                  |
+| -------------- | ---------------------------------------------------------------------- |
+| `web`          | `scrape_as_markdown`, `screenshot`,                                    |
+| `search`       | `google_search`                                                        |
+| `ecommerce`    | `amazon_search`, `target_search`, `tiktok_shop_search`, `walmart_search` |
+| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post`        |
+| `ai`           | `chatgpt`, `perplexity`                                                |
 
 ## Tools
 
@@ -118,8 +118,9 @@ The server exposes the following tools:
 | `scrape_as_markdown` | Scrapes any target URL, expects a URL to be given via prompt. Returns results in Markdown. | Scrape peacock.com from a US IP address and tell me the pricing.                        |
 | `screenshot`         | Captures a screenshot of any webpage and returns it as a PNG image.                        | Take a screenshot of github.com from a US IP address.                                   |
 | `google_search`      | Scrapes Google Search for a given query, and returns parsed results.                       | Scrape Google Search for shoes and tell me the top position.                            |
-| `amazon_search`      | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for toothbrushes.                                                  |
+| `amazon_search`      | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for wireless keyboard.                                             |
 | `target_search`      | Scrapes Target Search for a given query, and returns parsed results.                       | Scrape Target Search for kitchen appliances.                                            |
+| `walmart_search`     | Scrapes Walmart Search for a given query, and returns parsed results.                      | Scrape Walmart Search for camping tent.                                                 |
 | `reddit_post`        | Scrapes a specific Reddit post for a given query, and returns parsed results.              | Scrape the following Reddit post: https://www.reddit.com/r/horseracing/comments/1nsrn3/ |
 | `reddit_subreddit`   | Scrapes a specific Reddit subreddit for a given query, and returns parsed results.         | Scrape the top 5 posts on r/Python this week.                                           |
 | `reddit_user`        | Scrapes a Reddit user profile and their posts or comments.                                 | Scrape Reddit user u/spez’s profile.                                                    |

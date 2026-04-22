@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { AmazonSearchParsedTool } from '../amazon-search-parsed-tool';
+import { AmazonSearchTool } from '../amazon-search-tool';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
 import { ScrapingMCPParams } from '../../../types';
 
@@ -9,11 +9,11 @@ jest.mock('../../../clients/scraper-api-client');
 const MockedMcpServer = McpServer as jest.MockedClass<typeof McpServer>;
 const MockedScraperApiClient = ScraperApiClient as jest.MockedClass<typeof ScraperApiClient>;
 
-describe('AmazonSearchParsedTool', () => {
+describe('AmazonSearchTool', () => {
   let server: jest.Mocked<McpServer>;
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let registeredHandler: (params: ScrapingMCPParams) => Promise<unknown>;
-  let tool: AmazonSearchParsedTool;
+  let tool: AmazonSearchTool;
   const auth = 'dGVzdDp0ZXN0';
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('AmazonSearchParsedTool', () => {
       return server;
     });
 
-    tool = new AmazonSearchParsedTool();
+    tool = new AmazonSearchTool();
     tool.register({ server, sapiClient, auth });
   });
 
@@ -97,9 +97,9 @@ describe('AmazonSearchParsedTool', () => {
   });
 });
 
-describe('AmazonSearchParsedTool.transformResponse', () => {
+describe('AmazonSearchTool.transformResponse', () => {
   it('removes all high-char-count fields', () => {
-    const tool = new AmazonSearchParsedTool();
+    const tool = new AmazonSearchTool();
     const input = {
       results: [{ title: 'Item' }],
       suggested: 'remove me',

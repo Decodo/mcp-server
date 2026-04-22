@@ -8,5 +8,6 @@ export * from './reddit-user';
 export * from './target-search';
 export * from './tiktok-post';
 export * from './tiktok-shop-search';
+export * from './walmart-search';
 export * from './scrape-as-markdown';
 export * from './screenshot';

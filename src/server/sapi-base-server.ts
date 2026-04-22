@@ -12,6 +12,7 @@ import {
   TargetSearchTool,
   TiktokPostTool,
   TiktokShopSearchTool,
+  WalmartSearchTool,
   ScrapeAsMarkdownTool,
   ScreenshotTool,
 } from '../tools';
@@ -50,6 +51,7 @@ export class ScraperAPIBaseServer {
     new GoogleSearchTool(),
     new AmazonSearchTool(),
     new TargetSearchTool(),
+    new WalmartSearchTool(),
     new RedditPostTool(),
     new RedditSubredditTool(),
     new RedditUserTool(),
