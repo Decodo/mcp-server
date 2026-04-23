@@ -1,3 +1,16 @@
+import { TOOLSET } from './constants';
+
+export const resolveToolsets = (toolsets?: string): TOOLSET[] => {
+  if (!toolsets?.trim()) {
+    return [];
+  }
+
+  return toolsets
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean) as TOOLSET[];
+};
+
 export const removeKeyFromNestedObject = ({
   obj,
   keyToRemove,

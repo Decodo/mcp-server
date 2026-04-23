@@ -5,15 +5,9 @@ import { removeKeyFromNestedObject } from '../../utils';
 import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-const zodDeliveryZip = z
-  .string()
-  .describe('ZIP code for delivery location')
-  .optional();
+const zodDeliveryZip = z.string().describe('ZIP code for delivery location').optional();
 
-const zodStoreId = z
-  .string()
-  .describe('Target store ID for local inventory')
-  .optional();
+const zodStoreId = z.string().describe('Target store ID for local inventory').optional();
 
 export class TargetSearchTool extends Tool {
   toolset = TOOLSET.ECOMMERCE;
@@ -47,6 +41,7 @@ export class TargetSearchTool extends Tool {
       },
       async (scrapingParams: ScrapingMCPParams) => {
         const params = {
+          headless: 'html',
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.TARGET_SEARCH,
           markdown: true,

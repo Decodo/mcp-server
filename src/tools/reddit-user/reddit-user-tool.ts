@@ -27,7 +27,9 @@ export class RedditUserTool extends Tool {
       {
         description: 'Scrape a Reddit user profile and their posts/comments',
         inputSchema: {
-          url: z.string().describe('Reddit user profile URL'),
+          url: z
+            .string()
+            .describe('Reddit user profile URL (eg. https://www.reddit.com/user/IWasRightOnce/)'),
         },
         annotations: {
           readOnlyHint: true,
