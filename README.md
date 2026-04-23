@@ -83,6 +83,21 @@ this:
 
 4. Update your MCP client with the server information:
 
+```
+{
+  "mcpServers": {
+    "decodo-mcp": {
+      "command": "node",
+      "args": ["/Users/your.user/projects/decodo-mcp/build/index.js"],
+      "env": {
+        "SCRAPER_API_USERNAME": "your_username",
+        "SCRAPER_API_PASSWORD": "your_password"
+      }
+    }
+  }
+}
+```
+
 </details>
 
 ## Toolsets
