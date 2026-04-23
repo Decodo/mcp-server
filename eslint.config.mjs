@@ -8,6 +8,7 @@ export default tseslint.config(
     files: ['src/**/*.ts'],
     rules: {
       'curly': ['error', 'all'],
+      'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: false }],
       'prefer-arrow-callback': 'error',
       'no-restricted-syntax': [
         'error',

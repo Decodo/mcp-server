@@ -8,7 +8,7 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
 
   sapiClient: ScraperApiClient;
 
-  constructor({ toolsets = [] }: { toolsets: TOOLSET[] }) {
-    super({ toolsets });
+  constructor({ toolsets = [], auth }: { toolsets: TOOLSET[]; auth: string }) {
+    super({ auth, toolsets });
   }
 }

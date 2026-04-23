@@ -2,16 +2,38 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import {
-  AmazonSearchParsedTool,
+  AmazonSearchTool,
+  AmazonProductTool,
+  AmazonPricingTool,
+  AmazonSellersTool,
+  AmazonBestsellersTool,
+  BingSearchTool,
   ChatGPTTool,
-  GoogleSearchParsedTool,
+  GoogleSearchTool,
+  GoogleAdsTool,
+  GoogleLensTool,
+  GoogleAiModeTool,
+  GoogleTravelHotelsTool,
   PerplexityTool,
   RedditPostTool,
   RedditSubredditTool,
+  RedditUserTool,
+  TargetSearchTool,
+  TargetProductTool,
+  TiktokPostTool,
+  TiktokShopSearchTool,
+  TiktokShopProductTool,
+  TiktokShopUrlTool,
+  WalmartSearchTool,
+  WalmartProductTool,
+  YoutubeMetadataTool,
+  YoutubeChannelTool,
+  YoutubeSubtitlesTool,
+  YoutubeSearchTool,
   ScrapeAsMarkdownTool,
   ScreenshotTool,
 } from '../tools';
-import { ToolClass } from '../tools/tool';
+import { Tool } from '../tools/tool';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { TOOLSET } from '../constants';
 
@@ -22,35 +44,55 @@ export class ScraperAPIBaseServer {
 
   auth: string = '';
 
-  constructor({ toolsets = [] }: { toolsets: TOOLSET[] }) {
+  constructor({ auth, toolsets = [] }: { auth: string; toolsets: TOOLSET[] }) {
     this.server = new McpServer({
       name: 'decodo',
       version: '1.0.3',
     });
     this.sapiClient = new ScraperApiClient();
 
+    this.auth = auth;
+
     this.registerTools({ toolsets });
 
     this.registerResources();
-  }
-
-  setAuthToken(token: string) {
-    this.auth = token;
   }
 
   connect(transport: StdioServerTransport | StreamableHTTPServerTransport) {
     this.server.connect(transport);
   }
 
-  static allTools: ToolClass[] = [
-    ScrapeAsMarkdownTool,
-    ScreenshotTool,
-    GoogleSearchParsedTool,
-    AmazonSearchParsedTool,
-    RedditPostTool,
-    RedditSubredditTool,
-    ChatGPTTool,
-    PerplexityTool,
+  static allTools: Tool[] = [
+    new ScrapeAsMarkdownTool(),
+    new ScreenshotTool(),
+    new GoogleSearchTool(),
+    new GoogleAdsTool(),
+    new GoogleLensTool(),
+    new GoogleAiModeTool(),
+    new GoogleTravelHotelsTool(),
+    new AmazonSearchTool(),
+    new AmazonProductTool(),
+    new AmazonPricingTool(),
+    new AmazonSellersTool(),
+    new AmazonBestsellersTool(),
+    new WalmartSearchTool(),
+    new WalmartProductTool(),
+    new TargetSearchTool(),
+    new TargetProductTool(),
+    new TiktokPostTool(),
+    new TiktokShopSearchTool(),
+    new TiktokShopProductTool(),
+    new TiktokShopUrlTool(),
+    new YoutubeMetadataTool(),
+    new YoutubeChannelTool(),
+    new YoutubeSubtitlesTool(),
+    new YoutubeSearchTool(),
+    new RedditPostTool(),
+    new RedditSubredditTool(),
+    new RedditUserTool(),
+    new BingSearchTool(),
+    new ChatGPTTool(),
+    new PerplexityTool(),
   ];
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {
@@ -59,21 +101,17 @@ export class ScraperAPIBaseServer {
       return;
     }
 
-    const getAuthToken = () => this.auth;
-
     for (const toolset of toolsets) {
       const tools = ScraperAPIBaseServer.allTools.filter(tool => tool.toolset === toolset);
       for (const tool of tools) {
-        tool.register({ server: this.server, sapiClient: this.sapiClient, getAuthToken });
+        tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
       }
     }
   }
 
   registerAllTools() {
-    const getAuthToken = () => this.auth;
-
     for (const tool of ScraperAPIBaseServer.allTools) {
-      tool.register({ server: this.server, sapiClient: this.sapiClient, getAuthToken });
+      tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
     }
   }
 

@@ -2,11 +2,22 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { TOOLSET } from '../constants';
 
-export type ToolClass = {
-  readonly toolset: TOOLSET;
-  register: (args: {
-    server: McpServer;
-    sapiClient: ScraperApiClient;
-    getAuthToken: () => string;
-  }) => void;
+export type ToolRegistrationArgs = {
+  server: McpServer;
+  sapiClient: ScraperApiClient;
+  auth: string;
 };
+
+export abstract class Tool {
+  abstract toolset: TOOLSET;
+
+  abstract register(args: ToolRegistrationArgs): void;
+
+  abstract transformResponse({
+    data,
+    tokenLimit,
+  }: {
+    data: string | object;
+    tokenLimit?: number;
+  }): { data: string; isTruncated?: boolean };
+}

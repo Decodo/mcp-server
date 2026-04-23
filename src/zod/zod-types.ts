@@ -12,9 +12,26 @@ export const zodJsRender = z
   .describe('Should the request be opened in a headless browser, false by default')
   .optional();
 
+export const zodXhr = z
+  .boolean()
+  .describe(
+    'When true, includes XHR/fetch responses in the scrape result where supported by the target'
+  )
+  .optional();
+
 export const zodTokenLimit = z
   .number()
   .describe(
     `The number of tokens to return in the response - anything above this limit will be truncated`
   )
+  .optional();
+
+export const zodCountry = z
+  .string()
+  .describe('Country code for the request (e.g., US, GB, DE)')
+  .optional();
+
+export const zodDeviceType = z
+  .enum(['desktop', 'mobile', 'tablet'])
+  .describe('Device type to emulate for the request')
   .optional();

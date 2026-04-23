@@ -38,11 +38,12 @@ const main = async () => {
   // if there are no envs, some MCP clients will fail silently
   const { sapiUsername, sapiPassword } = parseEnvsOrExit();
 
+  const auth = Buffer.from(`${sapiUsername}:${sapiPassword}`).toString('base64');
+
   const toolsets = resolveToolsets(process.env.TOOLSETS);
 
   const sapiMcpServer = new ScraperAPIStdioServer({
-    sapiUsername,
-    sapiPassword,
+    auth,
     toolsets,
   });
   await sapiMcpServer.connect(transport);
