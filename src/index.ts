@@ -1,12 +1,8 @@
 import 'dotenv/config';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { ScraperAPIStdioServer } from 'server/sapi-stdio-server';
-import { TOOLSET } from './constants';
-
-if (process.env.ENABLE_MCPS_LOGGER) {
-  import('mcps-logger/console');
-}
+import { ScraperAPIStdioServer } from './server/sapi-stdio-server';
+import { resolveToolsets } from './utils';
 
 const parseEnvsOrExit = (): Record<string, string> => {
   const envs = ['SCRAPER_API_USERNAME', 'SCRAPER_API_PASSWORD'];
@@ -24,14 +20,6 @@ const parseEnvsOrExit = (): Record<string, string> => {
   };
 };
 
-const resolveToolsets = (toolsets?: string): TOOLSET[] => {
-  if (!toolsets) {
-    return [];
-  }
-
-  return toolsets.split(',').map(toolset => toolset as TOOLSET);
-};
-
 const main = async () => {
   const transport = new StdioServerTransport();
 
@@ -40,11 +28,9 @@ const main = async () => {
 
   const auth = Buffer.from(`${sapiUsername}:${sapiPassword}`).toString('base64');
 
-  const toolsets = resolveToolsets(process.env.TOOLSETS);
-
   const sapiMcpServer = new ScraperAPIStdioServer({
     auth,
-    toolsets,
+    toolsets: resolveToolsets(process.env.TOOLSETS),
   });
   await sapiMcpServer.connect(transport);
 
