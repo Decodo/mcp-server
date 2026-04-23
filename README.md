@@ -106,7 +106,7 @@ When no toolsets are specified, all tools are registered.
 | `web`          | `scrape_as_markdown`, `screenshot`                                                                                                                                                  |
 | `search`       | `google_search`, `google_ads`, `google_lens`, `google_travel_hotels`, `bing_search`                                                                                                |
 | `ecommerce`    | `amazon_search`, `amazon_product`, `amazon_pricing`, `amazon_sellers`, `amazon_bestsellers`, `walmart_search`, `walmart_product`, `target_search`, `target_product`, `tiktok_shop_search`, `tiktok_shop_product`, `tiktok_shop_url` |
-| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post`, `youtube_video`, `youtube_metadata`, `youtube_channel`, `youtube_subtitles`, `youtube_search`                    |
+| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post`, `youtube_metadata`, `youtube_channel`, `youtube_subtitles`, `youtube_search`                    |
 | `ai`           | `chatgpt`, `perplexity`, `google_ai_mode`                                                                                                                                           |
 
 ## Tools
@@ -135,7 +135,6 @@ The server exposes the following tools:
 | `tiktok_shop_search`    | Scrapes TikTok Shop Search for a given query, and returns parsed results.                  | Scrape TikTok Shop Search for phone cases.                                              |
 | `tiktok_shop_product`   | Scrapes TikTok Shop Product page.                                                          | Scrape TikTok Shop product 1731541214379741272.                                         |
 | `tiktok_shop_url`       | Scrapes TikTok Shop page by URL.                                                           | Scrape this TikTok Shop URL: https://www.tiktok.com/shop/s?q=HEADPHONES                 |
-| `youtube_video`         | Scrapes YouTube video information.                                                         | Scrape YouTube video 6Ejga4kJUts.                                                       |
 | `youtube_metadata`      | Scrapes YouTube video metadata.                                                            | Get metadata for YouTube video dFu9aKJoqGg.                                             |
 | `youtube_channel`       | Scrapes YouTube channel videos with automatic parsing.                                     | Scrape YouTube channel @decodo_official.                                                |
 | `youtube_subtitles`     | Scrapes YouTube video subtitles.                                                           | Get subtitles for YouTube video L8zSWbQN-v8.                                            |
