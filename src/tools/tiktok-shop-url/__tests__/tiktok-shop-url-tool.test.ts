@@ -46,7 +46,7 @@ describe('TiktokShopUrlTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         url: 'https://www.tiktok.com/shop/s?q=HEADPHONES',
-        target: 'tiktok_shop_url',
+        target: 'tiktok',
       }),
     });
   });
@@ -56,8 +56,8 @@ describe('TiktokShopUrlTool', () => {
       .fn()
       .mockRejectedValue(new Error('Scraper API request failed (401): Authentication failed.'));
 
-    await expect(registeredHandler({ url: 'https://www.tiktok.com/shop/s?q=HEADPHONES' })).rejects.toThrow(
-      'Scraper API request failed (401): Authentication failed.'
-    );
+    await expect(
+      registeredHandler({ url: 'https://www.tiktok.com/shop/s?q=HEADPHONES' })
+    ).rejects.toThrow('Scraper API request failed (401): Authentication failed.');
   });
 });
