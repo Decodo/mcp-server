@@ -9,7 +9,8 @@
   "mcpName": "io.github.Decodo/mcp-web-scraper",
   "scripts": {
     "build": "tsc && chmod 755 build/index.js build/server.js",
-    "dev": "nodemon --watch src -e ts --exec 'npm run build'",
+    "dev": "nodemon --watch src -e ts --exec 'tsx src/server.ts'",
+    "dev:server": "nodemon --watch src -e ts --exec 'npm run build'",
     "start": "node build/server.js",
     "inspect": "mcp-inspector",
     "test": "jest",

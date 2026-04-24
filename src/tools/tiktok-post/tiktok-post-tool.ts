@@ -3,6 +3,7 @@ import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
 import { zodXhr } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { ProgressExtra } from '../../utils';
 
 export class TiktokPostTool extends Tool {
   toolset = TOOLSET.SOCIAL_MEDIA;
@@ -28,13 +29,13 @@ export class TiktokPostTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.TIKTOK_POST,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params, extra });
 
         const { data: text } = this.transformResponse({ data });
 

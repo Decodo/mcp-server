@@ -3,6 +3,7 @@ import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
 import { zodGeo } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { ProgressExtra } from '../../utils';
 
 export class PerplexityTool extends Tool {
   toolset = TOOLSET.AI;
@@ -26,14 +27,14 @@ export class PerplexityTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.PERPLEXITY,
           parse: true,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params, extra });
 
         const { data: text } = this.transformResponse({ data });
 

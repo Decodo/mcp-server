@@ -3,6 +3,7 @@ import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
 import { zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { ProgressExtra } from '../../utils';
 
 export class TiktokShopUrlTool extends Tool {
   toolset = TOOLSET.ECOMMERCE;
@@ -25,13 +26,13 @@ export class TiktokShopUrlTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.TIKTOK_SHOP_URL,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params, extra });
 
         return {
           content: [
