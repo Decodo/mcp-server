@@ -7,7 +7,7 @@ jest.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const client = new ScraperApiClient();
+const client = new ScraperApiClient({ maxRetries: 1, delayMs: 0 });
 const defaultArgs = {
   auth: 'dGVzdDp0ZXN0',
   scrapingParams: { url: 'https://example.com' },
@@ -48,6 +48,14 @@ beforeEach(() => {
 
 describe('ScraperApiClient', () => {
   describe('scrape - error handling', () => {
+    beforeEach(() => {
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      jest.mocked(console.error).mockRestore();
+    });
+
     it('throws friendly message on 401', async () => {
       mockedAxios.request.mockRejectedValue(
         createAxiosError({ status: 401, message: 'Unauthorized' })

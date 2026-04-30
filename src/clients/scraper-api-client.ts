@@ -1,45 +1,33 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { ScraperApiResponseData } from './types';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { ProgressNotifier, ProgressExtra } from '../utils';
-
-const MAX_RETRIES = Math.max(0, parseInt(process.env.MAX_RETRIES ?? '2', 10) || 2);
-const RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
-const RETRYABLE_NETWORK_CODES = new Set(['ECONNRESET', 'ETIMEDOUT', 'ECONNABORTED', 'ENOTFOUND']);
-const WAITING_INITIAL_DELAY_MS = 3000;
-const WAITING_INTERVAL_MS = 5000;
-
-const isRetryable = (error: AxiosError): boolean => {
-  if (error.response) {
-    return RETRYABLE_STATUS_CODES.has(error.response.status);
-  }
-  return RETRYABLE_NETWORK_CODES.has(error.code ?? '');
-};
-
-const getRetryDelay = (attempt: number, error: AxiosError): number => {
-  if (error.response?.status === 429) {
-    const retryAfter = error.response.headers['retry-after'];
-    if (retryAfter) {
-      const seconds = Number(retryAfter);
-      if (!isNaN(seconds)) {
-        return seconds * 1000;
-      }
-
-      const date = Date.parse(retryAfter);
-      if (!isNaN(date)) {
-        return Math.max(0, date - Date.now());
-      }
-    }
-  }
-
-  const baseMs = 1000 * Math.pow(2, attempt);
-  const jitterMs = Math.random() * 500;
-  return baseMs + jitterMs;
-};
-
-const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+import {
+  BASE_RETRY_DELAY_MS,
+  getRetryDelay,
+  isRetryable,
+  MAX_RETRIES,
+  sleep,
+  WAITING_INITIAL_DELAY_MS,
+  WAITING_INTERVAL_MS,
+} from 'clients/retry';
 
 export class ScraperApiClient {
+  maxRetries: number;
+
+  delayMs: number;
+
+  constructor({
+    maxRetries = MAX_RETRIES,
+    delayMs = BASE_RETRY_DELAY_MS,
+  }: {
+    maxRetries?: number;
+    delayMs?: number;
+  } = {}) {
+    this.maxRetries = maxRetries;
+    this.delayMs = delayMs;
+  }
+
   transformScrapingParams = ({
     scrapingParams,
   }: {
@@ -81,7 +69,7 @@ export class ScraperApiClient {
 
       let lastError: unknown;
 
-      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
         try {
           const res = await axios.request<ScraperApiResponseData<T>>({
             url: `${url}/v2/scrape`,
@@ -105,7 +93,8 @@ export class ScraperApiClient {
           lastError = error;
 
           if (attempt < MAX_RETRIES && axios.isAxiosError(error) && isRetryable(error)) {
-            const delayMs = getRetryDelay(attempt, error);
+            // const delayMs = getRetryDelay(attempt, error);
+            const delayMs = getRetryDelay({ attempt, error, baseDelayMs: this.delayMs });
             const reason = error.response
               ? `status ${error.response.status}`
               : `network error ${error.code}`;

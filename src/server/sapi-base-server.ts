@@ -50,7 +50,7 @@ export class ScraperAPIBaseServer {
       name: 'decodo',
       version: pkg.version,
     });
-    this.sapiClient = new ScraperApiClient();
+    this.sapiClient = new ScraperApiClient({});
 
     this.auth = auth;
 
