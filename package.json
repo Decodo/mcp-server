@@ -6,7 +6,7 @@
     "decodo-mcp": "./build/index.js"
   },
   "main": "index.js",
-  "mcpName": "io.github.Decodo/mcp-web-scraper",
+  "mcpName": "io.github.Decodo/mcp-server",
   "scripts": {
     "build": "tsc && chmod 755 build/index.js build/server.js",
     "dev": "nodemon --watch src -e ts --exec 'tsx src/server.ts'",

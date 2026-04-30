@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import pkg from '../../package.json';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import {
   AmazonSearchTool,
@@ -47,7 +48,7 @@ export class ScraperAPIBaseServer {
   constructor({ auth, toolsets = [] }: { auth: string; toolsets: TOOLSET[] }) {
     this.server = new McpServer({
       name: 'decodo',
-      version: '1.2.1',
+      version: pkg.version,
     });
     this.sapiClient = new ScraperApiClient();
 
