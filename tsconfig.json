@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "nodenext",
+    "rootDir": "./src",
     "outDir": "./build",
     "baseUrl": "src",
     "strict": true,

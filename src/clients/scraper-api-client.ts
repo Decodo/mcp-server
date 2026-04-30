@@ -10,7 +10,7 @@ import {
   sleep,
   WAITING_INITIAL_DELAY_MS,
   WAITING_INTERVAL_MS,
-} from 'clients/retry';
+} from './retry';
 
 export class ScraperApiClient {
   maxRetries: number;
