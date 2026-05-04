@@ -2,7 +2,6 @@
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/Ja8dqKgvbZ)](https://discord.gg/Ja8dqKgvbZ)
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=Decodo&config=eyJ1cmwiOiJodHRwczovL21jcC5kZWNvZG8uY29tL21jcCIsImhlYWRlcnMiOnsiQXV0aG9yaXphdGlvbiI6IkJhc2ljIDx3ZWJfYWR2YW5jZWRfdG9rZW4%2BIn19)
-[![smithery badge](https://smithery.ai/badge/@Decodo/decodo-mcp-server)](https://smithery.ai/server/@Decodo/decodo-mcp-server)
 
 <p align="center">
 <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
@@ -30,7 +29,7 @@ services, streamlining access to our tools and capabilities.
 
 ## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp) (Claude Code, Cursor)
 
-3. Open your preferred MCP client and add the following configuration:
+1. Open your preferred MCP client and add the following configuration:
 
 ```
 {
@@ -50,7 +49,7 @@ services, streamlining access to our tools and capabilities.
   "mcpServers": {
     "Decodo MCP Server": {
       "command": "npx",
-      "args": ["@decodo/mcp"],
+      "args": ["@decodo/mcp-server"],
       "env": {
         "SCRAPER_API_TOKEN": "<web_scraping_api_base64_token>",
         "TOOLSETS": "web,ai"
