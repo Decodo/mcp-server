@@ -1,7 +1,7 @@
 import z from 'zod';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
 import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
-import { removeKeyFromNestedObject } from '../../utils';
+import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
 import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
@@ -45,14 +45,14 @@ export class AmazonProductTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
           target: SCRAPER_API_TARGETS.AMAZON_PRODUCT,
           parse: true,
         } satisfies ScraperAPIParams;
 
-        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params });
+        const { data } = await sapiClient.scrape<object>({ auth, scrapingParams: params, extra });
 
         const { data: text } = this.transformResponse({ data });
 

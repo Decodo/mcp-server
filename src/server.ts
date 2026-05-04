@@ -35,7 +35,7 @@ app.post('/mcp', async (req, res) => {
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
-    enableJsonResponse: true,
+    enableJsonResponse: false,
   });
 
   res.on('close', () => {

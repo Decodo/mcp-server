@@ -3,6 +3,7 @@ import { ScrapingMCPParams } from 'types';
 import { zodGeo } from '../../zod/zod-types';
 import { TOOLSET } from '../../constants';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { ProgressExtra } from '../../utils';
 
 export class ScreenshotTool extends Tool {
   toolset = TOOLSET.WEB;
@@ -25,10 +26,11 @@ export class ScreenshotTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const { data } = await sapiClient.scrape({
           auth,
           scrapingParams: { ...scrapingParams, headless: 'png' },
+          extra,
         });
 
         return {

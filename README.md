@@ -75,7 +75,7 @@ services, streamlining access to our tools and capabilities.
 1. Clone this repository:
 
 ```
-git clone https://github.com/Decodo/decodo-mcp-server
+git clone https://github.com/Decodo/mcp-server
 ```
 
 2. Run the following commands in the terminal:
@@ -151,31 +151,31 @@ The server exposes the following tools:
 | `scrape_as_markdown`   | Scrapes any target URL, expects a URL to be given via prompt. Returns results in Markdown. | Scrape peacock.com from a US IP address and tell me the pricing.                        |
 | `screenshot`           | Captures a screenshot of any webpage and returns it as a PNG image.                        | Take a screenshot of github.com from a US IP address.                                   |
 | `google_search`        | Scrapes Google Search for a given query, and returns parsed results.                       | Scrape Google Search for shoes and tell me the top position.                            |
-| `google_ads`           | Scrapes Google Ads search results.                                  | Scrape Google Ads for laptop and show me the top ads.                                   |
-| `google_lens`          | Scrapes Google Lens image search results.                           | Search Google Lens for this image: https://example.com/image.jpg                        |
-| `google_ai_mode`       | Scrapes Google AI Mode (Search with AI) results.                    | Ask Google AI Mode: What are the top three dog breeds?                                  |
+| `google_ads`           | Scrapes Google Ads search results.                                                         | Scrape Google Ads for laptop and show me the top ads.                                   |
+| `google_lens`          | Scrapes Google Lens image search results.                                                  | Search Google Lens for this image: https://example.com/image.jpg                        |
+| `google_ai_mode`       | Scrapes Google AI Mode (Search with AI) results.                                           | Ask Google AI Mode: What are the top three dog breeds?                                  |
 | `google_travel_hotels` | Scrapes Google Travel Hotels search results.                                               | Search Google Travel Hotels for hotels in Paris.                                        |
 | `amazon_search`        | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for wireless keyboard.                                             |
-| `amazon_product`       | Scrapes Amazon Product page.                                        | Scrape Amazon product B09H74FXNW and show me the details.                               |
-| `amazon_pricing`       | Scrapes Amazon Product pricing information.                         | Get pricing for Amazon product B09H74FXNW.                                              |
-| `amazon_sellers`       | Scrapes Amazon Seller information.                                  | Get information about Amazon seller A1R0Z7FJGTKESH.                                     |
-| `amazon_bestsellers`   | Scrapes Amazon Bestsellers list.                                    | Show me Amazon bestsellers in electronics.                                              |
+| `amazon_product`       | Scrapes Amazon Product page.                                                               | Scrape Amazon product B09H74FXNW and show me the details.                               |
+| `amazon_pricing`       | Scrapes Amazon Product pricing information.                                                | Get pricing for Amazon product B09H74FXNW.                                              |
+| `amazon_sellers`       | Scrapes Amazon Seller information.                                                         | Get information about Amazon seller A1R0Z7FJGTKESH.                                     |
+| `amazon_bestsellers`   | Scrapes Amazon Bestsellers list.                                                           | Show me Amazon bestsellers in electronics.                                              |
 | `walmart_search`       | Scrapes Walmart Search for a given query, and returns parsed results.                      | Scrape Walmart Search for camping tent.                                                 |
-| `walmart_product`      | Scrapes Walmart Product page.                                       | Scrape Walmart product 15296401808.                                                     |
+| `walmart_product`      | Scrapes Walmart Product page.                                                              | Scrape Walmart product 15296401808.                                                     |
 | `target_search`        | Scrapes Target Search for a given query, and returns parsed results.                       | Scrape Target Search for kitchen appliances.                                            |
-| `target_product`       | Scrapes Target Product page.                                        | Scrape Target product 92186007.                                                         |
+| `target_product`       | Scrapes Target Product page.                                                               | Scrape Target product 92186007.                                                         |
 | `tiktok_post`          | Scrapes a TikTok post URL for structured data (e.g. engagement, caption, hashtags).        | Scrape this TikTok post: https://www.tiktok.com/@nba/video/7393013274725403950          |
 | `tiktok_shop_search`   | Scrapes TikTok Shop Search for a given query, and returns parsed results.                  | Scrape TikTok Shop Search for phone cases.                                              |
 | `tiktok_shop_product`  | Scrapes TikTok Shop Product page.                                                          | Scrape TikTok Shop product 1731541214379741272.                                         |
 | `tiktok_shop_url`      | Scrapes TikTok Shop page by URL.                                                           | Scrape this TikTok Shop URL: https://www.tiktok.com/shop/s?q=HEADPHONES                 |
 | `youtube_metadata`     | Scrapes YouTube video metadata.                                                            | Get metadata for YouTube video dFu9aKJoqGg.                                             |
-| `youtube_channel`      | Scrapes YouTube channel videos.                                     | Scrape YouTube channel @decodo_official.                                                |
+| `youtube_channel`      | Scrapes YouTube channel videos.                                                            | Scrape YouTube channel @decodo_official.                                                |
 | `youtube_subtitles`    | Scrapes YouTube video subtitles.                                                           | Get subtitles for YouTube video L8zSWbQN-v8.                                            |
 | `youtube_search`       | Search YouTube videos.                                                                     | Search YouTube for "How to care for chinchillas".                                       |
 | `reddit_post`          | Scrapes a specific Reddit post.                                                            | Scrape the following Reddit post: https://www.reddit.com/r/horseracing/comments/1nsrn3/ |
-| `reddit_subreddit`     | Scrapes Reddit subreddit results.                                   | Scrape the top 5 posts on r/Python this week.                                           |
+| `reddit_subreddit`     | Scrapes Reddit subreddit results.                                                          | Scrape the top 5 posts on r/Python this week.                                           |
 | `reddit_user`          | Scrapes a Reddit user profile and their posts/comments.                                    | Scrape this Reddit user: https://www.reddit.com/user/IWasRightOnce/                     |
-| `bing_search`          | Scrapes Bing Search results.                                        | Search Bing for laptop reviews.                                                         |
+| `bing_search`          | Scrapes Bing Search results.                                                               | Search Bing for laptop reviews.                                                         |
 | `chatgpt`              | Search and interact with ChatGPT for AI-powered responses and conversations.               | Ask ChatGPT to explain quantum computing in simple terms.                               |
 | `perplexity`           | Search and interact with Perplexity for AI-powered responses and conversations.            | Ask Perplexity what the latest trends in web development are.                           |
 

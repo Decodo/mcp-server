@@ -4,6 +4,7 @@ import { NodeHtmlMarkdown } from 'node-html-markdown';
 import { zodGeo, zodJsRender, zodLocale, zodTokenLimit } from '../../zod/zod-types';
 import { TOOLSET } from '../../constants';
 import { Tool, ToolRegistrationArgs } from '../tool';
+import { ProgressExtra } from '../../utils';
 
 export class ScrapeAsMarkdownTool extends Tool {
   toolset = TOOLSET.WEB;
@@ -56,8 +57,8 @@ export class ScrapeAsMarkdownTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams) => {
-        const { data } = await sapiClient.scrape({ auth, scrapingParams });
+      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
+        const { data } = await sapiClient.scrape({ auth, scrapingParams, extra });
 
         const { data: markdown, isTruncated } = this.transformResponse({
           data,

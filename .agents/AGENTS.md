@@ -28,6 +28,11 @@ server.
 - After generating the tool, call the tool to actually test it.
 - When testing by calling the tool, prefer to not set the `jsRender` parameter.
 
+# Releasing
+
+- When bumping server versions, make sure all instances of the old server version are updated. These
+  are in `package.json`, `server.json` and possibly in other files.
+
 # Documentation
 
 - Update readme with new tool, toolset and parameter information.

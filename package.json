@@ -1,15 +1,16 @@
 {
   "name": "@decodo/mcp-server",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Decodo MCP Server",
   "bin": {
     "decodo-mcp": "./build/index.js"
   },
   "main": "index.js",
-  "mcpName": "io.github.Decodo/mcp-web-scraper",
+  "mcpName": "io.github.Decodo/mcp-server",
   "scripts": {
     "build": "tsc && chmod 755 build/index.js build/server.js",
-    "dev": "nodemon --watch src -e ts --exec 'npm run build'",
+    "dev:http": "nodemon --watch src -e ts --exec 'tsx src/server.ts'",
+    "dev:stdio": "nodemon --watch src -e ts --exec 'npm run build'",
     "start": "node build/server.js",
     "inspect": "mcp-inspector",
     "test": "jest",
