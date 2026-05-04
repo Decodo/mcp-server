@@ -7,13 +7,13 @@
     "url": "https://github.com/Decodo/mcp-server",
     "source": "github"
   },
-  "version": "1.2.2",
+  "version": "1.2.3",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@decodo/mcp-server",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "transport": {
         "type": "stdio"
       }
