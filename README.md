@@ -273,9 +273,14 @@ Scrape hacker news, return full content.
 
 ## Related repositories
 
-[Web Scraping API](https://github.com/Decodo/Web-Scraping-API)
+[Web Scraping API](https://github.com/Decodo/Web-Scraping-API), [Decodo OpenClaw skill](https://github.com/Decodo/decodo-openclaw-skill)
 
-[Decodo OpenClaw skill](https://github.com/Decodo/decodo-openclaw-skill)
+## Try it
+
+Plug Decodo MCP Server into your AI workflow in just a few clicks and equip your AI agents with real-time data from any website.
+
+[Start for free](https://dashboard.decodo.com/) | [Docs](https://help.decodo.com/docs/introduction) | [Discord](https://discord.gg/Ja8dqKgvbZ)
+
 
 ## License
 
