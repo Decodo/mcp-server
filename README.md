@@ -275,9 +275,7 @@ Scrape hacker news, return full content.
 
 [Web Scraping API](https://github.com/Decodo/Web-Scraping-API)
 
-[Google Maps scraper](https://github.com/Decodo/google-maps-scraper)
-
-[Amazon scraper](https://github.com/Decodo/Amazon-scraper)
+[Decodo OpenClaw skill](https://github.com/Decodo/decodo-openclaw-skill)
 
 ## License
 
