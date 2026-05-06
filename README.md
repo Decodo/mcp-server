@@ -6,26 +6,65 @@
 <p align="center">
 <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
 
-This repository provides a Model Context Protocol (MCP) server that connects LLMs and applications
-to Decodo's platform. The server facilitates integration between MCP-compatible clients and Decodo's
-services, streamlining access to our tools and capabilities.
+Connect LLMs and AI agents to live web data using MCP (Model Context Protocol). The Decodo MCP Server lets you scrape websites, search engines, eCommerce platforms, and social media directly from AI tools like Claude, Cursor, and Windsurf, all without the need to build scraping infrastructure from scratch.
 
-## Features
+- Structured outputs in JSON, Markdown, and screenshots
+- Server-side JavaScript rendering and anti-bot handling
+- 125M+ IPs across 195+ locations
 
-- Easy web data access. Simplified retrieval of information from websites and online sources.
-- Geographic flexibility. Access content regardless of regional restrictions.
-- Enhanced privacy. Browse and collect data while maintaining anonymity.
-- Reliable scraping. Advanced techniques to avoid detection and blocks.
-- Simple integration. Seamless setup with popular MCP clients like Claude Desktop, Cursor, and
-  Windsurf.
+## What is Decodo MCP server? 
 
-## Authenticating
+The Decodo MCP Server is a web scraping layer for AI agents. It connects MCP-compatible clients to Decodo's Web Scraping API, enabling:
 
-1. Go to [decodo.com](https://decodo.com/scraping/web) and start a Web Scraping API plan (free plan
-   available).
+- Web scraping for LLMs
+- Real-time data retrieval for RAG
+- AI agent browsing and research
+- Structured data extraction from dynamic websites
 
-2. Once your plan has started, obtain a Web Scraping API basic authentication token from the
-   [dashboard](https://dashboard.decodo.com/).
+Instead of maintaining proxies, parsers, and retry logic, you get a single integration point for reliable web data access.
+
+## Why use MCP for web scraping?
+
+Model Context Protocol (MCP) is the emerging standard for connecting AI agents to external tools and data sources. With MCP:
+
+- Agents can call tools dynamically
+- Integrations stay standardized
+- Workflows scale across environments
+
+The Decodo MCP Server gives your agents reliable, production-ready web access through this standard.
+
+## Key features
+
+**Web scraping for AI agents, no infrastructure required.** Scrape any website, including JavaScript-heavy pages, without handling proxy rotation, CAPTCHA solving, or anti-bot systems.
+
+**Structured outputs for LLM workflows.** Markdown (LLM-ready), JSON (for structured pipelines), and screenshots (for visual context), built for RAG pipelines, AI research agents, and automation flows.
+
+**Built-in support for popular targets.** Ready-made tools for Google and Bing (SERPs), Amazon, Walmart, and Target (eCommerce), Reddit, TikTok, and YouTube (social media), and ChatGPT and Perplexity (AI search).
+
+**Global proxy infrastructure.** 125M+ residential IPs, 195+ geo-locations, and a 99.99% success rate on even the most protected targets.
+
+**Modular MCP toolsets.** Enable only what you need: `web`, `search`, `ecommerce`, `social_media`, `ai` for cleaner tool selection and better agent performance.
+
+**Fast time to value.** From API key to first scrape in minutes, no setup overhead.
+
+## Use cases
+
+Use the Decodo MCP Server when you need web scraping for AI agents, structured data extraction at scale, reliable access to dynamic websites, real-time data for RAG, or an alternative to building scraping infrastructure from scratch. Common scenarios:
+
+- **AI-powered web scraping** – give LLMs the ability to collect fresh data instead of relying on static training data.
+- **RAG with live data** – pull real-time Google, Bing, and AI search results into retrieval pipelines.
+- **eCommerce intelligence** – track product prices, listings, and sellers across marketplaces without getting blocked.
+- **Social media data collection** – gather posts, channels, and engagement data from Reddit, TikTok, and YouTube.
+- **Travel and price aggregation** – build tools that collect live pricing and availability across websites.
+
+## Quick start
+
+1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K free requests, no credit card required.
+2. **Get your API key.** Obtain a Web Scraping API basic authentication token from the dashboard.
+3. **Configure the MCP server** in your AI client (see configuration examples below).
+4. **Connect your AI client.** Works with Claude Code, Cursor, Windsurf, and other MCP-compatible tools.
+
+Your agent can now scrape and retrieve live web data.
 
 ## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp) (Claude Code, Cursor)
 
