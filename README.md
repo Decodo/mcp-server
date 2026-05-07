@@ -6,26 +6,32 @@
 <p align="center">
 <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
 
-Connect LLMs and AI agents to live web data using MCP (Model Context Protocol). The Decodo MCP Server lets you scrape websites, search engines, eCommerce platforms, and social media directly from AI tools like Claude, Cursor, and Windsurf, all without the need to build scraping infrastructure from scratch.
+Connect LLMs and AI agents to live web data using MCP (Model Context Protocol). The Decodo MCP
+Server lets you scrape websites, search engines, eCommerce platforms, and social media directly from
+AI tools like Claude, Cursor, and Windsurf, all without the need to build scraping infrastructure
+from scratch.
 
 - Structured outputs in JSON, Markdown, and screenshots
 - Server-side JavaScript rendering and anti-bot handling
 - 125M+ IPs across 195+ locations
 
-## What is Decodo MCP server? 
+## What is Decodo MCP server?
 
-The Decodo MCP Server is a web scraping layer for AI agents. It connects MCP-compatible clients to Decodo's Web Scraping API, enabling:
+The Decodo MCP Server is a web scraping layer for AI agents. It connects MCP-compatible clients to
+Decodo's Web Scraping API, enabling:
 
 - Web scraping for LLMs
 - Real-time data retrieval for RAG
 - AI agent browsing and research
 - Structured data extraction from dynamic websites
 
-Instead of maintaining proxies, parsers, and retry logic, you get a single integration point for reliable web data access.
+Instead of maintaining proxies, parsers, and retry logic, you get a single integration point for
+reliable web data access.
 
 ## Why use MCP for web scraping?
 
-Model Context Protocol (MCP) is the emerging standard for connecting AI agents to external tools and data sources. With MCP:
+Model Context Protocol (MCP) is the emerging standard for connecting AI agents to external tools and
+data sources. With MCP:
 
 - Agents can call tools dynamically
 - Integrations stay standardized
@@ -35,34 +41,49 @@ The Decodo MCP Server gives your agents reliable, production-ready web access th
 
 ## Key features
 
-**Web scraping for AI agents, no infrastructure required.** Scrape any website, including JavaScript-heavy pages, without handling proxy rotation, CAPTCHA solving, or anti-bot systems.
+**Web scraping for AI agents, no infrastructure required.** Scrape any website, including
+JavaScript-heavy pages, without handling proxy rotation, CAPTCHA solving, or anti-bot systems.
 
-**Structured outputs for LLM workflows.** Markdown (LLM-ready), JSON (for structured pipelines), and screenshots (for visual context), built for RAG pipelines, AI research agents, and automation flows.
+**Structured outputs for LLM workflows.** Markdown (LLM-ready), JSON (for structured pipelines), and
+screenshots (for visual context), built for RAG pipelines, AI research agents, and automation flows.
 
-**Built-in support for popular targets.** Ready-made tools for Google and Bing (SERPs), Amazon, Walmart, and Target (eCommerce), Reddit, TikTok, and YouTube (social media), and ChatGPT and Perplexity (AI search).
+**Built-in support for popular targets.** Ready-made tools for Google and Bing (SERPs), Amazon,
+Walmart, and Target (eCommerce), Reddit, TikTok, and YouTube (social media), and ChatGPT and
+Perplexity (AI search).
 
-**Global proxy infrastructure.** 125M+ residential IPs, 195+ geo-locations, and a 99.99% success rate on even the most protected targets.
+**Global proxy infrastructure.** 125M+ residential IPs, 195+ geo-locations, and a 99.99% success
+rate on even the most protected targets.
 
-**Modular MCP toolsets.** Enable only what you need: `web`, `search`, `ecommerce`, `social_media`, `ai` for cleaner tool selection and better agent performance.
+**Modular MCP toolsets.** Enable only what you need: `web`, `search`, `ecommerce`, `social_media`,
+`ai` for cleaner tool selection and better agent performance.
 
 **Fast time to value.** From API key to first scrape in minutes, no setup overhead.
 
 ## Use cases
 
-Use the Decodo MCP Server when you need web scraping for AI agents, structured data extraction at scale, reliable access to dynamic websites, real-time data for RAG, or an alternative to building scraping infrastructure from scratch. Common scenarios:
+Use the Decodo MCP Server when you need web scraping for AI agents, structured data extraction at
+scale, reliable access to dynamic websites, real-time data for RAG, or an alternative to building
+scraping infrastructure from scratch. Common scenarios:
 
-- **AI-powered web scraping** – give LLMs the ability to collect fresh data instead of relying on static training data.
-- **RAG with live data** – pull real-time Google, Bing, and AI search results into retrieval pipelines.
-- **eCommerce intelligence** – track product prices, listings, and sellers across marketplaces without getting blocked.
-- **Social media data collection** – gather posts, channels, and engagement data from Reddit, TikTok, and YouTube.
-- **Travel and price aggregation** – build tools that collect live pricing and availability across websites.
+- **AI-powered web scraping** – give LLMs the ability to collect fresh data instead of relying on
+  static training data.
+- **RAG with live data** – pull real-time Google, Bing, and AI search results into retrieval
+  pipelines.
+- **eCommerce intelligence** – track product prices, listings, and sellers across marketplaces
+  without getting blocked.
+- **Social media data collection** – gather posts, channels, and engagement data from Reddit,
+  TikTok, and YouTube.
+- **Travel and price aggregation** – build tools that collect live pricing and availability across
+  websites.
 
 ## Quick start
 
-1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K free requests, no credit card required.
+1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
+   free requests, no credit card required.
 2. **Get your API key.** Obtain a Web Scraping API basic authentication token from the dashboard.
 3. **Configure the MCP server** in your AI client (see configuration examples below).
-4. **Connect your AI client.** Works with Claude Code, Cursor, Windsurf, and other MCP-compatible tools.
+4. **Connect your AI client.** Works with Claude Code, Cursor, Windsurf, and other MCP-compatible
+   tools.
 
 Your agent can now scrape and retrieve live web data.
 
@@ -72,10 +93,12 @@ Your agent can now scrape and retrieve live web data.
 
 ```
 {
-  "Decodo": {
-    "url": "https://mcp.decodo.com/mcp",
-    "headers": {
-      "Authorization": "Basic <basic_auth_token>"
+  "mcpServers": {
+    "Decodo MCP Server": {
+      "url": "https://mcp.decodo.com/mcp",
+      "headers": {
+        "Authorization": "Basic <basic_auth_token>"
+      }
     }
   }
 }
@@ -88,9 +111,9 @@ Your agent can now scrape and retrieve live web data.
   "mcpServers": {
     "Decodo MCP Server": {
       "command": "npx",
-      "args": ["@decodo/mcp-server"],
+      "args": ["-y", "@decodo/mcp-server"],
       "env": {
-        "SCRAPER_API_TOKEN": "<web_scraping_api_base64_token>",
+        "SCRAPER_API_TOKEN": "<basic_auth_token>",
         "TOOLSETS": "web,ai"
       }
     }
@@ -273,14 +296,16 @@ Scrape hacker news, return full content.
 
 ## Related repositories
 
-[Web Scraping API](https://github.com/Decodo/Web-Scraping-API), [Decodo OpenClaw skill](https://github.com/Decodo/decodo-openclaw-skill)
+[Web Scraping API](https://github.com/Decodo/Web-Scraping-API),
+[Decodo OpenClaw skill](https://github.com/Decodo/decodo-openclaw-skill)
 
 ## Try it
 
-Plug Decodo MCP Server into your AI workflow in just a few clicks and equip your AI agents with real-time data from any website.
+Plug Decodo MCP Server into your AI workflow in just a few clicks and equip your AI agents with
+real-time data from any website.
 
-[Start for free](https://dashboard.decodo.com/) | [Docs](https://help.decodo.com/docs/introduction) | [Discord](https://discord.gg/Ja8dqKgvbZ)
-
+[Start for free](https://dashboard.decodo.com/) | [Docs](https://help.decodo.com/docs/introduction)
+| [Discord](https://discord.gg/Ja8dqKgvbZ)
 
 ## License
 
