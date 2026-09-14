@@ -53,13 +53,12 @@ describe('TiktokShopSearchTool', () => {
   it('passes tiktok_shop_search target and markdown: true to the scraper', async () => {
     sapiClient.scrape = jest.fn().mockResolvedValue({ data: {} });
 
-    await registeredHandler({ query: 'phone case', geo: 'us' });
+    await registeredHandler({ query: 'phone case' });
 
     expect(sapiClient.scrape).toHaveBeenCalledWith({
       auth,
       scrapingParams: expect.objectContaining({
         query: 'phone case',
-        geo: 'us',
         target: 'tiktok_shop_search',
         markdown: true,
       }),

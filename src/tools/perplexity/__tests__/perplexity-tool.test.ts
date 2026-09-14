@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
 import { PerplexityTool } from '../perplexity-tool';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
+import { Target } from '@decodo/sdk-ts';
+import { TOOLSET } from '../../../constants';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
 jest.mock('../../../clients/scraper-api-client');
@@ -46,7 +47,7 @@ describe('PerplexityTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         prompt: 'What is MCP?',
-        target: SCRAPER_API_TARGETS.PERPLEXITY,
+        target: Target.Perplexity,
         parse: true,
       }),
     });
@@ -70,7 +71,7 @@ describe('PerplexityTool', () => {
       scrapingParams: expect.objectContaining({
         prompt: 'Weather today',
         geo: 'United States',
-        target: SCRAPER_API_TARGETS.PERPLEXITY,
+        target: Target.Perplexity,
         parse: true,
       }),
     });

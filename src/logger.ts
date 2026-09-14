@@ -9,7 +9,7 @@ type LogLevel = 'info' | 'warn' | 'error';
 
 export type LogFields = Record<string, unknown>;
 
-export function log(level: LogLevel, event: string, fields: LogFields = {}): void {
+export const log = (level: LogLevel, event: string, fields: LogFields = {}): void => {
   const entry = JSON.stringify({
     ts: new Date().toISOString(),
     level,
@@ -17,4 +17,4 @@ export function log(level: LogLevel, event: string, fields: LogFields = {}): voi
     ...fields,
   });
   process.stderr.write(entry + '\n');
-}
+};

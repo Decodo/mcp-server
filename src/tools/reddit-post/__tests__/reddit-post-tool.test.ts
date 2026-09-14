@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
 import { RedditPostTool } from '../reddit-post-tool';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
+import { Target } from '@decodo/sdk-ts';
+import { TOOLSET } from '../../../constants';
 import mockPostData from './reddit-post.json';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -47,7 +48,7 @@ describe('RedditPostTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         url: 'https://reddit.com/r/test/comments/abc',
-        target: SCRAPER_API_TARGETS.REDDIT_POST,
+        target: Target.RedditPost,
       }),
     });
 

@@ -27,8 +27,8 @@
     "build"
   ],
   "dependencies": {
+    "@decodo/sdk-ts": "^2.3.0",
     "@modelcontextprotocol/sdk": "^1.12.3",
-    "axios": "^1.15.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.2.1",

@@ -1,14 +1,16 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
-import { zodDeviceType } from '../../zod/zod-types';
+import { TOOLSET } from '../../constants';
 import { Tool, ToolRegistrationArgs } from '../tool';
 import { ProgressExtra } from '../../utils';
 
-const zodGeo = z
-  .string()
-  .describe('Geo location for AI mode search (e.g., "us", "uk")')
+const zodDeviceType = z
+  .enum(['desktop', 'mobile'])
+  .describe('Device type to emulate for the request')
   .optional();
+
+const zodGeo = z.string().describe('Geo location for AI mode search (e.g., "us", "uk")').optional();
 
 export class GoogleAiModeTool extends Tool {
   toolset = TOOLSET.AI;
@@ -23,7 +25,11 @@ export class GoogleAiModeTool extends Tool {
       {
         description: 'Scrape Google AI Mode (Search with AI) results with automatic parsing',
         inputSchema: {
-          query: z.string().describe('Search query for Google AI Mode (e.g., "What are the top three dog breeds?")'),
+          query: z
+            .string()
+            .describe(
+              'Search query for Google AI Mode (e.g., "What are the top three dog breeds?")'
+            ),
           geo: zodGeo,
           deviceType: zodDeviceType,
         },
@@ -35,7 +41,7 @@ export class GoogleAiModeTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.GOOGLE_AI_MODE,
+          target: Target.GoogleAiMode,
           parse: true,
         } satisfies ScraperAPIParams;
 

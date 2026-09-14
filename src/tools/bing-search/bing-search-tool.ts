@@ -1,19 +1,19 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
-import { zodGeo, zodLocale, zodJsRender, zodDeviceType } from '../../zod/zod-types';
+import { zodGeo, zodLocale, zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
-const zodDomain = z
-  .string()
-  .describe('Bing domain (e.g., bing.com, bing.co.uk)')
+const zodDeviceType = z
+  .enum(['desktop', 'mobile'])
+  .describe('Device type to emulate for the request')
   .optional();
 
-const zodPageFrom = z
-  .number()
-  .describe('Starting page number for pagination')
-  .optional();
+const zodDomain = z.string().describe('Bing domain (e.g., bing.com, bing.co.uk)').optional();
+
+const zodPageFrom = z.number().describe('Starting page number for pagination').optional();
 
 export class BingSearchTool extends Tool {
   toolset = TOOLSET.SEARCH;
@@ -50,7 +50,7 @@ export class BingSearchTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.BING_SEARCH,
+          target: Target.BingSearch,
           parse: true,
         } satisfies ScraperAPIParams;
 

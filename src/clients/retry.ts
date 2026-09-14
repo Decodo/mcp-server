@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios';
+import { DecodoError, TimeoutError } from '@decodo/sdk-ts';
 
 export const MAX_RETRIES = Math.max(0, parseInt(process.env.MAX_RETRIES ?? '2', 10) || 2);
 export const RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
@@ -13,37 +13,35 @@ export const WAITING_INTERVAL_MS = 5000;
 
 export const BASE_RETRY_DELAY_MS = 1000;
 
-export const isRetryable = (error: AxiosError): boolean => {
-  if (error.response) {
-    return RETRYABLE_STATUS_CODES.has(error.response.status);
+export const getNetworkErrorCode = (error: unknown): string | undefined => {
+  if (!(error instanceof TypeError)) {
+    return undefined;
   }
-  return RETRYABLE_NETWORK_CODES.has(error.code ?? '');
+
+  const { cause } = error as TypeError & { cause?: { code?: unknown } };
+
+  return typeof cause?.code === 'string' ? cause.code : undefined;
+};
+
+export const isRetryable = (error: unknown): boolean => {
+  if (error instanceof TimeoutError) {
+    return true;
+  }
+
+  if (error instanceof DecodoError) {
+    return RETRYABLE_STATUS_CODES.has(error.statusCode);
+  }
+
+  return RETRYABLE_NETWORK_CODES.has(getNetworkErrorCode(error) ?? '');
 };
 
 export const getRetryDelay = ({
   attempt,
-  error,
   baseDelayMs = BASE_RETRY_DELAY_MS,
 }: {
   attempt: number;
-  error: AxiosError;
   baseDelayMs?: number;
 }): number => {
-  if (error.response?.status === 429) {
-    const retryAfter = error.response.headers['retry-after'];
-    if (retryAfter) {
-      const seconds = Number(retryAfter);
-      if (!isNaN(seconds)) {
-        return seconds * 1000;
-      }
-
-      const date = Date.parse(retryAfter);
-      if (!isNaN(date)) {
-        return Math.max(0, date - Date.now());
-      }
-    }
-  }
-
   const baseMs = baseDelayMs * Math.pow(2, attempt);
   const jitterMs = Math.random() * 500;
   return baseMs + jitterMs;

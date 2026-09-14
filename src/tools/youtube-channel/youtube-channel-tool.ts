@@ -1,6 +1,7 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { Tool, ToolRegistrationArgs } from '../tool';
 import { ProgressExtra } from '../../utils';
 
@@ -33,7 +34,7 @@ export class YoutubeChannelTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.YOUTUBE_CHANNEL,
+          target: Target.YoutubeChannel,
           parse: true,
         } satisfies ScraperAPIParams;
 

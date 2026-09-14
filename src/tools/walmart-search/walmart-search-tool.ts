@@ -1,8 +1,9 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
-import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
+import { zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
 const zodDeliveryZip = z
@@ -36,7 +37,6 @@ export class WalmartSearchTool extends Tool {
         inputSchema: {
           query: z.string().describe('Search query for Walmart products (e.g., "camping tent")'),
           jsRender: zodJsRender,
-          deviceType: zodDeviceType,
           deliveryZip: zodDeliveryZip,
           storeId: zodWalmartStoreId,
         },
@@ -45,10 +45,11 @@ export class WalmartSearchTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
+      async ({ storeId, ...scrapingParams }: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.WALMART_SEARCH,
+          ...(storeId && { walmart_store_id: String(storeId) }),
+          target: Target.WalmartSearch,
           markdown: true,
         } satisfies ScraperAPIParams;
 

@@ -1,8 +1,9 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
-import { zodGeo, zodJsRender, zodDeviceType } from '../../zod/zod-types';
+import { zodGeo, zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
 const zodDomain = z
@@ -38,7 +39,6 @@ export class AmazonSearchTool extends Tool {
           geo: zodGeo,
           jsRender: zodJsRender,
           domain: zodDomain,
-          deviceType: zodDeviceType,
           pageFrom: zodPageFrom,
         },
         annotations: {
@@ -49,7 +49,7 @@ export class AmazonSearchTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.AMAZON_SEARCH,
+          target: Target.AmazonSearch,
           parse: true,
         } satisfies ScraperAPIParams;
 

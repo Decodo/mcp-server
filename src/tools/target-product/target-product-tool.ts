@@ -1,13 +1,12 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 import { ProgressExtra } from '../../utils';
 
 const zodDeliveryZip = z.string().describe('ZIP code for delivery location').optional();
-
-const zodStoreId = z.string().describe('Target store ID for local inventory').optional();
 
 export class TargetProductTool extends Tool {
   toolset = TOOLSET.ECOMMERCE;
@@ -26,7 +25,6 @@ export class TargetProductTool extends Tool {
           jsRender: zodJsRender,
           deviceType: zodDeviceType,
           deliveryZip: zodDeliveryZip,
-          storeId: zodStoreId,
         },
         annotations: {
           readOnlyHint: true,
@@ -37,7 +35,7 @@ export class TargetProductTool extends Tool {
         const params = {
           headless: 'html',
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.TARGET_PRODUCT,
+          target: Target.TargetProduct,
           parse: true,
         } satisfies ScraperAPIParams;
 

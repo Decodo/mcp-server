@@ -276,11 +276,11 @@ The following parameters are inferred from user prompts:
 | `prompt`        | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                 |
 | `search`        | Activates ChatGPT's web search functionality (`chatgpt` only).                                        |
 | `xhr`           | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`). |
-| `deviceType`    | Device type to emulate for the request (`desktop`, `mobile`, `tablet`).                               |
+| `deviceType`    | Device type to emulate (`desktop`, `mobile`, `tablet`). Parsed targets are stricter: Amazon tools are desktop-only so they omit it, and `bing_search`/`google_ai_mode` accept `desktop` and `mobile` only. |
 | `domain`        | Domain to use for the request (e.g., `amazon.com`, `amazon.co.uk`, `bing.com`).                       |
 | `pageFrom`      | Starting page number for pagination.                                                                  |
 | `deliveryZip`   | ZIP code for delivery location (Target, Walmart).                                                     |
-| `storeId`       | Store ID for local inventory (Target, Walmart).                                                       |
+| `storeId`       | Store ID for local inventory (Walmart).                                                               |
 | `country`       | Country for TikTok Shop requests.                                                                     |
 | `limit`         | Maximum number of results to return (e.g., YouTube channel videos).                                   |
 | `language_code` | Language code for subtitles (e.g., `en`, `es`).                                                       |

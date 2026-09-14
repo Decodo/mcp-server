@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
 import { ChatGPTTool } from '../chatgpt-tool';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
+import { Target } from '@decodo/sdk-ts';
+import { TOOLSET } from '../../../constants';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
 jest.mock('../../../clients/scraper-api-client');
@@ -46,7 +47,7 @@ describe('ChatGPTTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         prompt: 'What is TypeScript?',
-        target: SCRAPER_API_TARGETS.CHATGPT,
+        target: Target.Chatgpt,
         parse: true,
       }),
     });
@@ -70,7 +71,7 @@ describe('ChatGPTTool', () => {
       scrapingParams: expect.objectContaining({
         prompt: 'Latest news',
         search: true,
-        target: SCRAPER_API_TARGETS.CHATGPT,
+        target: Target.Chatgpt,
         parse: true,
       }),
     });

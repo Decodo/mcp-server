@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
+import { Target } from '@decodo/sdk-ts';
+import { TOOLSET } from '../../../constants';
 import { TiktokPostTool } from '../tiktok-post-tool';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -47,7 +48,7 @@ describe('TiktokPostTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         url,
-        target: SCRAPER_API_TARGETS.TIKTOK_POST,
+        target: Target.TiktokPost,
       }),
     });
 
@@ -71,7 +72,7 @@ describe('TiktokPostTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         xhr: true,
-        target: SCRAPER_API_TARGETS.TIKTOK_POST,
+        target: Target.TiktokPost,
       }),
     });
   });

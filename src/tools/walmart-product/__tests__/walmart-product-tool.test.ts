@@ -61,4 +61,14 @@ describe('WalmartProductTool', () => {
       'Scraper API request failed (401): Authentication failed.'
     );
   });
+  it('maps storeId to walmart_store_id', async () => {
+    sapiClient.scrape = jest.fn().mockResolvedValue({ data: {} });
+
+    await registeredHandler({ product_id: '15296401808', storeId: '4174' });
+
+    const { scrapingParams } = jest.mocked(sapiClient.scrape).mock.calls[0][0];
+
+    expect(scrapingParams).toMatchObject({ walmart_store_id: '4174' });
+    expect(scrapingParams).not.toHaveProperty('storeId');
+  });
 });

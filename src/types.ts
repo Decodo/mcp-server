@@ -1,6 +1,7 @@
-import { SCRAPER_API_TARGETS } from './constants';
+import type { TargetString } from '@decodo/sdk-ts';
 
 export type ScrapingMCPParams = {
+  target?: TargetString;
   url?: string;
   query?: string;
   prompt?: string;
@@ -9,12 +10,13 @@ export type ScrapingMCPParams = {
   locale?: string;
   jsRender?: boolean;
   headless?: string;
+  storeId?: string;
   tokenLimit?: number;
   xhr?: boolean;
 };
 
 export type ScraperAPIParams = {
-  target?: SCRAPER_API_TARGETS;
+  target?: TargetString;
   url?: string;
   query?: string;
   prompt?: string;
@@ -25,4 +27,5 @@ export type ScraperAPIParams = {
   parse?: boolean;
   xhr?: boolean;
   markdown?: boolean;
+  walmart_store_id?: string;
 };

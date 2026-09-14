@@ -1,6 +1,7 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
 import { zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
@@ -44,10 +45,11 @@ export class WalmartProductTool extends Tool {
           openWorldHint: true,
         },
       },
-      async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
+      async ({ storeId, ...scrapingParams }: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.WALMART_PRODUCT,
+          ...(storeId && { walmart_store_id: String(storeId) }),
+          target: Target.WalmartProduct,
           parse: true,
         } satisfies ScraperAPIParams;
 

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperApiClient } from '../../../clients/scraper-api-client';
 import { RedditSubredditTool } from '../reddit-subreddit-tool';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../../constants';
+import { Target } from '@decodo/sdk-ts';
+import { TOOLSET } from '../../../constants';
 import mockSubredditData from './reddit-subreddit.json';
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -47,7 +48,7 @@ describe('RedditSubredditTool', () => {
       auth,
       scrapingParams: expect.objectContaining({
         url: 'https://reddit.com/r/programming',
-        target: SCRAPER_API_TARGETS.REDDIT_SUBREDDIT,
+        target: Target.RedditSubreddit,
       }),
     });
 

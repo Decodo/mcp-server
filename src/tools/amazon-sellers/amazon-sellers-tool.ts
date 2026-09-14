@@ -1,7 +1,8 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
-import { zodJsRender, zodDeviceType } from '../../zod/zod-types';
+import { TOOLSET } from '../../constants';
+import { zodJsRender } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 import { ProgressExtra } from '../../utils';
 
@@ -31,7 +32,6 @@ export class AmazonSellersTool extends Tool {
           query: z.string().describe('Amazon seller ID (e.g., "A1R0Z7FJGTKESH")'),
           jsRender: zodJsRender,
           domain: zodDomain,
-          deviceType: zodDeviceType,
           geo: zodGeo,
         },
         annotations: {
@@ -42,7 +42,7 @@ export class AmazonSellersTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.AMAZON_SELLERS,
+          target: Target.AmazonSellers,
           parse: true,
         } satisfies ScraperAPIParams;
 

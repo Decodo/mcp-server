@@ -1,8 +1,9 @@
 import z from 'zod';
+import { Target } from '@decodo/sdk-ts';
 import { ScraperAPIParams, ScrapingMCPParams } from 'types';
-import { SCRAPER_API_TARGETS, TOOLSET } from '../../constants';
+import { TOOLSET } from '../../constants';
 import { removeKeyFromNestedObject, ProgressExtra } from '../../utils';
-import { zodGeo, zodJsRender, zodCountry, zodDeviceType } from '../../zod/zod-types';
+import { zodJsRender, zodCountry, zodDeviceType } from '../../zod/zod-types';
 import { Tool, ToolRegistrationArgs } from '../tool';
 
 export class TiktokShopSearchTool extends Tool {
@@ -25,7 +26,6 @@ export class TiktokShopSearchTool extends Tool {
         description: 'Scrape TikTok Shop Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for TikTok Shop products'),
-          geo: zodGeo,
           jsRender: zodJsRender,
           country: zodCountry,
           deviceType: zodDeviceType,
@@ -38,7 +38,7 @@ export class TiktokShopSearchTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const params = {
           ...scrapingParams,
-          target: SCRAPER_API_TARGETS.TIKTOK_SHOP_SEARCH,
+          target: Target.TiktokShopSearch,
           markdown: true,
         } satisfies ScraperAPIParams;
 
