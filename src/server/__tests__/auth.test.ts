@@ -1,3 +1,5 @@
+import { AUTH_TYPE } from '../../auth';
+import type { AuthCredential } from '../../auth';
 import { ScraperAPIBaseServer } from '../sapi-base-server';
 import { ScraperApiClient } from '../../clients/scraper-api-client';
 
@@ -9,11 +11,21 @@ jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
 
 describe('Auth flow', () => {
   describe('base64 encoding', () => {
-    it('passes auth token directly to server', () => {
-      const base64Token = 'dGVzdHVzZXI6dGVzdHBhc3M=';
-      const server = new ScraperAPIBaseServer({ auth: base64Token, toolsets: [] });
+    it('passes the token credential directly to server', () => {
+      const auth: AuthCredential = {
+        type: AUTH_TYPE.TOKEN,
+        value: 'dGVzdHVzZXI6dGVzdHBhc3M=',
+      };
+      const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
 
-      expect(server.auth).toBe(base64Token);
+      expect(server.auth).toEqual(auth);
+    });
+
+    it('passes an api key credential directly to server', () => {
+      const auth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'sk-live-abc123' };
+      const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
+
+      expect(server.auth).toEqual(auth);
     });
 
     it('auth token format is valid base64 encoding of username:password', () => {
@@ -35,14 +47,16 @@ describe('Auth flow', () => {
   });
 
   describe('missing credentials handling', () => {
-    it('ScraperAPIBaseServer accepts empty auth string', () => {
-      const server = new ScraperAPIBaseServer({ auth: '', toolsets: [] });
+    it('ScraperAPIBaseServer accepts an empty credential value', () => {
+      const auth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: '' };
+      const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
 
-      expect(server.auth).toBe('');
+      expect(server.auth).toEqual(auth);
     });
 
-    it('server initializes with empty auth and creates client', () => {
-      const server = new ScraperAPIBaseServer({ auth: '', toolsets: [] });
+    it('server initializes with an empty credential and creates client', () => {
+      const auth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: '' };
+      const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
 
       expect(server.sapiClient).toBeInstanceOf(ScraperApiClient);
     });
@@ -114,10 +128,10 @@ describe('Auth flow', () => {
 
   describe('auth token propagation', () => {
     it('auth is passed to tool registration', () => {
-      const auth = 'bXl0b2tlbjEyMw==';
+      const auth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: 'bXl0b2tlbjEyMw==' };
       const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
 
-      expect(server.auth).toBe(auth);
+      expect(server.auth).toEqual(auth);
       expect(server.server).toBeDefined();
       expect(server.sapiClient).toBeDefined();
     });

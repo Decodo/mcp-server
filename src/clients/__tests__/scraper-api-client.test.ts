@@ -1,10 +1,17 @@
 import { Target } from '@decodo/sdk-ts';
+import { AUTH_TYPE } from '../../auth';
+import type { AuthCredential } from '../../auth';
 import { ScraperApiClient } from '../scraper-api-client';
 import { ScrapingMCPParams } from '../../types';
 
 const client = new ScraperApiClient({ maxRetries: 1, delayMs: 0 });
 
-const auth = 'dGVzdDp0ZXN0';
+const tokenValue = 'dGVzdDp0ZXN0';
+const apiKeyValue = 'sk-test-api-key';
+
+const auth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: tokenValue };
+const apiKeyAuth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: apiKeyValue };
+
 const defaultArgs = { auth, scrapingParams: { url: 'https://example.com' } };
 
 const mockFetch = jest.fn();
@@ -53,9 +60,31 @@ describe('ScraperApiClient', () => {
       expect(url).toBe('https://scraper-api.decodo.com/v2/scrape');
       expect(init.method).toBe('POST');
       expect(init.headers).toMatchObject({
-        Authorization: `Basic ${auth}`,
+        Authorization: `Basic ${tokenValue}`,
         'x-integration': 'mcp',
       });
+    });
+
+    it('posts to the data API with Bearer auth when given an API key', async () => {
+      await client.scrape({ ...defaultArgs, auth: apiKeyAuth });
+
+      const { url, init } = lastRequest();
+
+      expect(url).toBe('https://data.decodo.com/v1/scrape');
+      expect(init.headers).toMatchObject({
+        Authorization: `Bearer ${apiKeyValue}`,
+        'x-integration': 'mcp',
+      });
+    });
+
+    it('sends the same body on both transports', async () => {
+      await client.scrape(defaultArgs);
+      const tokenBody = requestBody();
+
+      await client.scrape({ ...defaultArgs, auth: apiKeyAuth });
+      const apiKeyBody = requestBody();
+
+      expect(apiKeyBody).toEqual(tokenBody);
     });
 
     it('returns the first result content', async () => {

@@ -1,6 +1,10 @@
+import { AUTH_TYPE } from '../../auth';
+import type { AuthCredential } from '../../auth';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIBaseServer } from '../sapi-base-server';
 import { TOOLSET } from '../../constants';
+
+const testAuth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: 'test' };
 
 const mockRegisterTool = jest.fn().mockReturnThis();
 
@@ -17,16 +21,16 @@ describe('Server registration', () => {
 
   describe('server metadata', () => {
     it('creates McpServer with correct name and version', () => {
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
       expect(McpServer).toHaveBeenCalledWith({
         name: 'decodo',
-        version: '1.2.3',
+        version: '1.2.4',
       });
     });
 
     it('server instance is accessible', () => {
-      const server = new ScraperAPIBaseServer({ auth: 'test', toolsets: [] });
+      const server = new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
       expect(server.server).toBeDefined();
     });
@@ -34,7 +38,7 @@ describe('Server registration', () => {
 
   describe('tool registration', () => {
     it('registers all tools when no toolsets specified', () => {
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
       const expectedToolCount = ScraperAPIBaseServer.allTools.length;
       expect(mockRegisterTool).toHaveBeenCalledTimes(expectedToolCount);
@@ -43,7 +47,7 @@ describe('Server registration', () => {
     it('registers only web toolset tools when web specified', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [TOOLSET.WEB] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.WEB] });
 
       const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
       expect(mockRegisterTool).toHaveBeenCalledTimes(webTools.length);
@@ -52,7 +56,7 @@ describe('Server registration', () => {
     it('registers only AI toolset tools when ai specified', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [TOOLSET.AI] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.AI] });
 
       const aiTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.AI);
       expect(mockRegisterTool).toHaveBeenCalledTimes(aiTools.length);
@@ -61,7 +65,7 @@ describe('Server registration', () => {
     it('registers multiple toolsets when specified', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [TOOLSET.WEB, TOOLSET.AI] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.WEB, TOOLSET.AI] });
 
       const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
       const aiTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.AI);
@@ -71,7 +75,7 @@ describe('Server registration', () => {
     it('each tool is registered with name and config', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: 'test', toolsets: [] });
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
       const calls = mockRegisterTool.mock.calls;
       for (const call of calls) {
@@ -133,7 +137,7 @@ describe('Server registration', () => {
     });
 
     it('creates ScraperApiClient instance', () => {
-      const server = new ScraperAPIBaseServer({ auth: 'test', toolsets: [] });
+      const server = new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
       expect(server.sapiClient).toBeDefined();
     });

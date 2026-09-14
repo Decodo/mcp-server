@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { credentialFromAuthHeader } from './auth';
 import { corsOptions } from './server/cors';
 import { ScraperAPIHttpServer } from './server/sapi-http-server';
 import { resolveToolsets } from './utils';
@@ -23,18 +24,16 @@ app.post('/mcp', async (req, res) => {
     return;
   }
 
-  const parts = auth.split(' ');
+  const credential = credentialFromAuthHeader(auth);
 
-  if (parts.length !== 2 || parts[0] !== 'Basic') {
-    res.status(401).send("Valid 'Basic' authorization required");
+  if (!credential) {
+    res.status(401).send("Valid 'Basic' or 'Bearer' authorization required");
     return;
   }
 
-  const token = parts[1];
-
   const toolsets = resolveToolsets(req.query.toolsets as string);
 
-  const server = new ScraperAPIHttpServer({ toolsets, auth: token });
+  const server = new ScraperAPIHttpServer({ toolsets, auth: credential });
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
