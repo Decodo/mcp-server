@@ -2,6 +2,7 @@
 import 'dotenv/config';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { credentialFromValue } from './auth';
 import { ScraperAPIStdioServer } from './server/sapi-stdio-server';
 import { resolveToolsets } from './utils';
 
@@ -15,9 +16,14 @@ const parseEnvsOrExit = () => {
     }
   }
 
-  return {
-    sapiAuth: process.env['SCRAPER_API_TOKEN'] as string,
-  };
+  const sapiAuth = credentialFromValue(process.env['SCRAPER_API_TOKEN'] as string);
+
+  if (!sapiAuth) {
+    console.error('env SCRAPER_API_TOKEN missing');
+    process.exit(1);
+  }
+
+  return { sapiAuth };
 };
 
 const main = async () => {
@@ -32,7 +38,7 @@ const main = async () => {
   });
   await sapiMcpServer.connect(transport);
 
-  console.error('MCP Server running on stdio');
+  console.error(`MCP Server running on stdio (auth: ${sapiAuth.type})`);
 };
 
 main().catch(error => {

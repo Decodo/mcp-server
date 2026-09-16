@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { PACKAGE_VERSION } from '../version';
 import {
@@ -43,9 +44,9 @@ export class ScraperAPIBaseServer {
 
   sapiClient: ScraperApiClient;
 
-  auth: string = '';
+  auth: AuthCredential;
 
-  constructor({ auth, toolsets = [] }: { auth: string; toolsets: TOOLSET[] }) {
+  constructor({ auth, toolsets = [] }: { auth: AuthCredential; toolsets: TOOLSET[] }) {
     this.server = new McpServer({
       name: 'decodo',
       version: PACKAGE_VERSION,

@@ -1,11 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import { TOOLSET } from '../constants';
 
 export type ToolRegistrationArgs = {
   server: McpServer;
   sapiClient: ScraperApiClient;
-  auth: string;
+  auth: AuthCredential;
 };
 
 export abstract class Tool {

@@ -7,6 +7,8 @@ import {
 } from '@decodo/sdk-ts';
 import type { ScrapeRequest, SyncResponse } from '@decodo/sdk-ts';
 import { ScrapingMCPParams } from 'types';
+import { AUTH_TYPE } from '../auth';
+import type { AuthCredential, AuthType } from '../auth';
 import { ProgressNotifier, ProgressExtra } from '../utils';
 import { log } from '../logger';
 import {
@@ -81,10 +83,12 @@ export class ScraperApiClient {
   private sdkError = ({
     error,
     target,
+    authType,
     startMs,
   }: {
     error: unknown;
     target: string;
+    authType: AuthType;
     startMs: number;
   }): unknown => {
     const latencyMs = Date.now() - startMs;
@@ -97,6 +101,7 @@ export class ScraperApiClient {
       log('error', 'tool_call', {
         outcome: 'error',
         target,
+        auth_type: authType,
         error_type: 'upstream_api',
         upstream_status: error.statusCode,
         message: sdkMessage,
@@ -112,6 +117,7 @@ export class ScraperApiClient {
       log('error', 'tool_call', {
         outcome: 'error',
         target,
+        auth_type: authType,
         error_type: 'network',
         error_code: errorCode,
         message,
@@ -124,6 +130,7 @@ export class ScraperApiClient {
     log('error', 'tool_call', {
       outcome: 'error',
       target,
+      auth_type: authType,
       error_type: 'unexpected',
       message,
       latency_ms: latencyMs,
@@ -132,12 +139,15 @@ export class ScraperApiClient {
     return error;
   };
 
+  private sdkCredentials = (auth: AuthCredential) =>
+    auth.type === AUTH_TYPE.API_KEY ? { apiKey: auth.value } : { token: auth.value };
+
   scrape = async <T = string>({
     auth,
     scrapingParams,
     extra,
   }: {
-    auth: string;
+    auth: AuthCredential;
     scrapingParams: ScrapingMCPParams;
     extra?: ProgressExtra;
   }) => {
@@ -153,7 +163,10 @@ export class ScraperApiClient {
       const { target } = params;
 
       const { webScrapingApi } = new DecodoClient({
-        webScrapingApi: { token: auth, integrationHeader: INTEGRATION_HEADER },
+        webScrapingApi: {
+          ...this.sdkCredentials(auth),
+          integrationHeader: INTEGRATION_HEADER,
+        },
         timeoutMs: REQUEST_TIMEOUT_MS,
       });
 
@@ -172,6 +185,7 @@ export class ScraperApiClient {
           log('info', 'tool_call', {
             outcome: 'success',
             target,
+            auth_type: auth.type,
             upstream_status: res.results[0]?.status_code ?? null,
             latency_ms: Date.now() - startMs,
             attempt,
@@ -208,7 +222,7 @@ export class ScraperApiClient {
         }
       }
 
-      throw this.sdkError({ error: lastError, target, startMs });
+      throw this.sdkError({ error: lastError, target, authType: auth.type, startMs });
     } finally {
       notifier.stopWaitingNotifications();
     }
