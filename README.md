@@ -80,7 +80,7 @@ scraping infrastructure from scratch. Common scenarios:
 
 1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
    free requests, no credit card required.
-2. **Get your API key.** Obtain a Web Scraping API basic authentication token from the dashboard.
+2. **Get your authentication token.** Obtain a Web Scraping API basic authentication token from the dashboard.
 3. **Download Node.js 18+** from https://nodejs.org.
 4. **Get MCP client** like Claude Desktop, Cursor, Windsurf or other MCP-compatible
    tools.
