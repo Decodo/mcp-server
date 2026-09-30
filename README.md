@@ -103,7 +103,20 @@ Open your preferred MCP client and add the following configuration (see examples
 }
 ```
 
-### Claude Desktop
+### Claude (claude.ai, Claude Desktop, Claude Code) with sign-in
+
+Claude clients can connect with the server URL alone and sign in through the browser instead of
+pasting a token. The hosted server is an OAuth 2.1 authorization server: it supports PKCE, dynamic
+client registration and Client ID Metadata Documents, so no client setup is needed.
+
+- claude.ai / Claude Desktop: Settings → Connectors → Add custom connector → URL `https://mcp.decodo.com/mcp`.
+- Claude Code: `claude mcp add --transport http decodo https://mcp.decodo.com/mcp`, then `/mcp` → Authenticate.
+
+You are sent to the Decodo dashboard, pick a Scraping API subscription, approve, and the tools use the
+key issued for that subscription. Sending an `Authorization` header (Basic or Bearer) keeps working
+as before and skips the sign-in.
+
+### Claude Desktop (local, stdio)
 1. Open Claude Desktop → Settings → Developer → Edit Config.
 2. Add to claude_desktop_config.json:
 
@@ -201,6 +214,41 @@ this:
 ```
 
 </details>
+
+## Running the HTTP server (hosted mode)
+
+`npm run dev:http` (or `npm start` after a build) serves `/mcp` plus the OAuth endpoints
+(`/authorize`, `/token`, `/register`, `/oauth/callback` and the `/.well-known` discovery documents).
+Configuration is via environment variables:
+
+| Variable                  | Default                                          | Purpose                                                                                     |
+| ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `PORT`                    | `3000`                                           | Listen port.                                                                                |
+| `PUBLIC_URL`              | `http://localhost:<PORT>`                        | Public origin, used as the OAuth issuer and for callback URLs. Must be `https` when hosted. |
+| `OAUTH_BACKEND`           | `decodo`                                         | `mock` runs an in-process approval screen and grant exchange (see below).                   |
+| `DASHBOARD_AUTHORIZE_URL` | `https://dashboard.decodo.com/authorize`         | Approval screen users are sent to.                                                          |
+| `GRANT_EXCHANGE_URL`      | `https://api.decodo.com/api/v1/grants/exchange`  | Backend endpoint that trades the approval code for a Scraping API key.                      |
+| `GRANT_EXCHANGE_SECRET`   |                                                  | Service credential for the grant exchange endpoint.                                         |
+| `OAUTH_APP_ID`            | `mcp`                                            | Application id shown on the approval screen.                                                |
+| `MOCK_SCRAPER_API_KEY`    |                                                  | Key the mock backend issues when the approval form leaves the key field empty.              |
+| `TRUST_PROXY`             | `false`                                          | Set to `true` behind a load balancer so rate limits use the client IP.                      |
+
+The access token issued to OAuth clients is the Scraping API key itself, so `/mcp` treats OAuth
+tokens and `Bearer` API keys identically. Refresh tokens are not issued yet.
+
+### Trying the sign-in flow locally
+
+Until the dashboard approval screen and grant exchange endpoint exist, run the server with the mock
+backend and connect from Claude Code:
+
+```
+OAUTH_BACKEND=mock MOCK_SCRAPER_API_KEY=<scraping_api_key> npm run dev:http
+claude mcp add --transport http decodo-local http://localhost:3000/mcp
+```
+
+Authenticate from `/mcp` in Claude Code: the browser opens the mock approval screen at
+`/mock/dashboard/authorize`, and approving issues the key you configured (or one pasted into the
+form). The mock skips login, sessions and CSRF; it exists only to exercise the redirect contract.
 
 ## Toolsets
 
