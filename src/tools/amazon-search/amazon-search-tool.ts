@@ -33,6 +33,7 @@ export class AmazonSearchTool extends Tool {
     server.registerTool(
       'amazon_search',
       {
+        title: 'Amazon Search',
         description: 'Scrape Amazon Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for Amazon products (e.g., "wireless keyboard")'),
@@ -42,7 +43,9 @@ export class AmazonSearchTool extends Tool {
           pageFrom: zodPageFrom,
         },
         annotations: {
+          title: 'Amazon Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

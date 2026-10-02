@@ -17,6 +17,7 @@ export class TiktokShopProductTool extends Tool {
     server.registerTool(
       'tiktok_shop_product',
       {
+        title: 'TikTok Shop Product',
         description: 'Scrape TikTok Shop Product page',
         inputSchema: {
           product_id: z.string().describe('TikTok Shop product ID (e.g., "1731541214379741272")'),
@@ -25,7 +26,9 @@ export class TiktokShopProductTool extends Tool {
           country: zodCountry,
         },
         annotations: {
+          title: 'TikTok Shop Product',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

@@ -44,6 +44,7 @@ export class ScrapeAsMarkdownTool extends Tool {
     server.registerTool(
       'scrape_as_markdown',
       {
+        title: 'Scrape as Markdown',
         description: 'Scrape the contents of a website and return Markdown-formatted results',
         inputSchema: {
           url: z.string().describe('URL to scrape'),
@@ -53,7 +54,9 @@ export class ScrapeAsMarkdownTool extends Tool {
           tokenLimit: zodTokenLimit,
         },
         annotations: {
+          title: 'Scrape as Markdown',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

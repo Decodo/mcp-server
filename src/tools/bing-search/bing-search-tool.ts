@@ -32,6 +32,7 @@ export class BingSearchTool extends Tool {
     server.registerTool(
       'bing_search',
       {
+        title: 'Bing Search',
         description: 'Scrape Bing Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for Bing (e.g., "laptop")'),
@@ -43,7 +44,9 @@ export class BingSearchTool extends Tool {
           pageFrom: zodPageFrom,
         },
         annotations: {
+          title: 'Bing Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

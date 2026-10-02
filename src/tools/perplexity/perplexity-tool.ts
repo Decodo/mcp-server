@@ -17,6 +17,7 @@ export class PerplexityTool extends Tool {
     server.registerTool(
       'perplexity',
       {
+        title: 'Perplexity',
         description:
           'Search and interact with Perplexity for AI-powered responses and conversations',
         inputSchema: {
@@ -24,7 +25,9 @@ export class PerplexityTool extends Tool {
           geo: zodGeo,
         },
         annotations: {
+          title: 'Perplexity',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

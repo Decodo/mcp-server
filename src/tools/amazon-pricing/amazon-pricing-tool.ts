@@ -38,6 +38,7 @@ export class AmazonPricingTool extends Tool {
     server.registerTool(
       'amazon_pricing',
       {
+        title: 'Amazon Pricing',
         description: 'Scrape Amazon Product pricing information with automatic parsing',
         inputSchema: {
           query: z.string().describe('Amazon product ASIN (e.g., "B09H74FXNW")'),
@@ -47,7 +48,9 @@ export class AmazonPricingTool extends Tool {
           geo: zodGeo,
         },
         annotations: {
+          title: 'Amazon Pricing',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

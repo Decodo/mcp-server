@@ -26,6 +26,7 @@ export class RedditUserTool extends Tool {
     server.registerTool(
       'reddit_user',
       {
+        title: 'Reddit User',
         description: 'Scrape a Reddit user profile and their posts/comments',
         inputSchema: {
           url: z
@@ -33,7 +34,9 @@ export class RedditUserTool extends Tool {
             .describe('Reddit user profile URL (eg. https://www.reddit.com/user/IWasRightOnce/)'),
         },
         annotations: {
+          title: 'Reddit User',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

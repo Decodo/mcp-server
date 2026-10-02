@@ -19,6 +19,7 @@ export class TargetProductTool extends Tool {
     server.registerTool(
       'target_product',
       {
+        title: 'Target Product',
         description: 'Scrape Target Product page with automatic parsing',
         inputSchema: {
           product_id: z.string().describe('Target product ID (e.g., "1003921355")'),
@@ -27,7 +28,9 @@ export class TargetProductTool extends Tool {
           deliveryZip: zodDeliveryZip,
         },
         annotations: {
+          title: 'Target Product',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },
