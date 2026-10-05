@@ -18,7 +18,7 @@ const page = (body: string): string => `<!doctype html>
   label { display: block; margin: 1rem 0 .25rem; font-weight: 600; }
   input { width: 100%; padding: .5rem; font: inherit; box-sizing: border-box; }
   .actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
-  button { padding: .6rem 1.2rem; font: inherit; border-radius: .4rem; border: 1px solid #999; background: #fff; cursor: pointer; }
+  button { padding: .6rem 1.2rem; font: inhe  rit; border-radius: .4rem; border: 1px solid #999; background: #fff; cursor: pointer; }
   button[value=approve] { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 </style>
 </head>
@@ -27,12 +27,6 @@ ${body}
 </body>
 </html>`;
 
-/**
- * Stand-in for the dashboard consent page. The MCP server has already registered the
- * request with the mock subscription-api; this page looks it up by `request_uuid`,
- * skips login and sessions, and performs the redirect the real dashboard does after
- * the decision.
- */
 export const mockDashboardRouter = ({
   api,
   defaultScraperApiKey,
