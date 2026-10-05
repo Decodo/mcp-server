@@ -55,7 +55,6 @@ const setup = (exchange: jest.Mock = jest.fn()) => {
     callbackUrl: CALLBACK,
   });
 
-  /** Runs authorize and returns what the browser now holds: the cookie and the dashboard URL. */
   const startAuthorization = async (forClient = client) => {
     const { res, asResponse } = fakeResponse();
     await provider.authorize(forClient, params, asResponse);
@@ -65,7 +64,6 @@ const setup = (exchange: jest.Mock = jest.fn()) => {
     return { cookie: cookie as string, cookieOptions, dashboardUrl, upstreamState: dashboardUrl.searchParams.get('state') as string };
   };
 
-  /** Simulates the dashboard approving: the callback arrives with the cookie and the upstream code. */
   const approve = async (upstreamCode: string, forClient = client) => {
     const { cookie, upstreamState } = await startAuthorization(forClient);
     const { asResponse } = fakeResponse();
