@@ -6,7 +6,8 @@ import { createOAuthMetadata, mcpAuthMetadataRouter } from '@modelcontextprotoco
 import type { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
 import { CALLBACK_PATH } from './config';
-import { DecodoOAuthProvider, UnknownAuthorizationRequestError } from './provider';
+import { cookieValue } from './cookies';
+import { DecodoOAuthProvider, PENDING_COOKIE, UnknownAuthorizationRequestError } from './provider';
 import type { CallbackQuery } from './provider';
 
 const RESOURCE_NAME = 'Decodo MCP Server';
@@ -15,10 +16,6 @@ const DOCUMENTATION_URL = new URL('https://github.com/Decodo/mcp-server#readme')
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
-/**
- * Registration and token calls from claude.ai arrive from Anthropic's shared egress
- * range, so the SDK's per-IP defaults (20/h and 50/15min) would throttle unrelated users.
- */
 const RATE_LIMITS = {
   register: { windowMs: RATE_LIMIT_WINDOW_MS, max: 500 },
   token: { windowMs: RATE_LIMIT_WINDOW_MS, max: 2_000 },
@@ -41,13 +38,10 @@ const buildOAuthMetadata = ({
 }): OAuthMetadata => ({
   ...createOAuthMetadata({ provider, issuerUrl, serviceDocumentationUrl: DOCUMENTATION_URL }),
   grant_types_supported: ['authorization_code'],
+  token_endpoint_auth_methods_supported: ['none'],
   client_id_metadata_document_supported: true,
 });
 
-/**
- * Mounts the authorization server (`/authorize`, `/token`, `/register`, the two
- * `/.well-known` documents) and the dashboard callback. Mount at the app root.
- */
 export const oauthRouter = ({
   provider,
   issuerUrl,
@@ -83,7 +77,13 @@ export const oauthRouter = ({
     res.setHeader('Cache-Control', 'no-store');
 
     try {
-      res.redirect(302, provider.handleCallback(req.query as CallbackQuery));
+      const redirect = provider.handleCallback({
+        query: req.query as CallbackQuery,
+        pendingCookie: cookieValue(req.headers.cookie, PENDING_COOKIE),
+        res,
+      });
+
+      res.redirect(302, redirect);
     } catch (error) {
       if (error instanceof UnknownAuthorizationRequestError) {
         res.status(400).send(errorPage(error.message));

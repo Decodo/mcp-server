@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { Response } from 'express';
 import {
   InvalidGrantError,
@@ -5,10 +6,12 @@ import {
   UnsupportedGrantTypeError,
 } from '@modelcontextprotocol/sdk/server/auth/errors.js';
 import type { OAuthClientInformationFull } from '@modelcontextprotocol/sdk/shared/auth.js';
-import { MockGrantExchange } from '../backends/mock';
+import type { OAuthBackend } from '../backend';
 import { ClientsStore } from '../clients-store';
-import { GRANT_EXCHANGE_ERROR, GrantExchangeError } from '../grant-exchange';
-import { DecodoOAuthProvider, UnknownAuthorizationRequestError } from '../provider';
+import { CLAUDE_REDIRECT_URIS } from '../config';
+import { DecodoOAuthProvider, PENDING_COOKIE, UnknownAuthorizationRequestError } from '../provider';
+import { Sealer } from '../sealer';
+import { TOKEN_EXCHANGE_ERROR, TokenExchangeError } from '../token-exchange';
 
 const client: OAuthClientInformationFull = {
   client_id: 'client-1',
@@ -25,73 +28,111 @@ const params = {
   state: 'client-state',
 };
 
-const DASHBOARD = new URL('https://dashboard.decodo.com/authorize');
+const DASHBOARD = 'https://dashboard.decodo.com/authorize';
 
 const CALLBACK = new URL('https://mcp.decodo.com/oauth/callback');
 
-const setup = (grantExchange = new MockGrantExchange()) => {
+const fakeResponse = () => {
+  const res = { cookie: jest.fn(), clearCookie: jest.fn(), redirect: jest.fn() };
+  return { res, asResponse: res as unknown as Response };
+};
+
+const setup = (exchange: jest.Mock = jest.fn()) => {
+  const sealer = new Sealer('secret');
+  const backend: OAuthBackend & { authorizationUrl: jest.Mock } = {
+    authorizationUrl: jest.fn(async ({ state, codeChallenge }) => {
+      const url = new URL(DASHBOARD);
+      url.searchParams.set('state', state);
+      url.searchParams.set('code_challenge', codeChallenge);
+      return url;
+    }),
+    exchange,
+  };
   const provider = new DecodoOAuthProvider({
-    clientsStore: new ClientsStore(),
-    grantExchange,
-    dashboardAuthorizeUrl: DASHBOARD,
+    clientsStore: new ClientsStore({ sealer, allowedRedirectUris: CLAUDE_REDIRECT_URIS }),
+    backend,
+    sealer,
     callbackUrl: CALLBACK,
-    appId: 'mcp',
   });
 
+  /** Runs authorize and returns what the browser now holds: the cookie and the dashboard URL. */
   const startAuthorization = async (forClient = client) => {
-    const redirect = jest.fn();
-    await provider.authorize(forClient, params, { redirect } as unknown as Response);
-    const dashboardUrl = new URL(redirect.mock.calls[0][1] as string);
+    const { res, asResponse } = fakeResponse();
+    await provider.authorize(forClient, params, asResponse);
+    const [, cookie, cookieOptions] = res.cookie.mock.calls[0];
+    const dashboardUrl = new URL(res.redirect.mock.calls[0][1] as string);
 
-    return { dashboardUrl, upstreamState: dashboardUrl.searchParams.get('state') as string };
+    return { cookie: cookie as string, cookieOptions, dashboardUrl, upstreamState: dashboardUrl.searchParams.get('state') as string };
   };
 
+  /** Simulates the dashboard approving: the callback arrives with the cookie and the upstream code. */
   const approve = async (upstreamCode: string, forClient = client) => {
-    const { upstreamState } = await startAuthorization(forClient);
-    const clientRedirect = new URL(provider.handleCallback({ code: upstreamCode, state: upstreamState }));
+    const { cookie, upstreamState } = await startAuthorization(forClient);
+    const { asResponse } = fakeResponse();
+    const clientRedirect = new URL(
+      provider.handleCallback({ query: { code: upstreamCode, state: upstreamState }, pendingCookie: cookie, res: asResponse })
+    );
 
     return clientRedirect.searchParams.get('code') as string;
   };
 
-  return { provider, grantExchange, startAuthorization, approve };
+  return { provider, backend, startAuthorization, approve };
 };
 
 describe('DecodoOAuthProvider.authorize', () => {
-  it('sends the browser to the dashboard approval screen with the documented query', async () => {
-    const { dashboardUrl } = await setup().startAuthorization();
+  it('sends the browser where the backend says, with a fresh state and PKCE challenge', async () => {
+    const { backend, startAuthorization } = setup();
+    const { dashboardUrl } = await startAuthorization();
 
-    expect(dashboardUrl.origin + dashboardUrl.pathname).toBe('https://dashboard.decodo.com/authorize');
-    expect(dashboardUrl.searchParams.get('app')).toBe('mcp');
-    expect(dashboardUrl.searchParams.get('redirect_uri')).toBe(CALLBACK.href);
-    expect(dashboardUrl.searchParams.get('request_id')).toMatch(/^[0-9a-f-]{36}$/);
-    expect(dashboardUrl.searchParams.get('state')).toMatch(/^[A-Za-z0-9_-]{40,}$/);
+    expect(dashboardUrl.origin + dashboardUrl.pathname).toBe(DASHBOARD);
+    const [{ state, codeChallenge }] = backend.authorizationUrl.mock.calls[0];
+    expect(state).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(codeChallenge).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(state).not.toBe(params.state);
   });
 
-  it('does not reuse the client state towards the dashboard', async () => {
-    const { upstreamState } = await setup().startAuthorization();
+  it('parks the pending authorization in an http-only, lax cookie scoped to the callback', async () => {
+    const { cookie, cookieOptions } = await setup().startAuthorization();
 
-    expect(upstreamState).not.toBe(params.state);
+    expect(cookie).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(cookieOptions).toMatchObject({ httpOnly: true, sameSite: 'lax', secure: true, path: '/oauth/callback' });
+  });
+
+  it('uses a fresh state and verifier per attempt', async () => {
+    const { backend, startAuthorization } = setup();
+    await startAuthorization();
+    await startAuthorization();
+
+    const [[first], [second]] = backend.authorizationUrl.mock.calls;
+    expect(first.state).not.toBe(second.state);
+    expect(first.codeChallenge).not.toBe(second.codeChallenge);
   });
 });
 
 describe('DecodoOAuthProvider.handleCallback', () => {
-  it('redirects the client with a fresh code and its own state on approval', async () => {
+  it('redirects the client with a sealed code and its own state on approval', async () => {
     const { provider, startAuthorization } = setup();
-    const { upstreamState } = await startAuthorization();
+    const { cookie, upstreamState } = await startAuthorization();
+    const { res, asResponse } = fakeResponse();
 
-    const redirect = new URL(provider.handleCallback({ code: 'upstream-code', state: upstreamState }));
+    const redirect = new URL(
+      provider.handleCallback({ query: { code: 'upstream-code', state: upstreamState }, pendingCookie: cookie, res: asResponse })
+    );
 
     expect(redirect.origin + redirect.pathname).toBe(params.redirectUri);
     expect(redirect.searchParams.get('state')).toBe(params.state);
-    expect(redirect.searchParams.get('code')).toBeTruthy();
-    expect(redirect.searchParams.get('code')).not.toBe('upstream-code');
+    expect(redirect.searchParams.get('code')).toMatch(/^[A-Za-z0-9_-]{60,}$/);
+    expect(redirect.searchParams.get('code')).not.toContain('upstream-code');
+    expect(res.clearCookie).toHaveBeenCalledWith(PENDING_COOKIE, expect.anything());
   });
 
   it('forwards a denial as access_denied', async () => {
     const { provider, startAuthorization } = setup();
-    const { upstreamState } = await startAuthorization();
+    const { cookie, upstreamState } = await startAuthorization();
 
-    const redirect = new URL(provider.handleCallback({ error: 'access_denied', state: upstreamState }));
+    const redirect = new URL(
+      provider.handleCallback({ query: { error: 'access_denied', state: upstreamState }, pendingCookie: cookie, res: fakeResponse().asResponse })
+    );
 
     expect(redirect.searchParams.get('error')).toBe('access_denied');
     expect(redirect.searchParams.get('state')).toBe(params.state);
@@ -100,26 +141,30 @@ describe('DecodoOAuthProvider.handleCallback', () => {
 
   it('treats a callback with neither code nor error as invalid_request', async () => {
     const { provider, startAuthorization } = setup();
-    const { upstreamState } = await startAuthorization();
+    const { cookie, upstreamState } = await startAuthorization();
 
-    const redirect = new URL(provider.handleCallback({ state: upstreamState }));
+    const redirect = new URL(
+      provider.handleCallback({ query: { state: upstreamState }, pendingCookie: cookie, res: fakeResponse().asResponse })
+    );
 
     expect(redirect.searchParams.get('error')).toBe('invalid_request');
   });
 
-  it('rejects an unknown state instead of redirecting', () => {
-    const { provider } = setup();
-
-    expect(() => provider.handleCallback({ code: 'x', state: 'nope' })).toThrow(UnknownAuthorizationRequestError);
-    expect(() => provider.handleCallback({ code: 'x' })).toThrow(UnknownAuthorizationRequestError);
-  });
-
-  it('consumes the pending authorization so the callback cannot be replayed', async () => {
+  it('rejects a missing cookie, a foreign cookie or a state that does not match it', async () => {
     const { provider, startAuthorization } = setup();
-    const { upstreamState } = await startAuthorization();
-    provider.handleCallback({ code: 'x', state: upstreamState });
+    const { cookie, upstreamState } = await startAuthorization();
+    const { asResponse } = fakeResponse();
 
-    expect(() => provider.handleCallback({ code: 'x', state: upstreamState })).toThrow(
+    expect(() => provider.handleCallback({ query: { code: 'x', state: upstreamState }, res: asResponse })).toThrow(
+      UnknownAuthorizationRequestError
+    );
+    expect(() =>
+      provider.handleCallback({ query: { code: 'x', state: 'other-state' }, pendingCookie: cookie, res: asResponse })
+    ).toThrow(UnknownAuthorizationRequestError);
+    expect(() =>
+      provider.handleCallback({ query: { code: 'x', state: upstreamState }, pendingCookie: 'garbage', res: asResponse })
+    ).toThrow(UnknownAuthorizationRequestError);
+    expect(() => provider.handleCallback({ query: { code: 'x' }, pendingCookie: cookie, res: asResponse })).toThrow(
       UnknownAuthorizationRequestError
     );
   });
@@ -135,62 +180,46 @@ describe('DecodoOAuthProvider code exchange', () => {
     await expect(provider.challengeForAuthorizationCode(client, 'unknown')).rejects.toThrow(InvalidGrantError);
   });
 
-  it('issues the scraper api key from the grant exchange as the access token', async () => {
-    const grantExchange = new MockGrantExchange();
-    const { provider, approve } = setup(grantExchange);
-    const code = await approve(grantExchange.mint('sk-live-from-dashboard'));
+  it('redeems the upstream code with the verifier matching the challenge it sent', async () => {
+    const exchange = jest.fn().mockResolvedValue('sk-live-from-backend');
+    const { provider, backend, approve } = setup(exchange);
+    const code = await approve('dashboard-code');
 
     await expect(provider.exchangeAuthorizationCode(client, code, undefined, params.redirectUri)).resolves.toEqual({
-      access_token: 'sk-live-from-dashboard',
+      access_token: 'sk-live-from-backend',
       token_type: 'bearer',
       scope: 'scraping',
     });
-  });
 
-  it('spends the code on first use', async () => {
-    const grantExchange = new MockGrantExchange();
-    const { provider, approve } = setup(grantExchange);
-    const code = await approve(grantExchange.mint('key'));
-
-    await provider.exchangeAuthorizationCode(client, code);
-
-    await expect(provider.exchangeAuthorizationCode(client, code)).rejects.toThrow(InvalidGrantError);
+    const [{ code: upstreamCode, codeVerifier }] = exchange.mock.calls[0];
+    const [{ codeChallenge }] = backend.authorizationUrl.mock.calls[0];
+    expect(upstreamCode).toBe('dashboard-code');
+    expect(createHash('sha256').update(codeVerifier).digest('base64url')).toBe(codeChallenge);
   });
 
   it('rejects a mismatched redirect_uri or client', async () => {
-    const grantExchange = new MockGrantExchange();
-    const { provider, approve } = setup(grantExchange);
+    const exchange = jest.fn().mockResolvedValue('key');
+    const { provider, approve } = setup(exchange);
 
-    const first = await approve(grantExchange.mint('key'));
     await expect(
-      provider.exchangeAuthorizationCode(client, first, undefined, 'https://attacker.example/cb')
+      provider.exchangeAuthorizationCode(client, await approve('a'), undefined, 'https://attacker.example/cb')
     ).rejects.toThrow(InvalidGrantError);
-
-    const second = await approve(grantExchange.mint('key'));
-    await expect(provider.exchangeAuthorizationCode(otherClient, second)).rejects.toThrow(InvalidGrantError);
+    await expect(provider.exchangeAuthorizationCode(otherClient, await approve('b'))).rejects.toThrow(InvalidGrantError);
+    expect(exchange).not.toHaveBeenCalled();
   });
 
   it('maps an upstream invalid_grant to invalid_grant and other failures to server_error', async () => {
-    const failing = { exchange: jest.fn() };
-    const { provider, approve } = setup(failing);
-
-    failing.exchange.mockRejectedValueOnce(new GrantExchangeError(GRANT_EXCHANGE_ERROR.INVALID_GRANT, 'spent'));
-    await expect(provider.exchangeAuthorizationCode(client, await approve('a'))).rejects.toThrow(InvalidGrantError);
-
-    failing.exchange.mockRejectedValueOnce(new GrantExchangeError(GRANT_EXCHANGE_ERROR.INVALID_CLIENT, 'bad secret'));
-    await expect(provider.exchangeAuthorizationCode(client, await approve('b'))).rejects.toThrow(ServerError);
-
-    failing.exchange.mockRejectedValueOnce(new GrantExchangeError(GRANT_EXCHANGE_ERROR.SERVER_ERROR, 'down'));
-    await expect(provider.exchangeAuthorizationCode(client, await approve('c'))).rejects.toThrow(ServerError);
-  });
-
-  it('passes the dashboard code through to the grant exchange', async () => {
-    const exchange = { exchange: jest.fn().mockResolvedValue('key') };
+    const exchange = jest.fn();
     const { provider, approve } = setup(exchange);
 
-    await provider.exchangeAuthorizationCode(client, await approve('dashboard-code'));
+    exchange.mockRejectedValueOnce(new TokenExchangeError(TOKEN_EXCHANGE_ERROR.INVALID_GRANT, 'spent'));
+    await expect(provider.exchangeAuthorizationCode(client, await approve('a'))).rejects.toThrow(InvalidGrantError);
 
-    expect(exchange.exchange).toHaveBeenCalledWith('dashboard-code');
+    exchange.mockRejectedValueOnce(new TokenExchangeError(TOKEN_EXCHANGE_ERROR.INVALID_CLIENT, 'wrong client'));
+    await expect(provider.exchangeAuthorizationCode(client, await approve('b'))).rejects.toThrow(ServerError);
+
+    exchange.mockRejectedValueOnce(new TokenExchangeError(TOKEN_EXCHANGE_ERROR.SERVER_ERROR, 'down'));
+    await expect(provider.exchangeAuthorizationCode(client, await approve('c'))).rejects.toThrow(ServerError);
   });
 
   it('does not support refresh tokens', async () => {

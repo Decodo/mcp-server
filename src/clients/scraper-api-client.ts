@@ -8,7 +8,7 @@ import {
 import type { ScrapeRequest, SyncResponse } from '@decodo/sdk-ts';
 import { ScrapingMCPParams } from 'types';
 import { AUTH_TYPE } from '../auth';
-import type { AuthCredential, AuthType } from '../auth';
+import type { AuthCredential } from '../auth';
 import { ProgressNotifier, ProgressExtra } from '../utils';
 import { log } from '../logger';
 import {
@@ -31,20 +31,27 @@ const API_PARAM_ALIASES = new Map([
   ['deliveryZip', 'delivery_zip'],
 ]);
 
+export type AuthenticationErrorListener = (auth: AuthCredential) => void;
+
 export class ScraperApiClient {
   maxRetries: number;
 
   delayMs: number;
 
+  onAuthenticationError?: AuthenticationErrorListener;
+
   constructor({
     maxRetries = MAX_RETRIES,
     delayMs = BASE_RETRY_DELAY_MS,
+    onAuthenticationError,
   }: {
     maxRetries?: number;
     delayMs?: number;
+    onAuthenticationError?: AuthenticationErrorListener;
   } = {}) {
     this.maxRetries = maxRetries;
     this.delayMs = delayMs;
+    this.onAuthenticationError = onAuthenticationError;
   }
 
   transformScrapingParams = ({
@@ -83,20 +90,25 @@ export class ScraperApiClient {
   private sdkError = ({
     error,
     target,
-    authType,
+    auth,
     startMs,
   }: {
     error: unknown;
     target: string;
-    authType: AuthType;
+    auth: AuthCredential;
     startMs: number;
   }): unknown => {
     const latencyMs = Date.now() - startMs;
+    const authType = auth.type;
     const message = error instanceof Error ? error.message : String(error);
 
     if (error instanceof DecodoError) {
       const sdkMessage =
         error instanceof AuthenticationError ? 'Authentication failed.' : error.message;
+
+      if (error instanceof AuthenticationError) {
+        this.onAuthenticationError?.(auth);
+      }
 
       log('error', 'tool_call', {
         outcome: 'error',
@@ -222,7 +234,7 @@ export class ScraperApiClient {
         }
       }
 
-      throw this.sdkError({ error: lastError, target, authType: auth.type, startMs });
+      throw this.sdkError({ error: lastError, target, auth, startMs });
     } finally {
       notifier.stopWaitingNotifications();
     }

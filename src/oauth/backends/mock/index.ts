@@ -1,28 +1,44 @@
+import { createPublicKey, generateKeyPairSync } from 'node:crypto';
 import express from 'express';
 import { log } from '../../../logger';
 import type { OAuthBackendFactory } from '../../backend';
+import { DecodoBackend } from '../decodo';
 import { mockDashboardRouter } from './dashboard';
-import { MockGrantExchange } from './grant-exchange';
+import { MockSubscriptionApi, mockSubscriptionApiRouter } from './subscription-api';
 
-export const MOCK_DASHBOARD_PATH = '/mock/dashboard';
+export const MOCK_PATH = '/mock';
 
-/**
- * Runs the approval screen and the grant exchange inside this process, for local
- * development and end-to-end tests while the real backend does not exist.
- */
-export const createMockBackend: OAuthBackendFactory = (config, { callbackUrl }) => {
-  const grantExchange = new MockGrantExchange();
-  const dashboardAuthorizeUrl = new URL(`${MOCK_DASHBOARD_PATH}/authorize`, config.publicUrl);
+const MOCK_CLIENT = { clientId: 'mcp-mock', kid: 'mock-key' };
+
+export const createMockBackend: OAuthBackendFactory = (config, { callbackUrl, fetch }) => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+  });
+
+  const dashboardAuthorizeUrl = new URL(`${MOCK_PATH}/dashboard/authorize`, config.publicUrl);
+  const baseUrl = new URL(`${MOCK_PATH}/subscription-api/token-exchange`, config.publicUrl);
+
+  const api = new MockSubscriptionApi(createPublicKey(publicKey), { ...MOCK_CLIENT, redirectUri: callbackUrl.href });
+
   const router = express.Router();
+  router.use(`${MOCK_PATH}/dashboard`, mockDashboardRouter({ api, defaultScraperApiKey: config.mockScraperApiKey }));
+  router.use(`${MOCK_PATH}/subscription-api`, mockSubscriptionApiRouter(api));
 
-  router.use(
-    MOCK_DASHBOARD_PATH,
-    mockDashboardRouter({ grantExchange, callbackUrl, defaultScraperApiKey: config.mockScraperApiKey })
-  );
+  const backend = new DecodoBackend({
+    client: { ...MOCK_CLIENT, privateKey, baseUrl },
+    dashboardAuthorizeUrl,
+    callbackUrl,
+    issuer: config.publicUrl.host,
+    fetch,
+  });
 
   log('warn', 'oauth.mock_backend', { dashboardAuthorizeUrl: dashboardAuthorizeUrl.href });
 
-  return { dashboardAuthorizeUrl, grantExchange, router };
+  return {
+    authorizationUrl: authorization => backend.authorizationUrl(authorization),
+    exchange: params => backend.exchange(params),
+    router,
+  };
 };
-
-export { MockGrantExchange } from './grant-exchange';

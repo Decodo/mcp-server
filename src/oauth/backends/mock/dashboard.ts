@@ -1,13 +1,10 @@
 import express from 'express';
-import type { MockGrantExchange } from './grant-exchange';
+import { DASHBOARD_QUERY } from '../decodo';
+import { MockRequestError } from './subscription-api';
+import type { MockSubscriptionApi } from './subscription-api';
 
 const escapeHtml = (value: string): string =>
   value.replace(/[&<>"']/g, character => `&#${character.charCodeAt(0)};`);
-
-const MOCK_SUBSCRIPTIONS = [
-  { id: 'sub_core_1', label: 'Web Scraping API Core' },
-  { id: 'sub_advanced_1', label: 'Web Scraping API Advanced' },
-];
 
 const page = (body: string): string => `<!doctype html>
 <html lang="en">
@@ -19,7 +16,7 @@ const page = (body: string): string => `<!doctype html>
   body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 3rem auto; padding: 0 1rem; color: #1a1a1a; }
   .banner { background: #fff3cd; border: 1px solid #ffe69c; padding: .75rem 1rem; border-radius: .5rem; margin-bottom: 1.5rem; }
   label { display: block; margin: 1rem 0 .25rem; font-weight: 600; }
-  input, select { width: 100%; padding: .5rem; font: inherit; box-sizing: border-box; }
+  input { width: 100%; padding: .5rem; font: inherit; box-sizing: border-box; }
   .actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
   button { padding: .6rem 1.2rem; font: inherit; border-radius: .4rem; border: 1px solid #999; background: #fff; cursor: pointer; }
   button[value=approve] { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
@@ -31,17 +28,16 @@ ${body}
 </html>`;
 
 /**
- * Stand-in for the dashboard approval screen described in the OAuth design doc.
- * It skips login, sessions and CSRF: its only job is to exercise the redirect
- * contract (`code`/`state` on approve, `error=access_denied` on deny) end to end.
+ * Stand-in for the dashboard consent page. The MCP server has already registered the
+ * request with the mock subscription-api; this page looks it up by `request_uuid`,
+ * skips login and sessions, and performs the redirect the real dashboard does after
+ * the decision.
  */
 export const mockDashboardRouter = ({
-  grantExchange,
-  callbackUrl,
+  api,
   defaultScraperApiKey,
 }: {
-  grantExchange: MockGrantExchange;
-  callbackUrl: URL;
+  api: MockSubscriptionApi;
   defaultScraperApiKey: string;
 }): express.Router => {
   const router = express.Router();
@@ -49,38 +45,21 @@ export const mockDashboardRouter = ({
   router.use(express.urlencoded({ extended: false }));
 
   router.get('/authorize', (req, res) => {
-    const { app, request_id: requestId, redirect_uri: redirectUri, state } = req.query;
+    const uuid = req.query[DASHBOARD_QUERY.REQUEST_UUID];
+    const pending = typeof uuid === 'string' ? api.pendingRequest(uuid) : undefined;
 
-    if (
-      typeof app !== 'string' ||
-      typeof requestId !== 'string' ||
-      typeof redirectUri !== 'string' ||
-      typeof state !== 'string'
-    ) {
-      res.status(400).send(page('<h1>Bad request</h1><p>Missing app, request_id, redirect_uri or state.</p>'));
+    if (!pending) {
+      res.status(400).send(page('<h1>Invalid request</h1><p>This connection request is unknown or has expired.</p>'));
       return;
     }
-
-    if (redirectUri !== callbackUrl.href) {
-      res.status(400).send(page('<h1>Unknown redirect_uri</h1><p>This application is not allowed to use that callback.</p>'));
-      return;
-    }
-
-    const options = MOCK_SUBSCRIPTIONS.map(
-      subscription => `<option value="${subscription.id}">${subscription.label}</option>`
-    ).join('');
 
     res.status(200).send(
       page(`
-<div class="banner">Mock approval screen. The real one lives on dashboard.decodo.com.</div>
-<h1>Allow <code>${escapeHtml(app)}</code> to use your Scraping API subscription?</h1>
+<div class="banner">Mock consent page. The real one lives on dashboard.decodo.com.</div>
+<h1>Allow <strong>${escapeHtml(pending.client_id)}</strong> to use your Scraping API key?</h1>
 <form method="post" action="authorize/decision">
-  <input type="hidden" name="request_id" value="${escapeHtml(requestId)}">
-  <input type="hidden" name="redirect_uri" value="${escapeHtml(redirectUri)}">
-  <input type="hidden" name="state" value="${escapeHtml(state)}">
-  <label for="subscription_id">Subscription</label>
-  <select id="subscription_id" name="subscription_id">${options}</select>
-  <label for="scraper_api_key">Scraping API key to issue</label>
+  <input type="hidden" name="request_uuid" value="${escapeHtml(pending.uuid)}">
+  <label for="scraper_api_key">Scraping API key to release</label>
   <input id="scraper_api_key" name="scraper_api_key" value="${escapeHtml(defaultScraperApiKey)}" placeholder="Paste a real key to make the tools work">
   <div class="actions">
     <button type="submit" name="decision" value="approve">Approve</button>
@@ -91,21 +70,32 @@ export const mockDashboardRouter = ({
   });
 
   router.post('/authorize/decision', (req, res) => {
-    const { redirect_uri: redirectUri, state, decision, scraper_api_key: scraperApiKey } = req.body ?? {};
+    const { request_uuid: uuid, decision, scraper_api_key: scraperApiKey } = req.body ?? {};
 
-    if (typeof redirectUri !== 'string' || typeof state !== 'string' || redirectUri !== callbackUrl.href) {
-      res.status(400).send(page('<h1>Bad request</h1><p>Missing or unknown redirect_uri.</p>'));
+    if (typeof uuid !== 'string' || typeof decision !== 'string') {
+      res.status(400).send(page('<h1>Bad request</h1><p>Missing request_uuid or decision.</p>'));
       return;
     }
 
-    const redirect = new URL(redirectUri);
-    redirect.searchParams.set('state', state);
+    const key = typeof scraperApiKey === 'string' && scraperApiKey.trim() ? scraperApiKey.trim() : defaultScraperApiKey;
 
-    if (decision === 'approve') {
-      const key = typeof scraperApiKey === 'string' && scraperApiKey.trim() ? scraperApiKey.trim() : defaultScraperApiKey;
-      redirect.searchParams.set('code', grantExchange.mint(key));
+    let decided;
+
+    try {
+      decided = api.decide({ uuid, decision, scraperApiKey: key });
+    } catch (error) {
+      const detail = error instanceof MockRequestError ? error.message : 'unexpected error';
+      res.status(409).send(page(`<h1>Request can no longer be decided</h1><p>${escapeHtml(detail)}</p>`));
+      return;
+    }
+
+    const redirect = new URL(decided.redirectUri);
+    redirect.searchParams.set('state', decided.state);
+
+    if (decided.code) {
+      redirect.searchParams.set('code', decided.code);
     } else {
-      redirect.searchParams.set('error', 'access_denied');
+      redirect.searchParams.set('error', decided.error as string);
     }
 
     res.redirect(302, redirect.href);

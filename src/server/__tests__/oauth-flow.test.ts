@@ -6,8 +6,12 @@ import { UnauthorizedError } from '@modelcontextprotocol/sdk/client/auth.js';
 import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { OAuthClientInformationMixed, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
+import { AUTH_TYPE } from '../../auth';
 import { OAUTH_BACKEND, oauthConfigFromEnv } from '../../oauth';
+import { cookieValue } from '../../oauth/cookies';
+import { PENDING_COOKIE } from '../../oauth/provider';
 import { createApp } from '../app';
+import { RevokedCredentials } from '../revoked-credentials';
 
 const CLIENT_REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
 
@@ -35,38 +39,49 @@ const location = (response: Response): URL => {
   return new URL(response.headers.get('location') as string);
 };
 
-/** What a person does in the browser between the MCP client's redirect and the callback. */
-const browser = {
-  /** Opens the authorize URL, which bounces to the mock approval screen. */
-  open: async (authorizeUrl: URL) => location(await fetch(authorizeUrl, noRedirect)),
+type BrowserSession = {
+  dashboardUrl: URL;
+  cookie: string;
+};
 
-  /** Submits the approval form and follows the dashboard's redirect to our callback. */
-  decide: async (dashboardUrl: URL, decision: 'approve' | 'deny', scraperApiKey = '') =>
-    location(
+const browser = {
+  open: async (authorizeUrl: URL): Promise<BrowserSession> => {
+    const response = await fetch(authorizeUrl, noRedirect);
+    const setCookie = response.headers.getSetCookie().find(value => value.startsWith(`${PENDING_COOKIE}=`));
+
+    expect(setCookie).toMatch(/HttpOnly/);
+    expect(setCookie).toMatch(/SameSite=Lax/);
+    expect(setCookie).toMatch(/Path=\/oauth\/callback/);
+
+    return { dashboardUrl: location(response), cookie: cookieValue(setCookie, PENDING_COOKIE) as string };
+  },
+
+  decide: async (dashboardUrl: URL, decision: 'approve' | 'deny', scraperApiKey = ''): Promise<URL> => {
+    const consent = await fetch(dashboardUrl);
+    expect(consent.status).toBe(200);
+    const html = await consent.text();
+    const requestUuid = /name="request_uuid" value="([^"]+)"/.exec(html)?.[1] as string;
+    expect(requestUuid).toBeTruthy();
+
+    return location(
       await fetch(new URL('authorize/decision', dashboardUrl), {
         ...noRedirect,
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: form({
-          request_id: dashboardUrl.searchParams.get('request_id') as string,
-          redirect_uri: dashboardUrl.searchParams.get('redirect_uri') as string,
-          state: dashboardUrl.searchParams.get('state') as string,
-          subscription_id: 'sub_core_1',
-          scraper_api_key: scraperApiKey,
-          decision,
-        }),
+        body: form({ request_uuid: requestUuid, scraper_api_key: scraperApiKey, decision }),
       })
-    ),
+    );
+  },
 
-  /** Follows our callback to wherever it sends the MCP client. */
-  callback: async (callbackUrl: URL) => location(await fetch(callbackUrl, noRedirect)),
+  callback: async (callbackUrl: URL, cookie?: string): Promise<URL> =>
+    location(await fetch(callbackUrl, { ...noRedirect, headers: cookie ? { Cookie: `${PENDING_COOKIE}=${cookie}` } : {} })),
 
-  /** The whole trip: returns the redirect the MCP client would receive. */
-  authorize: async (authorizeUrl: URL, decision: 'approve' | 'deny' = 'approve', scraperApiKey = '') =>
-    browser.callback(await browser.decide(await browser.open(authorizeUrl), decision, scraperApiKey)),
+  authorize: async (authorizeUrl: URL, decision: 'approve' | 'deny' = 'approve', scraperApiKey = ''): Promise<URL> => {
+    const session = await browser.open(authorizeUrl);
+    return browser.callback(await browser.decide(session.dashboardUrl, decision, scraperApiKey), session.cookie);
+  },
 };
 
-/** Minimal in-memory OAuthClientProvider, the part of Claude that talks to our authorization server. */
 class TestOAuthClient implements OAuthClientProvider {
   readonly redirectUrl = CLIENT_REDIRECT;
 
@@ -118,12 +133,17 @@ class TestOAuthClient implements OAuthClientProvider {
 describe('OAuth against the mock backend', () => {
   let server: Server;
   let origin: string;
+  const revokedCredentials = new RevokedCredentials();
 
   beforeAll(async () => {
     const port = await freePort();
     origin = `http://localhost:${port}`;
     const app = createApp({
-      oauth: oauthConfigFromEnv({ PUBLIC_URL: origin, OAUTH_BACKEND: OAUTH_BACKEND.MOCK, MOCK_SCRAPER_API_KEY: 'sk-live-mock' }, port),
+      oauth: oauthConfigFromEnv(
+        { PUBLIC_URL: origin, OAUTH_BACKEND: OAUTH_BACKEND.MOCK, OAUTH_STATE_SECRET: 'test-secret', MOCK_SCRAPER_API_KEY: 'sk-live-mock' },
+        port
+      ),
+      revokedCredentials,
     });
     server = await new Promise(resolve => {
       const listening = app.listen(port, () => resolve(listening));
@@ -179,8 +199,8 @@ describe('OAuth against the mock backend', () => {
   });
 
   describe('HTTP contract', () => {
-    const registerClient = async () => {
-      const response = await fetch(`${origin}/register`, {
+    const register = (body: object) =>
+      fetch(`${origin}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -189,8 +209,12 @@ describe('OAuth against the mock backend', () => {
           token_endpoint_auth_method: 'none',
           grant_types: ['authorization_code'],
           response_types: ['code'],
+          ...body,
         }),
       });
+
+    const registerClient = async () => {
+      const response = await register({});
 
       expect(response.status).toBe(201);
 
@@ -219,6 +243,13 @@ describe('OAuth against the mock backend', () => {
         body: form(fields),
       });
 
+    const postMcp = (authorization?: string) =>
+      fetch(`${origin}/mcp`, {
+        method: 'POST',
+        body: '{}',
+        headers: { 'Content-Type': 'application/json', ...(authorization ? { Authorization: authorization } : {}) },
+      });
+
     it('advertises authorization server metadata with PKCE, registration and client id metadata documents', async () => {
       const response = await fetch(`${origin}/.well-known/oauth-authorization-server`);
       const metadata = await response.json();
@@ -231,9 +262,9 @@ describe('OAuth against the mock backend', () => {
         registration_endpoint: `${origin}/register`,
         code_challenge_methods_supported: ['S256'],
         grant_types_supported: ['authorization_code'],
+        token_endpoint_auth_methods_supported: ['none'],
         client_id_metadata_document_supported: true,
       });
-      expect(metadata.token_endpoint_auth_methods_supported).toContain('none');
     });
 
     it('advertises protected resource metadata for /mcp', async () => {
@@ -247,7 +278,7 @@ describe('OAuth against the mock backend', () => {
     });
 
     it('answers an unauthenticated /mcp call with 401 pointing at the resource metadata', async () => {
-      const response = await fetch(`${origin}/mcp`, { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' } });
+      const response = await postMcp();
 
       expect(response.status).toBe(401);
       expect(response.headers.get('www-authenticate')).toBe(
@@ -256,31 +287,51 @@ describe('OAuth against the mock backend', () => {
     });
 
     it('flags a malformed Authorization header as invalid_token', async () => {
-      const response = await fetch(`${origin}/mcp`, {
-        method: 'POST',
-        body: '{}',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Token abc' },
-      });
+      const response = await postMcp('Token abc');
 
       expect(response.status).toBe(401);
       expect(response.headers.get('www-authenticate')).toContain('error="invalid_token"');
     });
 
-    it('sends the browser to the approval screen with the documented query', async () => {
-      const { client_id: clientId } = await registerClient();
+    it('answers a credential the Scraping API has rejected with 401 so the client signs in again', async () => {
+      revokedCredentials.add({ type: AUTH_TYPE.API_KEY, value: 'sk-live-dead' });
 
-      const dashboardUrl = await browser.open(authorizeUrl(clientId, pkce().challenge));
+      const response = await postMcp('Bearer sk-live-dead');
 
-      expect(dashboardUrl.href.startsWith(`${origin}/mock/dashboard/authorize?`)).toBe(true);
-      expect(dashboardUrl.searchParams.get('app')).toBe('mcp');
-      expect(dashboardUrl.searchParams.get('redirect_uri')).toBe(`${origin}/oauth/callback`);
-
-      const approvalPage = await fetch(dashboardUrl);
-      expect(approvalPage.status).toBe(200);
-      expect(await approvalPage.text()).toContain('Approve');
+      expect(response.status).toBe(401);
+      expect(response.headers.get('www-authenticate')).toContain('error="invalid_token"');
+      expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
     });
 
-    it('issues the key chosen on the approval form as the access token', async () => {
+    it('refuses to register a redirect uri outside the allowlist', async () => {
+      const response = await register({ redirect_uris: [CLIENT_REDIRECT, 'https://evil.example/cb'] });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
+    });
+
+    it('refuses to register a confidential client', async () => {
+      const response = await register({ token_endpoint_auth_method: 'client_secret_post' });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
+    });
+
+    it('registers the signed request with the backend and sends the browser to the consent page with its uuid', async () => {
+      const { client_id: clientId } = await registerClient();
+
+      const { dashboardUrl } = await browser.open(authorizeUrl(clientId, pkce().challenge));
+
+      expect(dashboardUrl.href.startsWith(`${origin}/mock/dashboard/authorize?`)).toBe(true);
+      expect(dashboardUrl.searchParams.get('request_uuid')).toMatch(/^[0-9a-f-]{36}$/);
+      expect(dashboardUrl.searchParams.has('request')).toBe(false);
+
+      const consent = await fetch(dashboardUrl);
+      expect(consent.status).toBe(200);
+      expect(await consent.text()).toContain('Approve');
+    });
+
+    it('issues the key chosen on the consent screen as the access token', async () => {
       const { client_id: clientId } = await registerClient();
       const { verifier, challenge } = pkce();
 
@@ -313,8 +364,24 @@ describe('OAuth against the mock backend', () => {
       expect(right.status).toBe(200);
     });
 
-    it('renders an error page for a callback with an unknown state', async () => {
-      const response = await fetch(`${origin}/oauth/callback?code=x&state=unknown`, noRedirect);
+    it('spends the code on first use', async () => {
+      const { client_id: clientId } = await registerClient();
+      const { verifier, challenge } = pkce();
+      const code = (await browser.authorize(authorizeUrl(clientId, challenge))).searchParams.get('code') as string;
+
+      expect((await requestToken({ grant_type: 'authorization_code', client_id: clientId, code, code_verifier: verifier })).status).toBe(200);
+
+      const again = await requestToken({ grant_type: 'authorization_code', client_id: clientId, code, code_verifier: verifier });
+      expect(again.status).toBe(400);
+      await expect(again.json()).resolves.toMatchObject({ error: 'invalid_grant' });
+    });
+
+    it('renders an error page when the callback arrives without the pending cookie', async () => {
+      const { client_id: clientId } = await registerClient();
+      const session = await browser.open(authorizeUrl(clientId, pkce().challenge));
+      const callbackUrl = await browser.decide(session.dashboardUrl, 'approve');
+
+      const response = await fetch(callbackUrl, noRedirect);
 
       expect(response.status).toBe(400);
       expect(await response.text()).toContain('unknown or has expired');

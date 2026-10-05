@@ -1,6 +1,11 @@
+import { InvalidClientMetadataError } from '@modelcontextprotocol/sdk/server/auth/errors.js';
 import { ClientsStore, isClientIdMetadataUrl } from '../clients-store';
+import { CLAUDE_REDIRECT_URIS } from '../config';
+import { Sealer } from '../sealer';
 
 const CLAUDE_CODE_CLIENT_ID = 'https://claude.ai/oauth/claude-code-client-metadata';
+
+const CLAUDE_CALLBACK = 'https://claude.ai/api/mcp/auth_callback';
 
 const metadataDocument = {
   client_id: CLAUDE_CODE_CLIENT_ID,
@@ -11,11 +16,19 @@ const metadataDocument = {
   response_types: ['code'],
 };
 
+const registration = {
+  client_name: 'Claude',
+  redirect_uris: [CLAUDE_CALLBACK],
+  token_endpoint_auth_method: 'none',
+  grant_types: ['authorization_code'],
+  response_types: ['code'],
+};
+
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-const storeWith = (fetchMock: jest.Mock) =>
-  new ClientsStore({ fetch: fetchMock as unknown as typeof fetch });
+const storeWith = (fetchMock: jest.Mock = jest.fn(), sealer = new Sealer('secret')) =>
+  new ClientsStore({ sealer, allowedRedirectUris: CLAUDE_REDIRECT_URIS, fetch: fetchMock as unknown as typeof fetch });
 
 describe('isClientIdMetadataUrl', () => {
   it('accepts an https url with a path', () => {
@@ -32,33 +45,67 @@ describe('isClientIdMetadataUrl', () => {
   });
 });
 
-describe('ClientsStore', () => {
-  it('returns a dynamically registered client', async () => {
-    const store = storeWith(jest.fn());
-    const client = {
-      client_id: 'abc',
-      redirect_uris: ['https://claude.ai/api/mcp/auth_callback'],
+describe('ClientsStore dynamic registration', () => {
+  it('seals the registration into the client id and resolves it without storage', async () => {
+    const sealer = new Sealer('secret');
+    const registered = storeWith(jest.fn(), sealer).registerClient(registration);
+
+    expect(registered.client_id).toMatch(/^[A-Za-z0-9_-]{40,}$/);
+    expect(registered.client_secret).toBeUndefined();
+    expect(registered.client_id_issued_at).toEqual(expect.any(Number));
+
+    const resolvedElsewhere = await storeWith(jest.fn(), new Sealer('secret')).getClient(registered.client_id);
+    expect(resolvedElsewhere).toMatchObject({
+      client_id: registered.client_id,
+      client_name: 'Claude',
+      redirect_uris: [CLAUDE_CALLBACK],
       token_endpoint_auth_method: 'none',
-    };
+    });
+  });
 
-    store.registerClient(client);
+  it('does not resolve a client id sealed with another secret', async () => {
+    const registered = storeWith(jest.fn(), new Sealer('one')).registerClient(registration);
 
-    await expect(store.getClient('abc')).resolves.toEqual(client);
+    await expect(storeWith(jest.fn(), new Sealer('two')).getClient(registered.client_id)).resolves.toBeUndefined();
   });
 
   it('returns undefined for an unknown plain id without fetching', async () => {
     const fetchMock = jest.fn();
-    const store = storeWith(fetchMock);
 
-    await expect(store.getClient('missing')).resolves.toBeUndefined();
+    await expect(storeWith(fetchMock).getClient('missing')).resolves.toBeUndefined();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('resolves a client id metadata document as a public client', async () => {
-    const fetchMock = jest.fn().mockResolvedValue(jsonResponse(metadataDocument));
-    const store = storeWith(fetchMock);
+  it('rejects redirect uris outside the allowlist', () => {
+    expect(() =>
+      storeWith().registerClient({ ...registration, redirect_uris: [CLAUDE_CALLBACK, 'https://evil.example/cb'] })
+    ).toThrow(InvalidClientMetadataError);
+    expect(() =>
+      storeWith().registerClient({ ...registration, redirect_uris: ['https://evil.example/cb'] })
+    ).toThrow('https://evil.example/cb');
+  });
 
-    const client = await store.getClient(CLAUDE_CODE_CLIENT_ID);
+  it('accepts loopback redirect uris', () => {
+    expect(() =>
+      storeWith().registerClient({ ...registration, redirect_uris: ['http://localhost:6274/oauth/callback'] })
+    ).not.toThrow();
+  });
+
+  it('rejects confidential clients', () => {
+    expect(() =>
+      storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post', client_secret: 's' })
+    ).toThrow(InvalidClientMetadataError);
+    expect(() => storeWith().registerClient({ ...registration, token_endpoint_auth_method: undefined })).toThrow(
+      InvalidClientMetadataError
+    );
+  });
+});
+
+describe('ClientsStore client id metadata documents', () => {
+  it('resolves a document as a public client', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(jsonResponse(metadataDocument));
+
+    const client = await storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID);
 
     expect(fetchMock).toHaveBeenCalledWith(CLAUDE_CODE_CLIENT_ID, expect.objectContaining({ redirect: 'error' }));
     expect(client).toMatchObject({
@@ -69,7 +116,7 @@ describe('ClientsStore', () => {
     expect(client?.client_secret).toBeUndefined();
   });
 
-  it('caches a fetched metadata document', async () => {
+  it('caches a fetched document', async () => {
     const fetchMock = jest.fn().mockResolvedValue(jsonResponse(metadataDocument));
     const store = storeWith(fetchMock);
 
@@ -80,16 +127,21 @@ describe('ClientsStore', () => {
   });
 
   it('rejects a document whose client_id differs from the url', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(jsonResponse({ ...metadataDocument, client_id: 'https://evil.example/other' }));
+
+    await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
+  });
+
+  it('rejects a document with a redirect uri outside the allowlist', async () => {
     const fetchMock = jest
       .fn()
-      .mockResolvedValue(jsonResponse({ ...metadataDocument, client_id: 'https://evil.example/other' }));
+      .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: ['https://evil.example/cb'] }));
 
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
   });
 
   it('rejects a document without redirect_uris', async () => {
-    const withoutRedirects = { ...metadataDocument, redirect_uris: undefined };
-    const fetchMock = jest.fn().mockResolvedValue(jsonResponse(withoutRedirects));
+    const fetchMock = jest.fn().mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: undefined }));
 
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
   });

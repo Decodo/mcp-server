@@ -3,12 +3,6 @@ type Entry<T> = {
   expiresAt: number;
 };
 
-/**
- * In-memory map whose entries expire after a fixed time to live.
- * Holds only short-lived OAuth state (pending authorizations, one-time codes),
- * so a restart or a second replica loses nothing a client cannot recover from
- * by starting the flow again.
- */
 export class TtlStore<T> {
   private readonly entries = new Map<string, Entry<T>>();
 
@@ -37,7 +31,6 @@ export class TtlStore<T> {
     return entry.value;
   }
 
-  /** Reads and removes the entry in one step, for single-use values. */
   take(key: string): T | undefined {
     const value = this.get(key);
     this.entries.delete(key);

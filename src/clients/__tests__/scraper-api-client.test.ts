@@ -165,6 +165,19 @@ describe('ScraperApiClient', () => {
       );
     });
 
+    it('reports the rejected credential on 401 and only then', async () => {
+      const onAuthenticationError = jest.fn();
+      const reporting = new ScraperApiClient({ maxRetries: 0, onAuthenticationError });
+
+      respondOnceWith(() => jsonResponse({ status: 401, body: { message: 'Unauthorized' } }));
+      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(401)');
+      expect(onAuthenticationError).toHaveBeenCalledWith(auth);
+
+      respondOnceWith(() => jsonResponse({ status: 502, body: { message: 'Bad gateway' } }));
+      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(502)');
+      expect(onAuthenticationError).toHaveBeenCalledTimes(1);
+    });
+
     it('surfaces the server message on 429', async () => {
       respondWith(() => jsonResponse({ status: 429, body: { message: 'Rate limit exceeded' } }));
 

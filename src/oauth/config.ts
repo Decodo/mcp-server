@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { log } from '../logger';
+import { Sealer } from './sealer';
+
 export const OAUTH_BACKEND = {
   DECODO: 'decodo',
   MOCK: 'mock',
@@ -5,25 +9,34 @@ export const OAUTH_BACKEND = {
 
 export type OAuthBackendKind = (typeof OAUTH_BACKEND)[keyof typeof OAUTH_BACKEND];
 
+export type TokenExchangeClient = {
+  clientId: string;
+  kid: string;
+  privateKey: string;
+  baseUrl: URL;
+};
+
 export type OAuthConfig = {
-  /** Public origin of this server; used as the OAuth issuer and to build callback URLs. */
   publicUrl: URL;
-  /** Identifies this application on the dashboard approval screen (`?app=`). */
-  appId: string;
   backend: OAuthBackendKind;
-  /** Dashboard approval screen the browser is sent to. */
+  stateSecret: string;
   dashboardAuthorizeUrl: URL;
-  /** Backend endpoint that turns a one-time grant code into a Scraping API key. */
-  grantExchangeUrl: URL;
-  /** Service credential presented to the grant exchange endpoint. */
-  grantExchangeSecret: string;
-  /** Scraping API key the mock backend hands out when the approval form leaves the key empty. */
+  tokenExchange: TokenExchangeClient;
+  allowedRedirectUris: string[];
   mockScraperApiKey: string;
 };
 
-export const DEFAULT_DASHBOARD_AUTHORIZE_URL = 'https://dashboard.decodo.com/authorize';
+export const DEFAULT_DASHBOARD_AUTHORIZE_URL = 'https://dashboard.decodo.com/scraper/token-exchange/decision';
 
-export const DEFAULT_GRANT_EXCHANGE_URL = 'https://api.decodo.com/api/v1/grants/exchange';
+export const DEFAULT_TOKEN_EXCHANGE_BASE_URL =
+  'https://dashboard.decodo.com/subscription-api/v1/api/scraper/apikey/token-exchange';
+
+export const DEFAULT_TOKEN_EXCHANGE_CLIENT_ID = 'scrapper-mcp';
+
+export const CLAUDE_REDIRECT_URIS = [
+  'https://claude.ai/api/mcp/auth_callback',
+  'https://claude.com/api/mcp/auth_callback',
+];
 
 export const CALLBACK_PATH = '/oauth/callback';
 
@@ -37,12 +50,47 @@ const urlFromEnv = (env: Env, key: string, fallback: string): URL => {
   return new URL(value || fallback);
 };
 
+const listFromEnv = (env: Env, key: string): string[] =>
+  (env[key] ?? '')
+    .split(',')
+    .map(value => value.trim())
+    .filter(Boolean);
+
+const privateKeyFromEnv = (env: Env): string => {
+  const file = env.TOKEN_EXCHANGE_PRIVATE_KEY_FILE?.trim();
+
+  if (file) {
+    return readFileSync(file, 'utf8');
+  }
+
+  return (env.TOKEN_EXCHANGE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n').trim();
+};
+
+const stateSecretFromEnv = (env: Env): string => {
+  const secret = env.OAUTH_STATE_SECRET?.trim();
+
+  if (secret) {
+    return secret;
+  }
+
+  log('warn', 'oauth.state_secret_missing', {
+    message: 'OAUTH_STATE_SECRET is not set; using a random one, so sign-in only works with a single replica',
+  });
+
+  return Sealer.randomSecret();
+};
+
 export const oauthConfigFromEnv = (env: Env, port: number): OAuthConfig => ({
   publicUrl: urlFromEnv(env, 'PUBLIC_URL', `http://localhost:${port}`),
-  appId: env.OAUTH_APP_ID?.trim() || 'mcp',
   backend: env.OAUTH_BACKEND === OAUTH_BACKEND.MOCK ? OAUTH_BACKEND.MOCK : OAUTH_BACKEND.DECODO,
+  stateSecret: stateSecretFromEnv(env),
   dashboardAuthorizeUrl: urlFromEnv(env, 'DASHBOARD_AUTHORIZE_URL', DEFAULT_DASHBOARD_AUTHORIZE_URL),
-  grantExchangeUrl: urlFromEnv(env, 'GRANT_EXCHANGE_URL', DEFAULT_GRANT_EXCHANGE_URL),
-  grantExchangeSecret: env.GRANT_EXCHANGE_SECRET?.trim() || '',
+  tokenExchange: {
+    clientId: env.TOKEN_EXCHANGE_CLIENT_ID?.trim() || DEFAULT_TOKEN_EXCHANGE_CLIENT_ID,
+    kid: env.TOKEN_EXCHANGE_KID?.trim() || '',
+    privateKey: privateKeyFromEnv(env),
+    baseUrl: urlFromEnv(env, 'TOKEN_EXCHANGE_BASE_URL', DEFAULT_TOKEN_EXCHANGE_BASE_URL),
+  },
+  allowedRedirectUris: [...CLAUDE_REDIRECT_URIS, ...listFromEnv(env, 'OAUTH_ALLOWED_REDIRECT_URIS')],
   mockScraperApiKey: env.MOCK_SCRAPER_API_KEY?.trim() || '',
 });

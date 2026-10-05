@@ -6,11 +6,11 @@ import { createOAuth } from '../oauth';
 import type { OAuthConfig } from '../oauth';
 import { resolveToolsets } from '../utils';
 import { corsOptions } from './cors';
+import { RevokedCredentials } from './revoked-credentials';
 import { ScraperAPIHttpServer } from './sapi-http-server';
 
 type FetchLike = typeof fetch;
 
-/** Tells OAuth-capable clients where to discover the authorization server (RFC 9728). */
 const wwwAuthenticate = (resourceMetadataUrl: string, error?: string): string =>
   error
     ? `Bearer error="${error}", resource_metadata="${resourceMetadataUrl}"`
@@ -19,11 +19,12 @@ const wwwAuthenticate = (resourceMetadataUrl: string, error?: string): string =>
 export const createApp = ({
   oauth: oauthConfig,
   trustProxy = false,
+  revokedCredentials = new RevokedCredentials(),
   fetch,
 }: {
   oauth: OAuthConfig;
-  /** Enable behind a load balancer so rate limits key on the client IP, not the balancer's. */
   trustProxy?: boolean;
+  revokedCredentials?: RevokedCredentials;
   fetch?: FetchLike;
 }): express.Express => {
   const app = express();
@@ -57,9 +58,19 @@ export const createApp = ({
       return;
     }
 
+    if (revokedCredentials.has(credential)) {
+      res.set('WWW-Authenticate', wwwAuthenticate(oauth.resourceMetadataUrl, 'invalid_token'));
+      res.status(401).send('The Scraping API rejected this credential; sign in again');
+      return;
+    }
+
     const toolsets = resolveToolsets(req.query.toolsets as string);
 
-    const server = new ScraperAPIHttpServer({ toolsets, auth: credential });
+    const server = new ScraperAPIHttpServer({
+      toolsets,
+      auth: credential,
+      onAuthenticationError: rejected => revokedCredentials.add(rejected),
+    });
 
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

@@ -1,5 +1,5 @@
-import { randomBytes, randomUUID } from 'node:crypto';
-import type { Response } from 'express';
+import { createHash, randomBytes } from 'node:crypto';
+import type { CookieOptions, Response } from 'express';
 import type { AuthorizationParams, OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import {
@@ -11,27 +11,37 @@ import {
 } from '@modelcontextprotocol/sdk/server/auth/errors.js';
 import type { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
+import type { OAuthBackend } from './backend';
 import type { ClientsStore } from './clients-store';
-import { GRANT_EXCHANGE_ERROR, GrantExchangeError } from './grant-exchange';
-import type { GrantExchange } from './grant-exchange';
-import { TtlStore } from './ttl-store';
+import type { Sealer } from './sealer';
+import { TOKEN_EXCHANGE_ERROR, TokenExchangeError } from './token-exchange';
 
-const PENDING_AUTHORIZATION_TTL_MS = 10 * 60 * 1000;
+export const PENDING_COOKIE = 'decodo_oauth_pending';
 
-const AUTHORIZATION_CODE_TTL_MS = 60 * 1000;
+const PENDING_TTL_MS = 10 * 60 * 1000;
 
-/** What the MCP client asked for, parked while the user is on the dashboard. */
+const CODE_TTL_MS = 60 * 1000;
+
+const SEAL = {
+  PENDING: 'pending',
+  CODE: 'code',
+} as const;
+
 type PendingAuthorization = {
   requestId: string;
+  state: string;
+  codeVerifier: string;
   clientId: string;
   redirectUri: string;
   codeChallenge: string;
   scopes: string[];
-  state?: string;
+  clientState?: string;
 };
 
-/** A code handed to the MCP client, carrying the dashboard's code it can be traded for. */
-type IssuedAuthorizationCode = Omit<PendingAuthorization, 'state'> & {
+type IssuedAuthorizationCode = Pick<
+  PendingAuthorization,
+  'requestId' | 'clientId' | 'redirectUri' | 'codeChallenge' | 'scopes' | 'codeVerifier'
+> & {
   upstreamCode: string;
 };
 
@@ -49,94 +59,84 @@ export class UnknownAuthorizationRequestError extends Error {
   }
 }
 
-const GRANT_ERROR_TO_OAUTH_ERROR = {
-  [GRANT_EXCHANGE_ERROR.INVALID_GRANT]: InvalidGrantError,
-  [GRANT_EXCHANGE_ERROR.INVALID_CLIENT]: ServerError,
-  [GRANT_EXCHANGE_ERROR.SERVER_ERROR]: ServerError,
+const EXCHANGE_ERROR_TO_OAUTH_ERROR = {
+  [TOKEN_EXCHANGE_ERROR.INVALID_GRANT]: InvalidGrantError,
+  [TOKEN_EXCHANGE_ERROR.INVALID_CLIENT]: ServerError,
+  [TOKEN_EXCHANGE_ERROR.SERVER_ERROR]: ServerError,
 };
 
-/**
- * OAuth 2.1 authorization server for the hosted MCP server.
- *
- * Login and consent happen on the Decodo dashboard; this provider only brokers between
- * the MCP client and the dashboard, then trades the dashboard's grant code for a
- * Scraping API key. That key is returned as the access token, so `/mcp` keeps
- * treating `Bearer` tokens as Scraping API keys and OAuth clients need no extra path.
- */
+const randomToken = (): string => randomBytes(32).toString('base64url');
+
+const pkceChallenge = (verifier: string): string => createHash('sha256').update(verifier).digest('base64url');
+
 export class DecodoOAuthProvider implements OAuthServerProvider {
   readonly clientsStore: ClientsStore;
 
-  private readonly grantExchange: GrantExchange;
+  private readonly backend: OAuthBackend;
 
-  private readonly dashboardAuthorizeUrl: URL;
+  private readonly sealer: Sealer;
 
-  private readonly callbackUrl: URL;
-
-  private readonly appId: string;
-
-  private readonly pending = new TtlStore<PendingAuthorization>(PENDING_AUTHORIZATION_TTL_MS);
-
-  private readonly codes = new TtlStore<IssuedAuthorizationCode>(AUTHORIZATION_CODE_TTL_MS);
+  private readonly cookieOptions: CookieOptions;
 
   constructor({
     clientsStore,
-    grantExchange,
-    dashboardAuthorizeUrl,
+    backend,
+    sealer,
     callbackUrl,
-    appId,
   }: {
     clientsStore: ClientsStore;
-    grantExchange: GrantExchange;
-    dashboardAuthorizeUrl: URL;
+    backend: OAuthBackend;
+    sealer: Sealer;
     callbackUrl: URL;
-    appId: string;
   }) {
     this.clientsStore = clientsStore;
-    this.grantExchange = grantExchange;
-    this.dashboardAuthorizeUrl = dashboardAuthorizeUrl;
-    this.callbackUrl = callbackUrl;
-    this.appId = appId;
+    this.backend = backend;
+    this.sealer = sealer;
+    this.cookieOptions = {
+      httpOnly: true,
+      secure: callbackUrl.protocol === 'https:',
+      sameSite: 'lax',
+      path: callbackUrl.pathname,
+      maxAge: PENDING_TTL_MS,
+    };
   }
 
   async authorize(client: OAuthClientInformationFull, params: AuthorizationParams, res: Response): Promise<void> {
-    const requestId = randomUUID();
-    const upstreamState = randomBytes(32).toString('base64url');
-
-    this.pending.set(upstreamState, {
-      requestId,
+    const pending: PendingAuthorization = {
+      requestId: randomToken(),
+      state: randomToken(),
+      codeVerifier: randomToken(),
       clientId: client.client_id,
       redirectUri: params.redirectUri,
       codeChallenge: params.codeChallenge,
       scopes: params.scopes ?? [],
-      state: params.state,
+      clientState: params.state,
+    };
+
+    const url = await this.backend.authorizationUrl({
+      state: pending.state,
+      codeChallenge: pkceChallenge(pending.codeVerifier),
     });
 
-    const url = new URL(this.dashboardAuthorizeUrl);
-    url.searchParams.set('app', this.appId);
-    url.searchParams.set('request_id', requestId);
-    url.searchParams.set('redirect_uri', this.callbackUrl.href);
-    url.searchParams.set('state', upstreamState);
+    log('info', 'oauth.authorize', { clientId: client.client_id, requestId: pending.requestId });
 
-    log('info', 'oauth.authorize', { clientId: client.client_id, requestId });
-
+    res.cookie(PENDING_COOKIE, this.sealer.seal(SEAL.PENDING, pending, PENDING_TTL_MS), this.cookieOptions);
     res.redirect(302, url.href);
   }
 
-  /**
-   * Handles the browser coming back from the dashboard and returns where to send it next:
-   * the MCP client's redirect URI with either a code or an error.
-   */
-  handleCallback(query: CallbackQuery): string {
-    const pending = query.state ? this.pending.take(query.state) : undefined;
+  handleCallback({ query, pendingCookie, res }: { query: CallbackQuery; pendingCookie?: string; res: Response }): string {
+    const pending = pendingCookie ? this.sealer.unseal<PendingAuthorization>(SEAL.PENDING, pendingCookie) : undefined;
 
-    if (!pending) {
+    if (!pending || !query.state || query.state !== pending.state) {
       throw new UnknownAuthorizationRequestError();
     }
 
+    res.clearCookie(PENDING_COOKIE, this.cookieOptions);
+
     const redirect = new URL(pending.redirectUri);
 
-    if (pending.state) {
-      redirect.searchParams.set('state', pending.state);
+    if (pending.clientState) {
+      redirect.searchParams.set('state', pending.clientState);
     }
 
     if (query.error || !query.code) {
@@ -152,18 +152,17 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
       return redirect.href;
     }
 
-    const code = randomBytes(32).toString('base64url');
-
-    this.codes.set(code, {
+    const issued: IssuedAuthorizationCode = {
       requestId: pending.requestId,
       clientId: pending.clientId,
       redirectUri: pending.redirectUri,
       codeChallenge: pending.codeChallenge,
       scopes: pending.scopes,
+      codeVerifier: pending.codeVerifier,
       upstreamCode: query.code,
-    });
+    };
 
-    redirect.searchParams.set('code', code);
+    redirect.searchParams.set('code', this.sealer.seal(SEAL.CODE, issued, CODE_TTL_MS));
 
     log('info', 'oauth.callback.approved', { requestId: pending.requestId });
 
@@ -171,13 +170,7 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
   }
 
   async challengeForAuthorizationCode(client: OAuthClientInformationFull, authorizationCode: string): Promise<string> {
-    const issued = this.codes.get(authorizationCode);
-
-    if (!issued || issued.clientId !== client.client_id) {
-      throw new InvalidGrantError('unknown or expired authorization code');
-    }
-
-    return issued.codeChallenge;
+    return this.issuedCode(client, authorizationCode).codeChallenge;
   }
 
   async exchangeAuthorizationCode(
@@ -186,17 +179,13 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
     _codeVerifier?: string,
     redirectUri?: string
   ): Promise<OAuthTokens> {
-    const issued = this.codes.take(authorizationCode);
-
-    if (!issued || issued.clientId !== client.client_id) {
-      throw new InvalidGrantError('unknown or expired authorization code');
-    }
+    const issued = this.issuedCode(client, authorizationCode);
 
     if (redirectUri && redirectUri !== issued.redirectUri) {
       throw new InvalidGrantError('redirect_uri does not match the authorization request');
     }
 
-    const scraperApiKey = await this.exchangeUpstream(issued);
+    const scraperApiKey = await this.redeem(issued);
 
     log('info', 'oauth.token.issued', { requestId: issued.requestId, clientId: client.client_id });
 
@@ -211,10 +200,6 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
     throw new UnsupportedGrantTypeError('refresh tokens are not issued; reconnect to get a new key');
   }
 
-  /**
-   * Access tokens are Scraping API keys, which only the Scraping API can validate.
-   * Nothing on this server gates on the result; `/mcp` forwards the key as-is.
-   */
   async verifyAccessToken(token: string): Promise<AuthInfo> {
     if (!token.trim()) {
       throw new InvalidTokenError('empty access token');
@@ -223,13 +208,23 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
     return { token, clientId: 'unknown', scopes: [] };
   }
 
-  private async exchangeUpstream(issued: IssuedAuthorizationCode): Promise<string> {
+  private issuedCode(client: OAuthClientInformationFull, authorizationCode: string): IssuedAuthorizationCode {
+    const issued = this.sealer.unseal<IssuedAuthorizationCode>(SEAL.CODE, authorizationCode);
+
+    if (!issued || issued.clientId !== client.client_id) {
+      throw new InvalidGrantError('unknown or expired authorization code');
+    }
+
+    return issued;
+  }
+
+  private async redeem(issued: IssuedAuthorizationCode): Promise<string> {
     try {
-      return await this.grantExchange.exchange(issued.upstreamCode);
+      return await this.backend.exchange({ code: issued.upstreamCode, codeVerifier: issued.codeVerifier });
     } catch (error) {
-      if (error instanceof GrantExchangeError) {
-        log('warn', 'oauth.grant_exchange.failed', { requestId: issued.requestId, code: error.code, error: error.message });
-        throw new GRANT_ERROR_TO_OAUTH_ERROR[error.code](error.message);
+      if (error instanceof TokenExchangeError) {
+        log('warn', 'oauth.token_exchange.failed', { requestId: issued.requestId, code: error.code, error: error.message });
+        throw new EXCHANGE_ERROR_TO_OAUTH_ERROR[error.code](error.message);
       }
 
       throw error;
