@@ -21,13 +21,16 @@ export class YoutubeSubtitlesTool extends Tool {
     server.registerTool(
       'youtube_subtitles',
       {
+        title: 'YouTube Subtitles',
         description: 'Scrape YouTube video subtitles',
         inputSchema: {
           query: z.string().describe('YouTube video ID (e.g., "L8zSWbQN-v8")'),
           language_code: zodLanguageCode,
         },
         annotations: {
+          title: 'YouTube Subtitles',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

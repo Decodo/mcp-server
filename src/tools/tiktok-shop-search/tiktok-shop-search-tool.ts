@@ -23,6 +23,7 @@ export class TiktokShopSearchTool extends Tool {
     server.registerTool(
       'tiktok_shop_search',
       {
+        title: 'TikTok Shop Search',
         description: 'Scrape TikTok Shop Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for TikTok Shop products'),
@@ -31,7 +32,9 @@ export class TiktokShopSearchTool extends Tool {
           deviceType: zodDeviceType,
         },
         annotations: {
+          title: 'TikTok Shop Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

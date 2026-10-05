@@ -33,6 +33,7 @@ export class WalmartSearchTool extends Tool {
     server.registerTool(
       'walmart_search',
       {
+        title: 'Walmart Search',
         description: 'Scrape Walmart Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for Walmart products (e.g., "camping tent")'),
@@ -41,7 +42,9 @@ export class WalmartSearchTool extends Tool {
           storeId: zodWalmartStoreId,
         },
         annotations: {
+          title: 'Walmart Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

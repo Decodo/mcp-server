@@ -16,13 +16,16 @@ export class ScreenshotTool extends Tool {
     server.registerTool(
       'screenshot',
       {
+        title: 'Screenshot',
         description: 'Capture a screenshot of any webpage and return it as a PNG image',
         inputSchema: {
           url: z.string().describe('URL to screenshot'),
           geo: zodGeo,
         },
         annotations: {
+          title: 'Screenshot',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

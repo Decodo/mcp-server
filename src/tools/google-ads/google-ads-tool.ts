@@ -28,6 +28,7 @@ export class GoogleAdsTool extends Tool {
     server.registerTool(
       'google_ads',
       {
+        title: 'Google Ads',
         description: 'Scrape Google Ads search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for Google Ads (e.g., "laptop")'),
@@ -38,7 +39,9 @@ export class GoogleAdsTool extends Tool {
           pageFrom: zodPageFrom,
         },
         annotations: {
+          title: 'Google Ads',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

@@ -23,6 +23,7 @@ export class GoogleLensTool extends Tool {
     server.registerTool(
       'google_lens',
       {
+        title: 'Google Lens',
         description: 'Scrape Google Lens image search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Image URL for Google Lens search (e.g., "https://example.com/image.jpg")'),
@@ -30,7 +31,9 @@ export class GoogleLensTool extends Tool {
           deviceType: zodDeviceType,
         },
         annotations: {
+          title: 'Google Lens',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

@@ -27,6 +27,7 @@ export class AmazonSellersTool extends Tool {
     server.registerTool(
       'amazon_sellers',
       {
+        title: 'Amazon Sellers',
         description: 'Scrape Amazon Seller information with automatic parsing',
         inputSchema: {
           query: z.string().describe('Amazon seller ID (e.g., "A1R0Z7FJGTKESH")'),
@@ -35,7 +36,9 @@ export class AmazonSellersTool extends Tool {
           geo: zodGeo,
         },
         annotations: {
+          title: 'Amazon Sellers',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

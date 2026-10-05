@@ -23,6 +23,7 @@ export class GoogleAiModeTool extends Tool {
     server.registerTool(
       'google_ai_mode',
       {
+        title: 'Google AI Mode',
         description: 'Scrape Google AI Mode (Search with AI) results with automatic parsing',
         inputSchema: {
           query: z
@@ -34,7 +35,9 @@ export class GoogleAiModeTool extends Tool {
           deviceType: zodDeviceType,
         },
         annotations: {
+          title: 'Google AI Mode',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

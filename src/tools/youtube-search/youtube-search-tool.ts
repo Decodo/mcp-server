@@ -16,12 +16,15 @@ export class YoutubeSearchTool extends Tool {
     server.registerTool(
       'youtube_search',
       {
+        title: 'YouTube Search',
         description: 'Search YouTube videos',
         inputSchema: {
           query: z.string().describe('YouTube search query (e.g., "How to care for chinchillas")'),
         },
         annotations: {
+          title: 'YouTube Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

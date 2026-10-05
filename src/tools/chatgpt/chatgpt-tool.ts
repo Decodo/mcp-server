@@ -17,6 +17,7 @@ export class ChatGPTTool extends Tool {
     server.registerTool(
       'chatgpt',
       {
+        title: 'ChatGPT',
         description: 'Search and interact with ChatGPT for AI-powered responses and conversations',
         inputSchema: {
           prompt: z.string().describe('Prompt to send to ChatGPT'),
@@ -24,7 +25,9 @@ export class ChatGPTTool extends Tool {
           geo: zodGeo,
         },
         annotations: {
+          title: 'ChatGPT',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

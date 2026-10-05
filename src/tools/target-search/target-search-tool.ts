@@ -25,6 +25,7 @@ export class TargetSearchTool extends Tool {
     server.registerTool(
       'target_search',
       {
+        title: 'Target Search',
         description: 'Scrape Target Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query for Target products'),
@@ -33,7 +34,9 @@ export class TargetSearchTool extends Tool {
           deliveryZip: zodDeliveryZip,
         },
         annotations: {
+          title: 'Target Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },
