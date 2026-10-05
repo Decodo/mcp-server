@@ -80,7 +80,7 @@ scraping infrastructure from scratch. Common scenarios:
 
 1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
    free requests, no credit card required.
-2. **Get your API key.** Obtain a Web Scraping API basic authentication token from the dashboard.
+2. **Get your authentication token.** Obtain a Web Scraping API basic authentication token from the dashboard.
 3. **Download Node.js 18+** from https://nodejs.org.
 4. **Get MCP client** like Claude Desktop, Cursor, Windsurf or other MCP-compatible
    tools.
@@ -103,21 +103,7 @@ Open your preferred MCP client and add the following configuration (see examples
 }
 ```
 
-### Claude (claude.ai, Claude Desktop, Claude Code) with sign-in
-
-Claude clients can connect with the server URL alone and sign in through the browser instead of
-pasting a token. The hosted server is an OAuth 2.1 authorization server: it supports PKCE, dynamic
-client registration and Client ID Metadata Documents, so no client setup is needed.
-
-- claude.ai / Claude Desktop: Settings → Connectors → Add custom connector → URL `https://mcp.decodo.com/mcp`.
-- Claude Code: `claude mcp add --transport http decodo https://mcp.decodo.com/mcp`, then `/mcp` → Authenticate.
-
-You are sent to the Decodo dashboard, log in, approve, and the tools use your workspace's existing
-Scraping API key. Only the workspace owner can approve. Revoking Claude's access means rotating that
-key in the dashboard, which also affects other integrations using it. Sending an `Authorization` header (Basic or Bearer) keeps working
-as before and skips the sign-in.
-
-### Claude Desktop (local, stdio)
+### Claude Desktop
 1. Open Claude Desktop → Settings → Developer → Edit Config.
 2. Add to claude_desktop_config.json:
 
@@ -215,61 +201,6 @@ this:
 ```
 
 </details>
-
-## Running the HTTP server (hosted mode)
-
-`npm run dev:http` (or `npm start` after a build) serves `/mcp` plus the OAuth endpoints
-(`/authorize`, `/token`, `/register`, `/oauth/callback` and the `/.well-known` discovery documents).
-
-The server is an OAuth 2.1 authorization server towards MCP clients and a registered *exchange
-client* towards Decodo's subscription-api. On sign-in it signs a request JWT with its private key,
-registers it with subscription-api, sends the browser to the dashboard consent page with the
-resulting `request_uuid`, and after the user approves redeems the returned code with a PKCE
-verifier for the user's Scraping API key. That key is the access token, so `/mcp` treats OAuth
-tokens and `Bearer` API keys identically. Refresh tokens are not issued.
-
-Nothing is stored between the handshake steps: the pending authorization travels in an encrypted
-cookie and the authorization code is an encrypted record, so any replica can serve any step as long
-as they share `OAUTH_STATE_SECRET`.
-
-| Variable                          | Default                                                                                 | Purpose                                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `PORT`                            | `3000`                                                                                  | Listen port.                                                                                |
-| `PUBLIC_URL`                      | `http://localhost:<PORT>`                                                               | Public origin, used as the OAuth issuer and for callback URLs. Must be `https` when hosted. |
-| `OAUTH_STATE_SECRET`              | random per process                                                                      | Seals the handshake cookie, codes and client ids. Required in production, same on all pods. |
-| `OAUTH_BACKEND`                   | `decodo`                                                                                | `mock` runs the consent page and subscription-api in-process (see below).                   |
-| `DASHBOARD_AUTHORIZE_URL`         | `https://dashboard.decodo.com/scraper/token-exchange/decision`                          | Consent page users are sent to, with a `request_uuid` query parameter.                      |
-| `TOKEN_EXCHANGE_BASE_URL`         | `https://dashboard.decodo.com/subscription-api/v1/api/scraper/apikey/token-exchange`    | subscription-api token exchange endpoints; `/request` and `/exchange` are appended.         |
-| `TOKEN_EXCHANGE_CLIENT_ID`        | `scrapper-mcp`                                                                          | Exchange client id registered in subscription-api for this environment.                     |
-| `TOKEN_EXCHANGE_KID`              |                                                                                         | Key id of the registered public key.                                                        |
-| `TOKEN_EXCHANGE_PRIVATE_KEY`      |                                                                                         | RSA private key (PEM, `\n` escapes accepted). Or `TOKEN_EXCHANGE_PRIVATE_KEY_FILE` as a path. |
-| `OAUTH_ALLOWED_REDIRECT_URIS`     |                                                                                         | Extra exact redirect URIs MCP clients may register. Claude's callbacks and loopback are built in. |
-| `MOCK_SCRAPER_API_KEY`            |                                                                                         | Key the mock backend releases when the consent form leaves the key field empty.             |
-| `TRUST_PROXY`                     | `false`                                                                                 | Set to `true` behind a load balancer so rate limits key on the client IP.                   |
-
-Registering the server as an exchange client in subscription-api needs: the client id, a display
-name, the exact redirect URI `<PUBLIC_URL>/oauth/callback`, and the public half of the signing key
-with its `kid`. Generate a key pair with:
-
-```
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
-openssl pkey -in private.pem -pubout -out public.pem
-```
-
-### Trying the sign-in flow locally
-
-Run the server with the mock backend, which hosts a fake consent page and a fake subscription-api
-in the same process with an ephemeral signing key, and connect from Claude Code:
-
-```
-OAUTH_BACKEND=mock MOCK_SCRAPER_API_KEY=<scraping_api_key> npm run dev:http
-claude mcp add --transport http decodo-local http://localhost:3000/mcp
-```
-
-Authenticate from `/mcp` in Claude Code: the browser opens the mock consent page at
-`/mock/dashboard/authorize`, and approving releases the key you configured (or one pasted into the
-form). The mock validates the signed request and the PKCE verifier like the real backend; it skips
-login and sessions.
 
 ## Toolsets
 
