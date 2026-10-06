@@ -111,6 +111,38 @@ describe('ScraperApiClient', () => {
     });
   });
 
+  describe('scrape - hosts', () => {
+    beforeEach(() => {
+      respondWith(() => scrapeResponse('<html></html>'));
+    });
+
+    it('sends api keys to the configured data API host', async () => {
+      const staged = new ScraperApiClient({ hosts: { dataApi: 'https://stage-data.example' } });
+
+      await staged.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
+
+      expect(lastRequest().url).toBe('https://stage-data.example/v1/scrape');
+    });
+
+    it('sends basic tokens to the configured scraper API host', async () => {
+      const staged = new ScraperApiClient({ hosts: { scraperApi: 'https://stage-scraper-api.example' } });
+
+      await staged.scrape(defaultArgs);
+
+      expect(lastRequest().url).toBe('https://stage-scraper-api.example/v2/scrape');
+    });
+
+    it('keeps the SDK defaults when no host is configured', async () => {
+      const bare = new ScraperApiClient({ hosts: {} });
+
+      await bare.scrape(defaultArgs);
+      expect(lastRequest().url).toBe('https://scraper-api.decodo.com/v2/scrape');
+
+      await bare.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/scrape');
+    });
+  });
+
   describe('transformScrapingParams', () => {
     it('maps jsRender to headless html', () => {
       expect(client.transformScrapingParams({ scrapingParams: { jsRender: true } })).toMatchObject({

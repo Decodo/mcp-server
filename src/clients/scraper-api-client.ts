@@ -8,6 +8,8 @@ import {
 import type { ScrapeRequest, SyncResponse } from '@decodo/sdk-ts';
 import { ScrapingMCPParams } from 'types';
 import { AUTH_TYPE } from '../auth';
+import { scrapingApiHostsFromEnv } from './hosts';
+import type { ScrapingApiHosts } from './hosts';
 import type { AuthCredential } from '../auth';
 import { ProgressNotifier, ProgressExtra } from '../utils';
 import { log } from '../logger';
@@ -40,18 +42,23 @@ export class ScraperApiClient {
 
   onAuthenticationError?: AuthenticationErrorListener;
 
+  hosts: ScrapingApiHosts;
+
   constructor({
     maxRetries = MAX_RETRIES,
     delayMs = BASE_RETRY_DELAY_MS,
     onAuthenticationError,
+    hosts = scrapingApiHostsFromEnv(),
   }: {
     maxRetries?: number;
     delayMs?: number;
     onAuthenticationError?: AuthenticationErrorListener;
+    hosts?: ScrapingApiHosts;
   } = {}) {
     this.maxRetries = maxRetries;
     this.delayMs = delayMs;
     this.onAuthenticationError = onAuthenticationError;
+    this.hosts = hosts;
   }
 
   transformScrapingParams = ({
@@ -151,8 +158,10 @@ export class ScraperApiClient {
     return error;
   };
 
-  private sdkCredentials = (auth: AuthCredential) =>
-    auth.type === AUTH_TYPE.API_KEY ? { apiKey: auth.value } : { token: auth.value };
+  private sdkTransport = (auth: AuthCredential) =>
+    auth.type === AUTH_TYPE.API_KEY
+      ? { apiKey: auth.value, baseUrl: this.hosts.dataApi }
+      : { token: auth.value, baseUrl: this.hosts.scraperApi };
 
   scrape = async <T = string>({
     auth,
@@ -176,7 +185,7 @@ export class ScraperApiClient {
 
       const { webScrapingApi } = new DecodoClient({
         webScrapingApi: {
-          ...this.sdkCredentials(auth),
+          ...this.sdkTransport(auth),
           integrationHeader: INTEGRATION_HEADER,
         },
         timeoutMs: REQUEST_TIMEOUT_MS,
