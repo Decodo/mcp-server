@@ -81,8 +81,8 @@ scraping infrastructure from scratch. Common scenarios:
 1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
    free requests, no credit card required.
 2. **Get your API key.** Copy your Web Data API key from your Web Data API subscription on the
-   [dashboard](https://dashboard.decodo.com/playground). Older plans have a basic authentication
-   token, which also works (see [Authentication](#authentication)).
+   [dashboard](https://dashboard.decodo.com/web-data/playground). Older plans have a basic
+   authentication token, which also works (see [Authentication](#authentication)).
 3. **Download Node.js 18+** from https://nodejs.org.
 4. **Get MCP client** like Claude Desktop, Cursor, Windsurf or other MCP-compatible tools.
 5. **Configure the MCP server** in your AI client (see configuration examples below).
