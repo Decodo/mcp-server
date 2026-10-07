@@ -33,6 +33,7 @@ export class WalmartProductTool extends Tool {
     server.registerTool(
       'walmart_product',
       {
+        title: 'Walmart Product',
         description: 'Scrape Walmart Product page with automatic parsing',
         inputSchema: {
           product_id: z.string().describe('Walmart product ID (e.g., "15296401808")'),
@@ -41,7 +42,9 @@ export class WalmartProductTool extends Tool {
           storeId: zodStoreId,
         },
         annotations: {
+          title: 'Walmart Product',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

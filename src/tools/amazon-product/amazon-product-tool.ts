@@ -33,6 +33,7 @@ export class AmazonProductTool extends Tool {
     server.registerTool(
       'amazon_product',
       {
+        title: 'Amazon Product',
         description: 'Scrape Amazon Product page with automatic parsing',
         inputSchema: {
           query: z.string().describe('Amazon product ASIN (e.g., "B09H74FXNW")'),
@@ -41,7 +42,9 @@ export class AmazonProductTool extends Tool {
           geo: zodGeo,
         },
         annotations: {
+          title: 'Amazon Product',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

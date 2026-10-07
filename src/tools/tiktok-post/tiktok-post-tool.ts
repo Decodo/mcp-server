@@ -17,6 +17,7 @@ export class TiktokPostTool extends Tool {
     server.registerTool(
       'tiktok_post',
       {
+        title: 'TikTok Post',
         description:
           'Scrape a TikTok post URL for structured data such as engagement, captions, and hashtags',
         inputSchema: {
@@ -26,7 +27,9 @@ export class TiktokPostTool extends Tool {
           xhr: zodXhr,
         },
         annotations: {
+          title: 'TikTok Post',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

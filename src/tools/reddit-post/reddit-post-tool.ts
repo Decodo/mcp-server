@@ -22,6 +22,7 @@ export class RedditPostTool extends Tool {
     server.registerTool(
       'reddit_post',
       {
+        title: 'Reddit Post',
         description: 'Scrape a specific Reddit post',
         inputSchema: {
           url: z
@@ -31,7 +32,9 @@ export class RedditPostTool extends Tool {
             ),
         },
         annotations: {
+          title: 'Reddit Post',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

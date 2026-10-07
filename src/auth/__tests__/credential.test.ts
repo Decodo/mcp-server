@@ -58,8 +58,20 @@ describe('credentialFromAuthHeader', () => {
     });
   });
 
-  it('trusts the scheme over the shape of the value', () => {
-    expect(credentialFromAuthHeader(`Bearer ${base64('user:pass')}`)?.type).toBe(AUTH_TYPE.API_KEY);
+  it('detects an api key sent under Basic', () => {
+    const apiKey = 'a'.repeat(64);
+
+    expect(credentialFromAuthHeader(`Basic ${apiKey}`)).toEqual({
+      type: AUTH_TYPE.API_KEY,
+      value: apiKey,
+    });
+  });
+
+  it('detects a token sent under Bearer', () => {
+    expect(credentialFromAuthHeader(`Bearer ${base64('user:pass')}`)).toEqual({
+      type: AUTH_TYPE.TOKEN,
+      value: base64('user:pass'),
+    });
   });
 
   it('rejects an unknown scheme', () => {

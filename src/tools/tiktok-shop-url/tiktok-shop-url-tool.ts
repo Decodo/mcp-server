@@ -17,13 +17,16 @@ export class TiktokShopUrlTool extends Tool {
     server.registerTool(
       'tiktok_shop_url',
       {
+        title: 'TikTok Shop URL',
         description: 'Scrape TikTok Shop page by URL',
         inputSchema: {
           url: z.string().describe('TikTok Shop URL (e.g., "https://www.tiktok.com/shop/s?q=HEADPHONES")'),
           jsRender: zodJsRender,
         },
         annotations: {
+          title: 'TikTok Shop URL',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

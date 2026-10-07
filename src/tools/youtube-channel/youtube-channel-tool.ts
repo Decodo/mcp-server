@@ -21,13 +21,16 @@ export class YoutubeChannelTool extends Tool {
     server.registerTool(
       'youtube_channel',
       {
+        title: 'YouTube Channel',
         description: 'Scrape YouTube channel videos with automatic parsing',
         inputSchema: {
           query: z.string().describe('YouTube channel handle or ID (e.g., "@decodo_official")'),
           limit: zodLimit,
         },
         annotations: {
+          title: 'YouTube Channel',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

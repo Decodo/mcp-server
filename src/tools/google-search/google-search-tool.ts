@@ -30,6 +30,7 @@ export class GoogleSearchTool extends Tool {
     server.registerTool(
       'google_search',
       {
+        title: 'Google Search',
         description: 'Scrape Google Search results with automatic parsing',
         inputSchema: {
           query: z.string().describe('Search query'),
@@ -38,7 +39,9 @@ export class GoogleSearchTool extends Tool {
           jsRender: zodJsRender,
         },
         annotations: {
+          title: 'Google Search',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

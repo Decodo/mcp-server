@@ -22,6 +22,7 @@ export class GoogleTravelHotelsTool extends Tool {
     server.registerTool(
       'google_travel_hotels',
       {
+        title: 'Google Travel Hotels',
         description: 'Scrape Google Travel Hotels search results',
         inputSchema: {
           query: z.string().describe('Hotel search query (e.g., "trivago", "hotels in Paris")'),
@@ -31,7 +32,9 @@ export class GoogleTravelHotelsTool extends Tool {
           pageFrom: zodPageFrom,
         },
         annotations: {
+          title: 'Google Travel Hotels',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

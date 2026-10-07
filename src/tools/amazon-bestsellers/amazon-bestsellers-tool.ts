@@ -26,6 +26,7 @@ export class AmazonBestsellersTool extends Tool {
     server.registerTool(
       'amazon_bestsellers',
       {
+        title: 'Amazon Bestsellers',
         description: 'Scrape Amazon Bestsellers list with automatic parsing',
         inputSchema: {
           query: z.string().describe('Amazon category (e.g., "mobile-apps", "electronics")'),
@@ -33,7 +34,9 @@ export class AmazonBestsellersTool extends Tool {
           pageFrom: zodPageFrom,
         },
         annotations: {
+          title: 'Amazon Bestsellers',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

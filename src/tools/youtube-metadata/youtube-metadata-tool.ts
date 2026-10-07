@@ -16,12 +16,15 @@ export class YoutubeMetadataTool extends Tool {
     server.registerTool(
       'youtube_metadata',
       {
+        title: 'YouTube Metadata',
         description: 'Scrape YouTube video metadata',
         inputSchema: {
           query: z.string().describe('YouTube video ID (e.g., "dFu9aKJoqGg")'),
         },
         annotations: {
+          title: 'YouTube Metadata',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },

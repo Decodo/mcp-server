@@ -27,5 +27,9 @@ export const credentialFromAuthHeader = (header: string): AuthCredential | undef
     return;
   }
 
-  return toCredential(TYPE_BY_SCHEME[scheme], value);
+  if (!TYPE_BY_SCHEME[scheme]) {
+    return;
+  }
+
+  return toCredential(detectCredentialType(value), value);
 };

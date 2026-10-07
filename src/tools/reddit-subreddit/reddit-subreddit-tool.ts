@@ -22,12 +22,15 @@ export class RedditSubredditTool extends Tool {
     server.registerTool(
       'reddit_subreddit',
       {
+        title: 'Reddit Subreddit',
         description: 'Scrape Reddit subreddit results with automatic parsing',
         inputSchema: {
           url: z.string().describe('URL to subreddit'),
         },
         annotations: {
+          title: 'Reddit Subreddit',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: true,
         },
       },
