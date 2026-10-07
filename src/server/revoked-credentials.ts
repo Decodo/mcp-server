@@ -15,6 +15,10 @@ export class RevokedCredentials {
     return this.rejected.get(RevokedCredentials.fingerprint(credential)) === true;
   }
 
+  remove(credential: AuthCredential): void {
+    this.rejected.delete(RevokedCredentials.fingerprint(credential));
+  }
+
   private static fingerprint({ type, value }: AuthCredential): string {
     return createHash('sha256').update(`${type}:${value}`).digest('hex');
   }

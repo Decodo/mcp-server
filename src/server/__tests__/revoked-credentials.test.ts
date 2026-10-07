@@ -18,4 +18,12 @@ describe('RevokedCredentials', () => {
 
     expect(revoked.has({ type: AUTH_TYPE.TOKEN, value: apiKey.value })).toBe(false);
   });
+
+  it('forgets a credential on request', () => {
+    const revoked = new RevokedCredentials();
+    revoked.add(apiKey);
+    revoked.remove(apiKey);
+
+    expect(revoked.has(apiKey)).toBe(false);
+  });
 });

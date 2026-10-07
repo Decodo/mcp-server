@@ -350,6 +350,25 @@ describe('OAuth against the mock backend', () => {
       await expect(tokenResponse.json()).resolves.toEqual({ access_token: 'sk-live-from-form', token_type: 'bearer' });
     });
 
+    it('accepts a previously rejected key again once a new sign-in issues it', async () => {
+      revokedCredentials.add({ type: AUTH_TYPE.API_KEY, value: 'sk-live-back' });
+      expect((await postMcp('Bearer sk-live-back')).status).toBe(401);
+
+      const { client_id: clientId } = await registerClient();
+      const { verifier, challenge } = pkce();
+      const clientRedirect = await browser.authorize(authorizeUrl(clientId, challenge), 'approve', 'sk-live-back');
+      const tokenResponse = await requestToken({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        code: clientRedirect.searchParams.get('code') as string,
+        code_verifier: verifier,
+        redirect_uri: CLIENT_REDIRECT,
+      });
+      expect(tokenResponse.status).toBe(200);
+
+      expect((await postMcp('Bearer sk-live-back')).status).not.toBe(401);
+    });
+
     it('rejects a wrong PKCE verifier and does not spend the code', async () => {
       const { client_id: clientId } = await registerClient();
       const { verifier, challenge } = pkce();

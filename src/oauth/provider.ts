@@ -78,20 +78,25 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
 
   private readonly cookieOptions: CookieOptions;
 
+  private readonly onTokenIssued?: (scraperApiKey: string) => void;
+
   constructor({
     clientsStore,
     backend,
     sealer,
     callbackUrl,
+    onTokenIssued,
   }: {
     clientsStore: ClientsStore;
     backend: OAuthBackend;
     sealer: Sealer;
     callbackUrl: URL;
+    onTokenIssued?: (scraperApiKey: string) => void;
   }) {
     this.clientsStore = clientsStore;
     this.backend = backend;
     this.sealer = sealer;
+    this.onTokenIssued = onTokenIssued;
     this.cookieOptions = {
       httpOnly: true,
       secure: callbackUrl.protocol === 'https:',
@@ -188,6 +193,7 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
     const scraperApiKey = await this.redeem(issued);
 
     log('info', 'oauth.token.issued', { requestId: issued.requestId, clientId: client.client_id });
+    this.onTokenIssued?.(scraperApiKey);
 
     return {
       access_token: scraperApiKey,

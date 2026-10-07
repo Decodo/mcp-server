@@ -1,13 +1,14 @@
 import cors from 'cors';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { credentialFromAuthHeader } from '../auth';
+import { credentialFromAuthHeader, credentialFromValue } from '../auth';
 import { createOAuth } from '../oauth';
 import type { OAuthConfig } from '../oauth';
 import { resolveToolsets } from '../utils';
 import { corsOptions } from './cors';
 import { RevokedCredentials } from './revoked-credentials';
 import { ScraperAPIHttpServer } from './sapi-http-server';
+import type { TrustProxy } from './trust-proxy';
 
 type FetchLike = typeof fetch;
 
@@ -23,12 +24,21 @@ export const createApp = ({
   fetch,
 }: {
   oauth: OAuthConfig;
-  trustProxy?: boolean;
+  trustProxy?: TrustProxy;
   revokedCredentials?: RevokedCredentials;
   fetch?: FetchLike;
 }): express.Express => {
   const app = express();
-  const oauth = createOAuth(oauthConfig, { fetch });
+  const oauth = createOAuth(oauthConfig, {
+    fetch,
+    onTokenIssued: scraperApiKey => {
+      const credential = credentialFromValue(scraperApiKey);
+
+      if (credential) {
+        revokedCredentials.remove(credential);
+      }
+    },
+  });
 
   app.set('trust proxy', trustProxy);
 

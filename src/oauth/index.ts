@@ -25,7 +25,10 @@ export type OAuth = {
 
 type FetchLike = typeof fetch;
 
-export const createOAuth = (config: OAuthConfig, { fetch }: { fetch?: FetchLike } = {}): OAuth => {
+export const createOAuth = (
+  config: OAuthConfig,
+  { fetch, onTokenIssued }: { fetch?: FetchLike; onTokenIssued?: (scraperApiKey: string) => void } = {}
+): OAuth => {
   const callbackUrl = new URL(CALLBACK_PATH, config.publicUrl);
   const resourceServerUrl = new URL(MCP_PATH, config.publicUrl);
   const sealer = new Sealer(config.stateSecret);
@@ -36,6 +39,7 @@ export const createOAuth = (config: OAuthConfig, { fetch }: { fetch?: FetchLike 
     backend,
     sealer,
     callbackUrl,
+    onTokenIssued,
   });
 
   const router = express.Router();
