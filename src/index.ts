@@ -11,7 +11,7 @@ const parseEnvsOrExit = () => {
 
   for (const envKey of envs) {
     if (!process.env[envKey]) {
-      console.error(`env ${envKey} missing`);
+      console.error(`env ${envKey} missing: set your API key or basic auth token`);
       process.exit(1);
     }
   }
