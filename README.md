@@ -107,10 +107,10 @@ Cursor, Windsurf bellow):
 
 ### Authentication
 
-| Credential                                   | Where to get it                                                             | Hosted server header                      | Local server env                       |
-| -------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------- |
-| **API key** (recommended)                    | Web Data API subscription on the [dashboard](https://dashboard.decodo.com/) | `Authorization: Bearer <api_key>`         | `SCRAPER_API_TOKEN=<api_key>`          |
-| **Basic authentication token** (older plans) | Web Scraping API page on the dashboard                                      | `Authorization: Basic <basic_auth_token>` | `SCRAPER_API_TOKEN=<basic_auth_token>` |
+| Credential                                   | Where to get it                                                                                | Hosted server header                      | Local server env                       |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------- |
+| **API key** (recommended)                    | Web Data API subscription on the [dashboard](https://dashboard.decodo.com/web-data/playground) | `Authorization: Bearer <api_key>`         | `SCRAPER_API_TOKEN=<api_key>`          |
+| **Basic authentication token** (older plans) | Web Scraping API page on the dashboard                                                         | `Authorization: Basic <basic_auth_token>` | `SCRAPER_API_TOKEN=<basic_auth_token>` |
 
 The local server reads either credential from `SCRAPER_API_TOKEN` and works out which one it got.
 
