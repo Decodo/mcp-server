@@ -19,6 +19,6 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
     auth: AuthCredential;
     onAuthenticationError?: AuthenticationErrorListener;
   }) {
-    super({ auth, toolsets, onAuthenticationError });
+    super({ auth, toolsets, onAuthenticationError, integrationHeader: 'mcp-hosted' });
   }
 }
