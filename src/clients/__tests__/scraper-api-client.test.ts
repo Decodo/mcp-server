@@ -65,6 +65,18 @@ describe('ScraperApiClient', () => {
       });
     });
 
+    it('sends a custom integration header when configured', async () => {
+      const hostedClient = new ScraperApiClient({
+        maxRetries: 1,
+        delayMs: 0,
+        integrationHeader: 'mcp-hosted',
+      });
+
+      await hostedClient.scrape(defaultArgs);
+
+      expect(lastRequest().init.headers).toMatchObject({ 'x-integration': 'mcp-hosted' });
+    });
+
     it('posts to the data API with Bearer auth when given an API key', async () => {
       await client.scrape({ ...defaultArgs, auth: apiKeyAuth });
 
