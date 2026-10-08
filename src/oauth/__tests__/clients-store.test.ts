@@ -1,5 +1,5 @@
 import { InvalidClientMetadataError } from '@modelcontextprotocol/sdk/server/auth/errors.js';
-import { ClientsStore, isClientIdMetadataUrl } from '../clients-store';
+import { ClientsStore, MAX_CLIENT_NAME_LENGTH, isClientIdMetadataUrl } from '../clients-store';
 import { CLAUDE_REDIRECT_URIS } from '../config';
 import { Sealer } from '../sealer';
 
@@ -88,6 +88,16 @@ describe('ClientsStore dynamic registration', () => {
   it('accepts loopback redirect uris', () => {
     expect(() =>
       storeWith().registerClient({ ...registration, redirect_uris: ['http://localhost:6274/oauth/callback'] })
+    ).not.toThrow();
+  });
+
+  it('rejects an empty redirect uri list and an oversized client name', () => {
+    expect(() => storeWith().registerClient({ ...registration, redirect_uris: [] })).toThrow(InvalidClientMetadataError);
+    expect(() =>
+      storeWith().registerClient({ ...registration, client_name: 'n'.repeat(MAX_CLIENT_NAME_LENGTH + 1) })
+    ).toThrow(InvalidClientMetadataError);
+    expect(() =>
+      storeWith().registerClient({ ...registration, client_name: 'n'.repeat(MAX_CLIENT_NAME_LENGTH) })
     ).not.toThrow();
   });
 

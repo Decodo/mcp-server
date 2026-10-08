@@ -8,7 +8,7 @@ import { log } from '../logger';
 import { CALLBACK_PATH } from './config';
 import { cookieValue } from './cookies';
 import { DecodoOAuthProvider, PENDING_COOKIE, UnknownAuthorizationRequestError } from './provider';
-import type { CallbackQuery } from './provider';
+import { callbackQueryFrom } from './provider';
 
 const RESOURCE_NAME = 'Decodo MCP Server';
 
@@ -78,7 +78,7 @@ export const oauthRouter = ({
 
     try {
       const redirect = provider.handleCallback({
-        query: req.query as CallbackQuery,
+        query: callbackQueryFrom(req.query),
         pendingCookie: cookieValue(req.headers.cookie, PENDING_COOKIE),
         res,
       });

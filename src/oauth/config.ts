@@ -45,9 +45,13 @@ export const MCP_PATH = '/mcp';
 type Env = Record<string, string | undefined>;
 
 const urlFromEnv = (env: Env, key: string, fallback: string): URL => {
-  const value = env[key]?.trim();
+  const value = env[key]?.trim() || fallback;
 
-  return new URL(value || fallback);
+  if (!URL.canParse(value)) {
+    throw new Error(`${key} must be an absolute URL, got "${value}"`);
+  }
+
+  return new URL(value);
 };
 
 const listFromEnv = (env: Env, key: string): string[] =>
@@ -60,7 +64,11 @@ const privateKeyFromEnv = (env: Env): string => {
   const file = env.TOKEN_EXCHANGE_PRIVATE_KEY_FILE?.trim();
 
   if (file) {
-    return readFileSync(file, 'utf8');
+    try {
+      return readFileSync(file, 'utf8');
+    } catch (error) {
+      throw new Error(`TOKEN_EXCHANGE_PRIVATE_KEY_FILE cannot be read (${file}): ${(error as Error).message}`, { cause: error });
+    }
   }
 
   return (env.TOKEN_EXCHANGE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n').trim();

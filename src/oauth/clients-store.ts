@@ -13,6 +13,8 @@ const SEAL_PURPOSE = 'client';
 
 const PUBLIC_CLIENT = 'none';
 
+export const MAX_CLIENT_NAME_LENGTH = 128;
+
 const METADATA_DOCUMENT_TTL_MS = 60 * 60 * 1000;
 
 const METADATA_FETCH_TIMEOUT_MS = 5_000;
@@ -71,6 +73,14 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
   registerClient(client: Omit<OAuthClientInformationFull, 'client_id' | 'client_id_issued_at'>): OAuthClientInformationFull {
     if (client.token_endpoint_auth_method !== PUBLIC_CLIENT) {
       throw new InvalidClientMetadataError(`only public clients are supported (token_endpoint_auth_method "${PUBLIC_CLIENT}")`);
+    }
+
+    if (client.redirect_uris.length === 0) {
+      throw new InvalidClientMetadataError('redirect_uris must contain at least one uri');
+    }
+
+    if (client.client_name && client.client_name.length > MAX_CLIENT_NAME_LENGTH) {
+      throw new InvalidClientMetadataError(`client_name must be at most ${MAX_CLIENT_NAME_LENGTH} characters`);
     }
 
     this.assertRedirectUrisAllowed(client.redirect_uris);

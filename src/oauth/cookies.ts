@@ -11,7 +11,11 @@ export const cookieValue = (header: string | undefined, name: string): string | 
     }
 
     if (part.slice(0, separator).trim() === name) {
-      return decodeURIComponent(part.slice(separator + 1).trim());
+      try {
+        return decodeURIComponent(part.slice(separator + 1).trim());
+      } catch {
+        return;
+      }
     }
   }
 

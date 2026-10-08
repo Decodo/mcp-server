@@ -406,6 +406,59 @@ describe('OAuth against the mock backend', () => {
       expect(await response.text()).toContain('unknown or has expired');
     });
 
+    it('answers a malformed pending cookie with the expired page, not a 500', async () => {
+      const { client_id: clientId } = await registerClient();
+      const session = await browser.open(authorizeUrl(clientId, pkce().challenge));
+      const callbackUrl = await browser.decide(session.dashboardUrl, 'approve');
+
+      const response = await fetch(callbackUrl, { ...noRedirect, headers: { Cookie: `${PENDING_COOKIE}=%E0%A4%A` } });
+
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain('unknown or has expired');
+    });
+
+    it('treats a repeated code parameter as a denial instead of sealing it', async () => {
+      const { client_id: clientId } = await registerClient();
+      const session = await browser.open(authorizeUrl(clientId, pkce().challenge));
+      const callbackUrl = await browser.decide(session.dashboardUrl, 'approve');
+      callbackUrl.searchParams.append('code', 'second');
+
+      const clientRedirect = await browser.callback(callbackUrl, session.cookie);
+
+      expect(clientRedirect.searchParams.get('error')).toBe('invalid_request');
+      expect(clientRedirect.searchParams.get('code')).toBeNull();
+    });
+
+    it('bounds the error_description it forwards to the client', async () => {
+      const { client_id: clientId } = await registerClient();
+      const session = await browser.open(authorizeUrl(clientId, pkce().challenge));
+      const callbackUrl = await browser.decide(session.dashboardUrl, 'deny');
+      callbackUrl.searchParams.set('error_description', 'd'.repeat(8_000));
+
+      const clientRedirect = await browser.callback(callbackUrl, session.cookie);
+
+      expect(clientRedirect.searchParams.get('error_description')).toHaveLength(512);
+    });
+
+    it('refuses an oversized state up front with an oauth error', async () => {
+      const { client_id: clientId } = await registerClient();
+      const url = authorizeUrl(clientId, pkce().challenge);
+      url.searchParams.set('state', 's'.repeat(3_000));
+
+      const response = await fetch(url, noRedirect);
+      const redirect = location(response);
+
+      expect(redirect.origin + redirect.pathname).toBe(CLIENT_REDIRECT);
+      expect(redirect.searchParams.get('error')).toBe('invalid_request');
+    });
+
+    it('refuses a registration without redirect uris', async () => {
+      const response = await register({ redirect_uris: [] });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
+    });
+
     it('rejects an authorization request from an unregistered client', async () => {
       const response = await fetch(`${origin}/authorize?${form({ client_id: 'ghost', redirect_uri: CLIENT_REDIRECT })}`, noRedirect);
 

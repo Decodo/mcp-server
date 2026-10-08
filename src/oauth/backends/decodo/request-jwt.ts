@@ -66,7 +66,13 @@ export const requestJwtClaims = ({
   scope: REQUEST_JWT.SCOPE,
 });
 
-export const parsePrivateKey = (pem: string): KeyObject => createPrivateKey(pem);
+export const parsePrivateKey = (pem: string): KeyObject => {
+  try {
+    return createPrivateKey(pem);
+  } catch (error) {
+    throw new Error(`TOKEN_EXCHANGE_PRIVATE_KEY is not a valid PEM private key: ${(error as Error).message}`, { cause: error });
+  }
+};
 
 export type DecodedRequestJwt = {
   header: { alg?: string; kid?: string };

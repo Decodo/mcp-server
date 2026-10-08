@@ -62,3 +62,9 @@ describe('request JWT', () => {
     expect(verifyRequestJwt('', createPublicKey(publicKey))).toBeUndefined();
   });
 });
+
+describe('parsePrivateKey', () => {
+  it('names the variable when the pem is invalid', () => {
+    expect(() => parsePrivateKey('not a pem')).toThrow('TOKEN_EXCHANGE_PRIVATE_KEY');
+  });
+});

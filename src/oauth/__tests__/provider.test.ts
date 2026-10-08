@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Response } from 'express';
 import {
   InvalidGrantError,
+  InvalidRequestError,
   ServerError,
   UnsupportedGrantTypeError,
 } from '@modelcontextprotocol/sdk/server/auth/errors.js';
@@ -9,7 +10,7 @@ import type { OAuthClientInformationFull } from '@modelcontextprotocol/sdk/share
 import type { OAuthBackend } from '../backend';
 import { ClientsStore } from '../clients-store';
 import { CLAUDE_REDIRECT_URIS } from '../config';
-import { DecodoOAuthProvider, PENDING_COOKIE, UnknownAuthorizationRequestError } from '../provider';
+import { DecodoOAuthProvider, MAX_STATE_LENGTH, PENDING_COOKIE, UnknownAuthorizationRequestError, callbackQueryFrom } from '../provider';
 import { Sealer } from '../sealer';
 import { TOKEN_EXCHANGE_ERROR, TokenExchangeError } from '../token-exchange';
 
@@ -96,6 +97,14 @@ describe('DecodoOAuthProvider.authorize', () => {
     expect(cookieOptions).toMatchObject({ httpOnly: true, sameSite: 'lax', secure: true, path: '/oauth/callback' });
   });
 
+  it('refuses a client state longer than proxies can carry back', async () => {
+    const { provider } = setup();
+
+    await expect(
+      provider.authorize(client, { ...params, state: 'x'.repeat(MAX_STATE_LENGTH + 1) }, fakeResponse().asResponse)
+    ).rejects.toThrow(InvalidRequestError);
+  });
+
   it('uses a fresh state and verifier per attempt', async () => {
     const { backend, startAuthorization } = setup();
     await startAuthorization();
@@ -104,6 +113,18 @@ describe('DecodoOAuthProvider.authorize', () => {
     const [[first], [second]] = backend.authorizationUrl.mock.calls;
     expect(first.state).not.toBe(second.state);
     expect(first.codeChallenge).not.toBe(second.codeChallenge);
+  });
+});
+
+describe('callbackQueryFrom', () => {
+  it('keeps only single string parameters and bounds their length', () => {
+    expect(callbackQueryFrom({ code: ['a', 'b'], state: 's', error: { nested: true }, extra: 'x' })).toEqual({ state: 's' });
+    expect(callbackQueryFrom({ code: '', state: 's' })).toEqual({ state: 's' });
+    expect(callbackQueryFrom({ error: 'access_denied', error_description: 'x'.repeat(5_000), state: 's' })).toEqual({
+      error: 'access_denied',
+      error_description: 'x'.repeat(512),
+      state: 's',
+    });
   });
 });
 

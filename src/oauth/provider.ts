@@ -22,6 +22,10 @@ const PENDING_TTL_MS = 10 * 60 * 1000;
 
 const CODE_TTL_MS = 60 * 1000;
 
+export const MAX_STATE_LENGTH = 1024;
+
+const MAX_CALLBACK_PARAM_LENGTH = { code: 512, state: 256, error: 64, error_description: 512 } as const;
+
 const SEAL = {
   PENDING: 'pending',
   CODE: 'code',
@@ -50,6 +54,20 @@ export type CallbackQuery = {
   state?: string;
   error?: string;
   error_description?: string;
+};
+
+export const callbackQueryFrom = (query: Record<string, unknown>): CallbackQuery => {
+  const picked: CallbackQuery = {};
+
+  for (const [key, max] of Object.entries(MAX_CALLBACK_PARAM_LENGTH) as [keyof CallbackQuery, number][]) {
+    const value = query[key];
+
+    if (typeof value === 'string' && value.length > 0) {
+      picked[key] = value.slice(0, max);
+    }
+  }
+
+  return picked;
 };
 
 export class UnknownAuthorizationRequestError extends Error {
@@ -107,6 +125,10 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
   }
 
   async authorize(client: OAuthClientInformationFull, params: AuthorizationParams, res: Response): Promise<void> {
+    if (params.state && params.state.length > MAX_STATE_LENGTH) {
+      throw new InvalidRequestError(`state must be at most ${MAX_STATE_LENGTH} characters`);
+    }
+
     const pending: PendingAuthorization = {
       requestId: randomToken(),
       state: randomToken(),
