@@ -10,6 +10,6 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
   sapiClient: ScraperApiClient;
 
   constructor({ toolsets = [], auth }: { toolsets: TOOLSET[]; auth: AuthCredential }) {
-    super({ auth, toolsets });
+    super({ auth, toolsets, integrationHeader: 'mcp-hosted' });
   }
 }
