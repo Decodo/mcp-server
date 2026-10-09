@@ -11,7 +11,7 @@ const parseEnvsOrExit = () => {
 
   for (const envKey of envs) {
     if (!process.env[envKey]) {
-      console.error(`env ${envKey} missing`);
+      console.error(`env ${envKey} missing: set your API key or basic auth token`);
       process.exit(1);
     }
   }
@@ -19,7 +19,7 @@ const parseEnvsOrExit = () => {
   const sapiAuth = credentialFromValue(process.env['SCRAPER_API_TOKEN'] as string);
 
   if (!sapiAuth) {
-    console.error('env SCRAPER_API_TOKEN missing');
+    console.error('env SCRAPER_API_TOKEN missing: set your API key or basic auth token');
     process.exit(1);
   }
 
