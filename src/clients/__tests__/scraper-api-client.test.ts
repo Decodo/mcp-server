@@ -111,6 +111,38 @@ describe('ScraperApiClient', () => {
     });
   });
 
+  describe('scrape - hosts', () => {
+    beforeEach(() => {
+      respondWith(() => scrapeResponse('<html></html>'));
+    });
+
+    it('sends api keys to the configured data API host', async () => {
+      const staged = new ScraperApiClient({ hosts: { dataApi: 'https://stage-data.example' } });
+
+      await staged.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
+
+      expect(lastRequest().url).toBe('https://stage-data.example/v1/scrape');
+    });
+
+    it('sends basic tokens to the configured scraper API host', async () => {
+      const staged = new ScraperApiClient({ hosts: { scraperApi: 'https://stage-scraper-api.example' } });
+
+      await staged.scrape(defaultArgs);
+
+      expect(lastRequest().url).toBe('https://stage-scraper-api.example/v2/scrape');
+    });
+
+    it('keeps the SDK defaults when no host is configured', async () => {
+      const bare = new ScraperApiClient({ hosts: {} });
+
+      await bare.scrape(defaultArgs);
+      expect(lastRequest().url).toBe('https://scraper-api.decodo.com/v2/scrape');
+
+      await bare.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/scrape');
+    });
+  });
+
   describe('transformScrapingParams', () => {
     it('maps jsRender to headless html', () => {
       expect(client.transformScrapingParams({ scrapingParams: { jsRender: true } })).toMatchObject({
@@ -163,6 +195,19 @@ describe('ScraperApiClient', () => {
       await expect(client.scrape(defaultArgs)).rejects.toThrow(
         'Scraper API request failed (401): Authentication failed.'
       );
+    });
+
+    it('reports the rejected credential on 401 and only then', async () => {
+      const onAuthenticationError = jest.fn();
+      const reporting = new ScraperApiClient({ maxRetries: 0, onAuthenticationError });
+
+      respondOnceWith(() => jsonResponse({ status: 401, body: { message: 'Unauthorized' } }));
+      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(401)');
+      expect(onAuthenticationError).toHaveBeenCalledWith(auth);
+
+      respondOnceWith(() => jsonResponse({ status: 502, body: { message: 'Bad gateway' } }));
+      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(502)');
+      expect(onAuthenticationError).toHaveBeenCalledTimes(1);
     });
 
     it('surfaces the server message on 429', async () => {

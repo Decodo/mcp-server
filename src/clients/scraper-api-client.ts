@@ -8,7 +8,9 @@ import {
 import type { ScrapeRequest, SyncResponse } from '@decodo/sdk-ts';
 import { ScrapingMCPParams } from 'types';
 import { AUTH_TYPE } from '../auth';
-import type { AuthCredential, AuthType } from '../auth';
+import { scrapingApiHostsFromEnv } from './hosts';
+import type { ScrapingApiHosts } from './hosts';
+import type { AuthCredential } from '../auth';
 import { ProgressNotifier, ProgressExtra } from '../utils';
 import { log } from '../logger';
 import {
@@ -31,20 +33,32 @@ const API_PARAM_ALIASES = new Map([
   ['deliveryZip', 'delivery_zip'],
 ]);
 
+export type AuthenticationErrorListener = (auth: AuthCredential) => void;
+
 export class ScraperApiClient {
   maxRetries: number;
 
   delayMs: number;
 
+  onAuthenticationError?: AuthenticationErrorListener;
+
+  hosts: ScrapingApiHosts;
+
   constructor({
     maxRetries = MAX_RETRIES,
     delayMs = BASE_RETRY_DELAY_MS,
+    onAuthenticationError,
+    hosts = scrapingApiHostsFromEnv(),
   }: {
     maxRetries?: number;
     delayMs?: number;
+    onAuthenticationError?: AuthenticationErrorListener;
+    hosts?: ScrapingApiHosts;
   } = {}) {
     this.maxRetries = maxRetries;
     this.delayMs = delayMs;
+    this.onAuthenticationError = onAuthenticationError;
+    this.hosts = hosts;
   }
 
   transformScrapingParams = ({
@@ -83,20 +97,25 @@ export class ScraperApiClient {
   private sdkError = ({
     error,
     target,
-    authType,
+    auth,
     startMs,
   }: {
     error: unknown;
     target: string;
-    authType: AuthType;
+    auth: AuthCredential;
     startMs: number;
   }): unknown => {
     const latencyMs = Date.now() - startMs;
+    const authType = auth.type;
     const message = error instanceof Error ? error.message : String(error);
 
     if (error instanceof DecodoError) {
       const sdkMessage =
         error instanceof AuthenticationError ? 'Authentication failed.' : error.message;
+
+      if (error instanceof AuthenticationError) {
+        this.onAuthenticationError?.(auth);
+      }
 
       log('error', 'tool_call', {
         outcome: 'error',
@@ -139,8 +158,10 @@ export class ScraperApiClient {
     return error;
   };
 
-  private sdkCredentials = (auth: AuthCredential) =>
-    auth.type === AUTH_TYPE.API_KEY ? { apiKey: auth.value } : { token: auth.value };
+  private sdkTransport = (auth: AuthCredential) =>
+    auth.type === AUTH_TYPE.API_KEY
+      ? { apiKey: auth.value, baseUrl: this.hosts.dataApi }
+      : { token: auth.value, baseUrl: this.hosts.scraperApi };
 
   scrape = async <T = string>({
     auth,
@@ -164,7 +185,7 @@ export class ScraperApiClient {
 
       const { webScrapingApi } = new DecodoClient({
         webScrapingApi: {
-          ...this.sdkCredentials(auth),
+          ...this.sdkTransport(auth),
           integrationHeader: INTEGRATION_HEADER,
         },
         timeoutMs: REQUEST_TIMEOUT_MS,
@@ -222,7 +243,7 @@ export class ScraperApiClient {
         }
       }
 
-      throw this.sdkError({ error: lastError, target, authType: auth.type, startMs });
+      throw this.sdkError({ error: lastError, target, auth, startMs });
     } finally {
       notifier.stopWaitingNotifications();
     }
