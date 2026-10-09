@@ -3,6 +3,7 @@ import { InvalidClientMetadataError } from '@modelcontextprotocol/sdk/server/aut
 import { OAuthClientMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { OAuthClientInformationFull, OAuthClientMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
+import { readBoundedText } from './bounded-body';
 import { disallowedRedirectUris } from './redirect-uris';
 import type { Sealer } from './sealer';
 import { TtlStore } from './ttl-store';
@@ -14,6 +15,14 @@ const SEAL_PURPOSE = 'client';
 const PUBLIC_CLIENT = 'none';
 
 export const MAX_CLIENT_NAME_LENGTH = 128;
+
+export const MAX_REDIRECT_URIS = 10;
+
+export const MAX_REDIRECT_URI_LENGTH = 1024;
+
+export const MAX_SCOPE_LENGTH = 256;
+
+const MAX_METADATA_DOCUMENT_BYTES = 64 * 1024;
 
 const METADATA_DOCUMENT_TTL_MS = 60 * 60 * 1000;
 
@@ -47,6 +56,28 @@ export const isClientIdMetadataUrl = (clientId: string): boolean => {
   );
 };
 
+export const assertClientMetadataBounded = (client: Pick<OAuthClientMetadata, 'redirect_uris' | 'client_name' | 'scope'>): void => {
+  if (client.redirect_uris.length === 0) {
+    throw new InvalidClientMetadataError('redirect_uris must contain at least one uri');
+  }
+
+  if (client.redirect_uris.length > MAX_REDIRECT_URIS) {
+    throw new InvalidClientMetadataError(`redirect_uris must contain at most ${MAX_REDIRECT_URIS} uris`);
+  }
+
+  if (client.redirect_uris.some(uri => uri.length > MAX_REDIRECT_URI_LENGTH)) {
+    throw new InvalidClientMetadataError(`each redirect_uri must be at most ${MAX_REDIRECT_URI_LENGTH} characters`);
+  }
+
+  if (client.client_name && client.client_name.length > MAX_CLIENT_NAME_LENGTH) {
+    throw new InvalidClientMetadataError(`client_name must be at most ${MAX_CLIENT_NAME_LENGTH} characters`);
+  }
+
+  if (client.scope && client.scope.length > MAX_SCOPE_LENGTH) {
+    throw new InvalidClientMetadataError(`scope must be at most ${MAX_SCOPE_LENGTH} characters`);
+  }
+};
+
 export class ClientsStore implements OAuthRegisteredClientsStore {
   private readonly metadataDocuments = new TtlStore<OAuthClientInformationFull>(METADATA_DOCUMENT_TTL_MS);
 
@@ -75,14 +106,7 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
       throw new InvalidClientMetadataError(`only public clients are supported (token_endpoint_auth_method "${PUBLIC_CLIENT}")`);
     }
 
-    if (client.redirect_uris.length === 0) {
-      throw new InvalidClientMetadataError('redirect_uris must contain at least one uri');
-    }
-
-    if (client.client_name && client.client_name.length > MAX_CLIENT_NAME_LENGTH) {
-      throw new InvalidClientMetadataError(`client_name must be at most ${MAX_CLIENT_NAME_LENGTH} characters`);
-    }
-
+    assertClientMetadataBounded(client);
     this.assertRedirectUrisAllowed(client.redirect_uris);
 
     const sealed: SealedClient = {
@@ -135,7 +159,14 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
         return;
       }
 
-      const document = (await response.json()) as { client_id?: unknown };
+      const text = await readBoundedText(response, MAX_METADATA_DOCUMENT_BYTES);
+
+      if (text === undefined) {
+        log('warn', 'oauth.client_metadata.too_large', { clientId, maxBytes: MAX_METADATA_DOCUMENT_BYTES });
+        return;
+      }
+
+      const document = JSON.parse(text) as { client_id?: unknown };
 
       if (document.client_id !== clientId) {
         log('warn', 'oauth.client_metadata.client_id_mismatch', { clientId });
@@ -146,6 +177,13 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
 
       if (!parsed.success) {
         log('warn', 'oauth.client_metadata.invalid', { clientId, issues: parsed.error.message });
+        return;
+      }
+
+      try {
+        assertClientMetadataBounded(parsed.data);
+      } catch (error) {
+        log('warn', 'oauth.client_metadata.invalid', { clientId, issues: error instanceof Error ? error.message : String(error) });
         return;
       }
 

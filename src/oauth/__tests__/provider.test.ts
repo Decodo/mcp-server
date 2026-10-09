@@ -10,7 +10,15 @@ import type { OAuthClientInformationFull } from '@modelcontextprotocol/sdk/share
 import type { OAuthBackend } from '../backend';
 import { ClientsStore } from '../clients-store';
 import { CLAUDE_REDIRECT_URIS } from '../config';
-import { DecodoOAuthProvider, MAX_STATE_LENGTH, PENDING_COOKIE, UnknownAuthorizationRequestError, callbackQueryFrom } from '../provider';
+import {
+  DecodoOAuthProvider,
+  MAX_CODE_CHALLENGE_LENGTH,
+  MAX_PENDING_COOKIE_LENGTH,
+  MAX_STATE_LENGTH,
+  PENDING_COOKIE,
+  UnknownAuthorizationRequestError,
+  callbackQueryFrom,
+} from '../provider';
 import { Sealer } from '../sealer';
 import { TOKEN_EXCHANGE_ERROR, TokenExchangeError } from '../token-exchange';
 
@@ -103,6 +111,32 @@ describe('DecodoOAuthProvider.authorize', () => {
     await expect(
       provider.authorize(client, { ...params, state: 'x'.repeat(MAX_STATE_LENGTH + 1) }, fakeResponse().asResponse)
     ).rejects.toThrow(InvalidRequestError);
+  });
+
+  it('refuses an over-long code_challenge or scope before contacting the backend', async () => {
+    const { provider, backend } = setup();
+
+    await expect(
+      provider.authorize(client, { ...params, codeChallenge: 'c'.repeat(MAX_CODE_CHALLENGE_LENGTH + 1) }, fakeResponse().asResponse)
+    ).rejects.toThrow(InvalidRequestError);
+    await expect(
+      provider.authorize(client, { ...params, scopes: ['s'.repeat(300)] }, fakeResponse().asResponse)
+    ).rejects.toThrow(InvalidRequestError);
+    expect(backend.authorizationUrl).not.toHaveBeenCalled();
+  });
+
+  it('refuses a request whose pending cookie would not fit a proxy header', async () => {
+    const { provider, backend, startAuthorization } = setup();
+    const longRedirect = `https://claude.ai/api/mcp/auth_callback?${'q'.repeat(1_000)}`;
+    const wide = { ...client, redirect_uris: [longRedirect] };
+
+    await expect(
+      provider.authorize(wide, { ...params, redirectUri: longRedirect, state: 's'.repeat(MAX_STATE_LENGTH) }, fakeResponse().asResponse)
+    ).rejects.toThrow(InvalidRequestError);
+    expect(backend.authorizationUrl).not.toHaveBeenCalled();
+
+    const { cookie } = await startAuthorization();
+    expect(cookie.length).toBeLessThanOrEqual(MAX_PENDING_COOKIE_LENGTH);
   });
 
   it('uses a fresh state and verifier per attempt', async () => {

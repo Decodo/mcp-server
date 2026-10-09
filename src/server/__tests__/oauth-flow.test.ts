@@ -452,6 +452,22 @@ describe('OAuth against the mock backend', () => {
       expect(redirect.searchParams.get('error')).toBe('invalid_request');
     });
 
+    it('refuses an over-long code_challenge up front with an oauth error', async () => {
+      const { client_id: clientId } = await registerClient();
+      const response = await fetch(authorizeUrl(clientId, 'c'.repeat(2_000)), noRedirect);
+      const redirect = location(response);
+
+      expect(redirect.origin + redirect.pathname).toBe(CLIENT_REDIRECT);
+      expect(redirect.searchParams.get('error')).toBe('invalid_request');
+    });
+
+    it('refuses a registration with an over-long redirect uri', async () => {
+      const response = await register({ redirect_uris: [`http://localhost/${'p'.repeat(2_000)}`] });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
+    });
+
     it('refuses a registration without redirect uris', async () => {
       const response = await register({ redirect_uris: [] });
 

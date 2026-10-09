@@ -47,7 +47,7 @@ export class HttpTokenExchange {
       );
     }
 
-    const body = (await response.json()) as { uuid?: unknown; client_name?: unknown; expires_at?: unknown };
+    const body = (await this.jsonBody(response)) as { uuid?: unknown; client_name?: unknown; expires_at?: unknown };
 
     if (typeof body.uuid !== 'string' || !body.uuid) {
       throw new TokenExchangeError(TOKEN_EXCHANGE_ERROR.SERVER_ERROR, 'token exchange request response has no uuid');
@@ -67,7 +67,7 @@ export class HttpTokenExchange {
       throw new TokenExchangeError(await this.errorCode(response), `token exchange responded with ${response.status}`);
     }
 
-    const body = (await response.json()) as { sapi_token?: unknown };
+    const body = (await this.jsonBody(response)) as { sapi_token?: unknown };
 
     if (typeof body.sapi_token !== 'string' || !body.sapi_token) {
       throw new TokenExchangeError(TOKEN_EXCHANGE_ERROR.SERVER_ERROR, 'token exchange response has no sapi_token');
@@ -89,6 +89,14 @@ export class HttpTokenExchange {
         TOKEN_EXCHANGE_ERROR.SERVER_ERROR,
         `token exchange call failed: ${error instanceof Error ? error.message : String(error)}`
       );
+    }
+  }
+
+  private async jsonBody(response: Response): Promise<unknown> {
+    try {
+      return await response.json();
+    } catch {
+      throw new TokenExchangeError(TOKEN_EXCHANGE_ERROR.SERVER_ERROR, `token exchange responded ${response.status} with a non-JSON body`);
     }
   }
 

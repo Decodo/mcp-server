@@ -51,6 +51,18 @@ describe('HttpTokenExchange.createRequest', () => {
   });
 });
 
+describe('HttpTokenExchange non-JSON answers', () => {
+  const html = (status: number) => new Response('<html>502</html>', { status, headers: { 'Content-Type': 'text/html' } });
+
+  it('fails as server_error instead of a parse error', async () => {
+    await expect(codeOf(exchangeWith(jest.fn().mockResolvedValue(html(200))).exchange(attempt)))
+      .resolves.toBe(TOKEN_EXCHANGE_ERROR.SERVER_ERROR);
+    await expect(codeOf(exchangeWith(jest.fn().mockResolvedValue(html(201))).createRequest('jwt')))
+      .resolves.toBe(TOKEN_EXCHANGE_ERROR.SERVER_ERROR);
+    await expect(exchangeWith(jest.fn().mockResolvedValue(html(200))).exchange(attempt)).rejects.toThrow('non-JSON');
+  });
+});
+
 describe('HttpTokenExchange.exchange', () => {
   it('posts client_id, code and code_verifier and returns sapi_token', async () => {
     const fetchMock = jest.fn().mockResolvedValue(jsonResponse({ sapi_token: 'sk-live-1', label: 'default' }));

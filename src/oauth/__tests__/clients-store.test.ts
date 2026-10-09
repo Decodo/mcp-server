@@ -1,5 +1,12 @@
 import { InvalidClientMetadataError } from '@modelcontextprotocol/sdk/server/auth/errors.js';
-import { ClientsStore, MAX_CLIENT_NAME_LENGTH, isClientIdMetadataUrl } from '../clients-store';
+import {
+  ClientsStore,
+  MAX_CLIENT_NAME_LENGTH,
+  MAX_REDIRECT_URIS,
+  MAX_REDIRECT_URI_LENGTH,
+  MAX_SCOPE_LENGTH,
+  isClientIdMetadataUrl,
+} from '../clients-store';
 import { CLAUDE_REDIRECT_URIS } from '../config';
 import { Sealer } from '../sealer';
 
@@ -101,6 +108,21 @@ describe('ClientsStore dynamic registration', () => {
     ).not.toThrow();
   });
 
+  it('rejects too many, over-long redirect uris and an over-long scope', () => {
+    const loopback = (n: number) => `http://localhost:${n}/callback`;
+
+    expect(() =>
+      storeWith().registerClient({ ...registration, redirect_uris: Array.from({ length: MAX_REDIRECT_URIS + 1 }, (_, i) => loopback(i)) })
+    ).toThrow(InvalidClientMetadataError);
+    expect(() =>
+      storeWith().registerClient({ ...registration, redirect_uris: [`http://localhost/${'p'.repeat(MAX_REDIRECT_URI_LENGTH)}`] })
+    ).toThrow(InvalidClientMetadataError);
+    expect(() => storeWith().registerClient({ ...registration, scope: 's'.repeat(MAX_SCOPE_LENGTH + 1) })).toThrow(
+      InvalidClientMetadataError
+    );
+    expect(() => storeWith().registerClient({ ...registration, scope: 's'.repeat(MAX_SCOPE_LENGTH) })).not.toThrow();
+  });
+
   it('rejects confidential clients', () => {
     expect(() =>
       storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post', client_secret: 's' })
@@ -124,6 +146,31 @@ describe('ClientsStore client id metadata documents', () => {
       token_endpoint_auth_method: 'none',
     });
     expect(client?.client_secret).toBeUndefined();
+  });
+
+  it('refuses a document over the size limit without buffering it', async () => {
+    let pulls = 0;
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        controller.enqueue(new Uint8Array(16 * 1024));
+      },
+    });
+    const fetchMock = jest.fn().mockResolvedValue(new Response(endless, { headers: { 'Content-Type': 'application/json' } }));
+
+    await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
+    expect(pulls).toBeLessThan(10);
+
+    const declared = new Response('{}', { headers: { 'Content-Type': 'application/json', 'Content-Length': '10000000' } });
+    await expect(storeWith(jest.fn().mockResolvedValue(declared)).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
+  });
+
+  it('refuses a document whose metadata is out of bounds', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: [`http://localhost/${'p'.repeat(MAX_REDIRECT_URI_LENGTH)}`] }));
+
+    await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
   });
 
   it('caches a fetched document', async () => {

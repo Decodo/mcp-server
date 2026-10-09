@@ -12,6 +12,7 @@ import {
 import type { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
 import type { OAuthBackend } from './backend';
+import { MAX_SCOPE_LENGTH } from './clients-store';
 import type { ClientsStore } from './clients-store';
 import type { Sealer } from './sealer';
 import { TOKEN_EXCHANGE_ERROR, TokenExchangeError } from './token-exchange';
@@ -23,6 +24,10 @@ const PENDING_TTL_MS = 10 * 60 * 1000;
 const CODE_TTL_MS = 60 * 1000;
 
 export const MAX_STATE_LENGTH = 1024;
+
+export const MAX_CODE_CHALLENGE_LENGTH = 128;
+
+export const MAX_PENDING_COOKIE_LENGTH = 3072;
 
 const MAX_CALLBACK_PARAM_LENGTH = { code: 512, state: 256, error: 64, error_description: 512 } as const;
 
@@ -129,6 +134,14 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
       throw new InvalidRequestError(`state must be at most ${MAX_STATE_LENGTH} characters`);
     }
 
+    if (params.codeChallenge.length > MAX_CODE_CHALLENGE_LENGTH) {
+      throw new InvalidRequestError(`code_challenge must be at most ${MAX_CODE_CHALLENGE_LENGTH} characters`);
+    }
+
+    if ((params.scopes ?? []).join(' ').length > MAX_SCOPE_LENGTH) {
+      throw new InvalidRequestError(`scope must be at most ${MAX_SCOPE_LENGTH} characters`);
+    }
+
     const pending: PendingAuthorization = {
       requestId: randomToken(),
       state: randomToken(),
@@ -140,6 +153,12 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
       clientState: params.state,
     };
 
+    const cookie = this.sealer.seal(SEAL.PENDING, pending, PENDING_TTL_MS);
+
+    if (cookie.length > MAX_PENDING_COOKIE_LENGTH) {
+      throw new InvalidRequestError('authorization request is too large');
+    }
+
     const url = await this.backend.authorizationUrl({
       state: pending.state,
       codeChallenge: pkceChallenge(pending.codeVerifier),
@@ -147,7 +166,7 @@ export class DecodoOAuthProvider implements OAuthServerProvider {
 
     log('info', 'oauth.authorize', { clientId: client.client_id, requestId: pending.requestId });
 
-    res.cookie(PENDING_COOKIE, this.sealer.seal(SEAL.PENDING, pending, PENDING_TTL_MS), this.cookieOptions);
+    res.cookie(PENDING_COOKIE, cookie, this.cookieOptions);
     res.redirect(302, url.href);
   }
 
