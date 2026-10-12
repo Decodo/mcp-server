@@ -1,28 +1,17 @@
 # Publishing
 
-When After merging changes to the server, the following steps need to be done:
+Releases are cut by bumping the version on `main`. The `Release` workflow
+(`.github/workflows/publish.yml`) publishes to npm and to the MCP registry whenever a push to
+`main` changes the version in `package.json`.
 
-1. Server version bump (major/minor/patch)
+To release:
 
-2. Publish to MCP registry.
+- Bump the version in both `package.json` and `server.json` (major, minor or patch). The workflow
+  refuses to publish when the two disagree.
 
-## Server version bump
+- Merge to `main`. The workflow lints, builds, tests, publishes `@decodo/mcp-server` to npm with
+  trusted publishing (no token), then publishes `server.json` to the MCP registry with GitHub OIDC.
 
-Publishing is done manually through a developer machine. This enabled bundling multiple
-features/fixes under one release.
+- A push that does not change the version, or a version already on npm, is skipped.
 
-When you want to publish a new version:
-
-- Pull `main` locally.
-
-- Bump the server version numbers in the following files: `package.json`, `server.json`. Note that
-  there may be more files where the version number
-
-- Choose between major, minor or patch bump accordingly.
-
-- Run `npm publish`. This command should instruct you how to authenticate with NPM. The full command
-  should look like this:
-
-```
-NPM_CONFIG__AUTHTOKEN=<one_time_token>npm publish --access public
-```
+Several merged changes can share one release: bump the version only when you want to publish.
