@@ -100,6 +100,17 @@ jobs:
           curl -sSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
             | tar xz mcp-publisher
 
+      - name: Wait for npm to serve the new version
+        run: |
+          for attempt in $(seq 1 20); do
+            if npm view "@decodo/mcp-server@${{ needs.changes.outputs.version }}" version >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "npm still does not serve ${{ needs.changes.outputs.version }} after 5 minutes"
+          exit 1
+
       - name: Publish to the MCP registry
         run: |
           ./mcp-publisher login github-oidc
