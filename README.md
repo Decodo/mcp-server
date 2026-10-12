@@ -1,7 +1,7 @@
 # Decodo MCP Server
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/Ja8dqKgvbZ)](https://discord.gg/Ja8dqKgvbZ)
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=Decodo&config=eyJ1cmwiOiJodHRwczovL21jcC5kZWNvZG8uY29tL21jcCIsImhlYWRlcnMiOnsiQXV0aG9yaXphdGlvbiI6IkJhc2ljIDx3ZWJfYWR2YW5jZWRfdG9rZW4%2BIn19)
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=Decodo&config=eyJ1cmwiOiJodHRwczovL21jcC5kZWNvZG8uY29tL21jcCIsImhlYWRlcnMiOnsiQXV0aG9yaXphdGlvbiI6IkJlYXJlciA8YXBpX2tleT4ifX0%3D)
 
 <p align="center">
 <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
@@ -80,15 +80,17 @@ scraping infrastructure from scratch. Common scenarios:
 
 1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
    free requests, no credit card required.
-2. **Get your authentication token.** Obtain a Web Scraping API basic authentication token from the dashboard.
+2. **Get your API key.** Copy your Web Data API key from your Web Data API subscription on the
+   [dashboard](https://dashboard.decodo.com/web-data/playground). Older plans have a basic
+   authentication token, which also works (see [Authentication](#authentication)).
 3. **Download Node.js 18+** from https://nodejs.org.
-4. **Get MCP client** like Claude Desktop, Cursor, Windsurf or other MCP-compatible
-   tools.
+4. **Get MCP client** like Claude Desktop, Cursor, Windsurf or other MCP-compatible tools.
 5. **Configure the MCP server** in your AI client (see configuration examples below).
 
-## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp) 
+## Connecting to [Decodo's MCP server](https://mcp.decodo.com/mcp)
 
-Open your preferred MCP client and add the following configuration (see examples for Claude Code, Cursor, Windsurf bellow):
+Open your preferred MCP client and add the following configuration (see examples for Claude Code,
+Cursor, Windsurf bellow):
 
 ```
 {
@@ -96,14 +98,24 @@ Open your preferred MCP client and add the following configuration (see examples
     "Decodo": {
       "url": "https://mcp.decodo.com/mcp",
       "headers": {
-        "Authorization": "Basic <basic_auth_token>"
+        "Authorization": "Bearer <api_key>"
       }
     }
   }
 }
 ```
 
+### Authentication
+
+| Credential                                   | Where to get it                                                                                | Hosted server header                      | Local server env                       |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------- |
+| **API key** (recommended)                    | Web Data API subscription on the [dashboard](https://dashboard.decodo.com/web-data/playground) | `Authorization: Bearer <api_key>`         | `SCRAPER_API_TOKEN=<api_key>`          |
+| **Basic authentication token** (older plans) | Web Scraping API page on the dashboard                                                         | `Authorization: Basic <basic_auth_token>` | `SCRAPER_API_TOKEN=<basic_auth_token>` |
+
+The local server reads either credential from `SCRAPER_API_TOKEN` and works out which one it got.
+
 ### Claude Desktop
+
 1. Open Claude Desktop → Settings → Developer → Edit Config.
 2. Add to claude_desktop_config.json:
 
@@ -114,35 +126,40 @@ Open your preferred MCP client and add the following configuration (see examples
       "command": "npx",
       "args": ["-y", "@decodo/mcp-server"],
       "env": {
-        "SCRAPER_API_TOKEN": "<basic_auth_token>",
+        "SCRAPER_API_TOKEN": "<api_key>",
         "TOOLSETS": "web,ai"
       }
     }
   }
 }
 ```
+
 3. Save and restart Claude Desktop.
 
 ### Cursor
- 1. Open Settings  → MCP.
- 2. Click Add a new global MCP server (opens mcp.json).
- 3. Add the same configuration as above.
- 4. Save — look for a green status indicator next to Decodo.
+
+1.  Open Settings → MCP.
+2.  Click Add a new global MCP server (opens mcp.json).
+3.  Add the same configuration as above.
+4.  Save — look for a green status indicator next to Decodo.
 
 ### Windsurf
- 1. Open Settings → Windsurf Settings.
- 2. Scroll to Cascade → Add custom server + (opens mcp_config.json).
- 3. Add the same configuration as above.
- 4. Save and restart Windsurf.
+
+1.  Open Settings → Windsurf Settings.
+2.  Scroll to Cascade → Add custom server + (opens mcp_config.json).
+3.  Add the same configuration as above.
+4.  Save and restart Windsurf.
 
 ## Test your setup
+
 Once connected, try this prompt in your client:
 
-  ▎ "Scrape the titles of the top 5 articles from Hacker News"
+▎ "Scrape the titles of the top 5 articles from Hacker News"
 
-You should get a structured list back within seconds. If you see an auth error, double-check your token from the dashboard.
+You should get a structured list back within seconds. If you see an auth error, double-check your
+API key on the dashboard.
+
 ## Optional: enable specific toolsets
-  
 
 # Running the MCP server locally
 
@@ -193,7 +210,7 @@ this:
       "command": "node",
       "args": ["/Users/your.user/projects/decodo-mcp/build/index.js"],
       "env": {
-        "SCRAPER_API_TOKEN": "<web_scraping_api_base64_token>"
+        "SCRAPER_API_TOKEN": "<api_key>"
       }
     }
   }
@@ -211,7 +228,7 @@ comma-separated list via the `toolsets` query parameter:
     "Decodo MCP Server": {
       "url": "https://mcp.decodo.com/mcp?toolsets=web,ai",
       "headers": {
-        "Authorization": "Basic <your_auth_token>"
+        "Authorization": "Bearer <api_key>"
       }
     }
 ```
@@ -267,23 +284,23 @@ The server exposes the following tools:
 
 The following parameters are inferred from user prompts:
 
-| Parameter       | Description                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------- |
-| `jsRender`      | Renders target URL in a headless browser.                                                             |
-| `geo`           | Sets the country from which the request will originate.                                               |
-| `locale`        | Sets the locale of the request.                                                                       |
-| `tokenLimit`    | Truncates the response content up to this limit. Useful if the context window is small.               |
-| `prompt`        | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                 |
-| `search`        | Activates ChatGPT's web search functionality (`chatgpt` only).                                        |
-| `xhr`           | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`). |
+| Parameter       | Description                                                                                                                                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jsRender`      | Renders target URL in a headless browser.                                                                                                                                                                  |
+| `geo`           | Sets the country from which the request will originate.                                                                                                                                                    |
+| `locale`        | Sets the locale of the request.                                                                                                                                                                            |
+| `tokenLimit`    | Truncates the response content up to this limit. Useful if the context window is small.                                                                                                                    |
+| `prompt`        | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                                                                                                                      |
+| `search`        | Activates ChatGPT's web search functionality (`chatgpt` only).                                                                                                                                             |
+| `xhr`           | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`).                                                                                                      |
 | `deviceType`    | Device type to emulate (`desktop`, `mobile`, `tablet`). Parsed targets are stricter: Amazon tools are desktop-only so they omit it, and `bing_search`/`google_ai_mode` accept `desktop` and `mobile` only. |
-| `domain`        | Domain to use for the request (e.g., `amazon.com`, `amazon.co.uk`, `bing.com`).                       |
-| `pageFrom`      | Starting page number for pagination.                                                                  |
-| `deliveryZip`   | ZIP code for delivery location (Target, Walmart).                                                     |
-| `storeId`       | Store ID for local inventory (Walmart).                                                               |
-| `country`       | Country for TikTok Shop requests.                                                                     |
-| `limit`         | Maximum number of results to return (e.g., YouTube channel videos).                                   |
-| `language_code` | Language code for subtitles (e.g., `en`, `es`).                                                       |
+| `domain`        | Domain to use for the request (e.g., `amazon.com`, `amazon.co.uk`, `bing.com`).                                                                                                                            |
+| `pageFrom`      | Starting page number for pagination.                                                                                                                                                                       |
+| `deliveryZip`   | ZIP code for delivery location (Target, Walmart).                                                                                                                                                          |
+| `storeId`       | Store ID for local inventory (Walmart).                                                                                                                                                                    |
+| `country`       | Country for TikTok Shop requests.                                                                                                                                                                          |
+| `limit`         | Maximum number of results to return (e.g., YouTube channel videos).                                                                                                                                        |
+| `language_code` | Language code for subtitles (e.g., `en`, `es`).                                                                                                                                                            |
 
 ## Examples
 
@@ -319,13 +336,14 @@ Scrape hacker news, return full content.
 
 ## Use with Decodo agent skills
 
-This server gives your agent the scraping *tools*. [`Decodo/agent-skills`](https://github.com/Decodo/agent-skills)
-teaches it **when** to reach for them, **which** surface to use, and **how** to call it — so the agent
-picks the right tool and parameters on its own instead of guessing.
+This server gives your agent the scraping _tools_.
+[`Decodo/agent-skills`](https://github.com/Decodo/agent-skills) teaches it **when** to reach for
+them, **which** surface to use, and **how** to call it — so the agent picks the right tool and
+parameters on its own instead of guessing.
 
-The skills route across the `decodo` CLI, this hosted MCP server, and the raw HTTP API, and fall back
-to the MCP server automatically when no shell is available. Pairing the two gives your agent both the
-execution layer (this server) and the decision layer (the skills) in a single setup.
+The skills route across the `decodo` CLI, this hosted MCP server, and the raw HTTP API, and fall
+back to the MCP server automatically when no shell is available. Pairing the two gives your agent
+both the execution layer (this server) and the decision layer (the skills) in a single setup.
 
 **Quick start** (Claude Code):
 
