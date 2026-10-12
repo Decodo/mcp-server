@@ -49,13 +49,11 @@ export class ScraperAPIBaseServer {
 
   constructor({
     auth,
-
     toolsets = [],
     onAuthenticationError,
     integrationHeader,
   }: {
     auth: AuthCredential;
-
     toolsets: TOOLSET[];
     onAuthenticationError?: AuthenticationErrorListener;
     integrationHeader?: string;
