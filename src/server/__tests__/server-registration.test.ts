@@ -25,7 +25,7 @@ describe('Server registration', () => {
 
       expect(McpServer).toHaveBeenCalledWith({
         name: 'decodo',
-        version: '1.2.6',
+        version: '1.3.0',
       });
     });
 

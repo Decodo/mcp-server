@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
+import type { AuthenticationErrorListener } from '../clients/scraper-api-client';
 import { PACKAGE_VERSION } from '../version';
 import {
   AmazonSearchTool,
@@ -46,12 +47,20 @@ export class ScraperAPIBaseServer {
 
   auth: AuthCredential;
 
-  constructor({ auth, toolsets = [] }: { auth: AuthCredential; toolsets: TOOLSET[] }) {
+  constructor({
+    auth,
+    toolsets = [],
+    onAuthenticationError,
+  }: {
+    auth: AuthCredential;
+    toolsets: TOOLSET[];
+    onAuthenticationError?: AuthenticationErrorListener;
+  }) {
     this.server = new McpServer({
       name: 'decodo',
       version: PACKAGE_VERSION,
     });
-    this.sapiClient = new ScraperApiClient({});
+    this.sapiClient = new ScraperApiClient({ onAuthenticationError });
 
     this.auth = auth;
 
