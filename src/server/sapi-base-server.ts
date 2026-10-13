@@ -57,16 +57,18 @@ export class ScraperAPIBaseServer {
     auth,
     toolsets = [],
     onAuthenticationError,
+    integrationHeader,
   }: {
     auth: AuthCredential;
     toolsets: TOOLSET[];
     onAuthenticationError?: AuthenticationErrorListener;
+    integrationHeader?: string;
   }) {
     this.server = new McpServer({
       name: 'decodo',
       version: PACKAGE_VERSION,
     });
-    this.sapiClient = new ScraperApiClient({ onAuthenticationError });
+    this.sapiClient = new ScraperApiClient({ onAuthenticationError, integrationHeader });
 
     this.auth = auth;
 

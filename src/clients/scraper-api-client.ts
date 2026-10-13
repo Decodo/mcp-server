@@ -31,7 +31,6 @@ import {
   WAITING_INTERVAL_MS,
 } from './retry';
 
-const INTEGRATION_HEADER = 'mcp';
 const REQUEST_TIMEOUT_MS = 180_000;
 
 const API_PARAM_ALIASES = new Map([
@@ -51,21 +50,26 @@ export class ScraperApiClient {
 
   hosts: ScrapingApiHosts;
 
+  integrationHeader: string;
+
   constructor({
     maxRetries = MAX_RETRIES,
     delayMs = BASE_RETRY_DELAY_MS,
     onAuthenticationError,
     hosts = scrapingApiHostsFromEnv(),
+    integrationHeader = 'mcp',
   }: {
     maxRetries?: number;
     delayMs?: number;
     onAuthenticationError?: AuthenticationErrorListener;
     hosts?: ScrapingApiHosts;
+    integrationHeader?: string;
   } = {}) {
     this.maxRetries = maxRetries;
     this.delayMs = delayMs;
     this.onAuthenticationError = onAuthenticationError;
     this.hosts = hosts;
+    this.integrationHeader = integrationHeader;
   }
 
   transformScrapingParams = ({
@@ -196,7 +200,7 @@ export class ScraperApiClient {
       const { webScrapingApi } = new DecodoClient({
         webScrapingApi: {
           ...this.sdkTransport(auth),
-          integrationHeader: INTEGRATION_HEADER,
+          integrationHeader: this.integrationHeader,
         },
         timeoutMs: REQUEST_TIMEOUT_MS,
       });
