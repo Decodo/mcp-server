@@ -35,3 +35,28 @@ export const zodDeviceType = z
   .enum(['desktop', 'mobile', 'tablet'])
   .describe('Device type to emulate for the request')
   .optional();
+
+export const zodLimit = (limitedItems: string) =>
+  z.number().int().min(1).default(10).describe(`Maximum number of ${limitedItems}, 10 by default`);
+
+export const zodSitemap = z
+  .enum(['include', 'only', 'skip'])
+  .describe(
+    'Whether to use the sitemap alongside links found on pages, only the sitemap, or skip it'
+  )
+  .optional();
+
+export const zodDomainFilter = z
+  .enum(['domain', 'subdomain', 'all'])
+  .describe('Which links to follow: the same domain, its subdomains too, or any domain')
+  .optional();
+
+export const zodSelectPaths = z
+  .array(z.string())
+  .describe('Only keep URLs whose path matches one of these patterns, e.g. /blog/*')
+  .optional();
+
+export const zodExcludePaths = z
+  .array(z.string())
+  .describe('Drop URLs whose path matches one of these patterns')
+  .optional();

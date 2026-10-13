@@ -5,7 +5,14 @@ import {
   Target,
   TimeoutError,
 } from '@decodo/sdk-ts';
-import type { ScrapeRequest, SyncResponse } from '@decodo/sdk-ts';
+import type {
+  MapSiteRequest,
+  RunSearchRequest,
+  ScrapeRequest,
+  StartCrawlRequest,
+  SyncResponse,
+  WebScrapingApi,
+} from '@decodo/sdk-ts';
 import { ScrapingMCPParams } from 'types';
 import { AUTH_TYPE } from '../auth';
 import { scrapingApiHostsFromEnv } from './hosts';
@@ -163,15 +170,21 @@ export class ScraperApiClient {
       ? { apiKey: auth.value, baseUrl: this.hosts.dataApi }
       : { token: auth.value, baseUrl: this.hosts.scraperApi };
 
-  scrape = async <T = string>({
+  private request = async <R>({
     auth,
-    scrapingParams,
+    target,
     extra,
+    maxRetries = this.maxRetries,
+    call,
+    upstreamStatus = () => null,
   }: {
     auth: AuthCredential;
-    scrapingParams: ScrapingMCPParams;
+    target: string;
     extra?: ProgressExtra;
-  }) => {
+    maxRetries?: number;
+    call: (api: WebScrapingApi) => Promise<R>;
+    upstreamStatus?: (res: R) => number | null;
+  }): Promise<R> => {
     const notifier = new ProgressNotifier(extra);
     const startMs = Date.now();
 
@@ -179,9 +192,6 @@ export class ScraperApiClient {
       await notifier.notify('Submitting request to Decodo API...', 0, 1);
 
       notifier.startWaitingNotifications(WAITING_INITIAL_DELAY_MS, WAITING_INTERVAL_MS);
-
-      const params = this.transformScrapingParams({ scrapingParams });
-      const { target } = params;
 
       const { webScrapingApi } = new DecodoClient({
         webScrapingApi: {
@@ -193,30 +203,28 @@ export class ScraperApiClient {
 
       let lastError: unknown;
 
-      for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          const res = await webScrapingApi.scrape(params);
+          const res = await call(webScrapingApi);
 
           notifier.stopWaitingNotifications();
 
           await notifier.notify('Processing response...', 0.9, 1);
 
-          const result = this.transformResponse<T>({ res });
-
           log('info', 'tool_call', {
             outcome: 'success',
             target,
             auth_type: auth.type,
-            upstream_status: res.results[0]?.status_code ?? null,
+            upstream_status: upstreamStatus(res),
             latency_ms: Date.now() - startMs,
             attempt,
           });
 
-          return result;
+          return res;
         } catch (error) {
           lastError = error;
 
-          if (attempt < this.maxRetries && isRetryable(error)) {
+          if (attempt < maxRetries && isRetryable(error)) {
             const delayMs = getRetryDelay({ attempt, baseDelayMs: this.delayMs });
             const reason =
               error instanceof DecodoError
@@ -226,14 +234,14 @@ export class ScraperApiClient {
             log('warn', 'tool_call_retry', {
               target,
               attempt: attempt + 1,
-              max_retries: this.maxRetries,
+              max_retries: maxRetries,
               reason,
               error_code: getNetworkErrorCode(error) ?? null,
               upstream_status: error instanceof DecodoError ? error.statusCode : null,
               delay_ms: Math.round(delayMs),
             });
 
-            await notifier.notify(`Retrying (${attempt + 1}/${this.maxRetries})...`, 0.1, 1);
+            await notifier.notify(`Retrying (${attempt + 1}/${maxRetries})...`, 0.1, 1);
 
             await sleep(delayMs);
             continue;
@@ -248,4 +256,98 @@ export class ScraperApiClient {
       notifier.stopWaitingNotifications();
     }
   };
+
+  scrape = async <T = string>({
+    auth,
+    scrapingParams,
+    extra,
+  }: {
+    auth: AuthCredential;
+    scrapingParams: ScrapingMCPParams;
+    extra?: ProgressExtra;
+  }) => {
+    const params = this.transformScrapingParams({ scrapingParams });
+
+    const res = await this.request({
+      auth,
+      target: params.target,
+      extra,
+      call: api => api.scrape(params),
+      upstreamStatus: ({ results }) => results[0]?.status_code ?? null,
+    });
+
+    return this.transformResponse<T>({ res });
+  };
+
+  search = ({
+    auth,
+    params,
+    extra,
+  }: {
+    auth: AuthCredential;
+    params: RunSearchRequest;
+    extra?: ProgressExtra;
+  }) => this.request({ auth, target: 'search', extra, call: api => api.search(params) });
+
+  map = ({
+    auth,
+    params,
+    extra,
+  }: {
+    auth: AuthCredential;
+    params: MapSiteRequest;
+    extra?: ProgressExtra;
+  }) =>
+    this.request({
+      auth,
+      target: 'map',
+      extra,
+      call: api => api.map(params),
+      upstreamStatus: ({ results }) => results[0]?.status_code ?? null,
+    });
+
+  startCrawl = ({
+    auth,
+    params,
+    extra,
+  }: {
+    auth: AuthCredential;
+    params: StartCrawlRequest;
+    extra?: ProgressExtra;
+  }) =>
+    this.request({
+      auth,
+      target: 'crawl',
+      extra,
+      maxRetries: 0,
+      call: api => api.startCrawl(params),
+    });
+
+  getCrawlStatus = ({
+    auth,
+    crawlId,
+    extra,
+  }: {
+    auth: AuthCredential;
+    crawlId: string;
+    extra?: ProgressExtra;
+  }) => this.request({ auth, target: 'crawl', extra, call: api => api.getCrawlStatus(crawlId) });
+
+  listCrawlPages = ({
+    auth,
+    crawlId,
+    cursor,
+    extra,
+  }: {
+    auth: AuthCredential;
+    crawlId: string;
+    cursor?: string;
+    extra?: ProgressExtra;
+  }) =>
+    this.request({
+      auth,
+      target: 'crawl',
+      extra,
+      call: api => api.listCrawlPages(crawlId, { cursor }),
+    });
 }

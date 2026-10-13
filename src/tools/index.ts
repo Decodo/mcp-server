@@ -28,3 +28,8 @@ export * from './youtube-subtitles';
 export * from './youtube-search';
 export * from './scrape-as-markdown';
 export * from './screenshot';
+export * from './search';
+export * from './map';
+export * from './crawl-start';
+export * from './crawl-status';
+export * from './crawl-results';

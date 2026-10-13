@@ -12,6 +12,8 @@ export type ToolRegistrationArgs = {
 export abstract class Tool {
   abstract toolset: TOOLSET;
 
+  requiresApiKey = false;
+
   abstract register(args: ToolRegistrationArgs): void;
 
   abstract transformResponse({

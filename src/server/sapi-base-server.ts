@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { AUTH_TYPE } from '../auth';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import type { AuthenticationErrorListener } from '../clients/scraper-api-client';
@@ -35,6 +36,11 @@ import {
   YoutubeSearchTool,
   ScrapeAsMarkdownTool,
   ScreenshotTool,
+  SearchTool,
+  MapTool,
+  CrawlStartTool,
+  CrawlStatusTool,
+  CrawlResultsTool,
 } from '../tools';
 import { Tool } from '../tools/tool';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -76,6 +82,11 @@ export class ScraperAPIBaseServer {
   static allTools: Tool[] = [
     new ScrapeAsMarkdownTool(),
     new ScreenshotTool(),
+    new MapTool(),
+    new CrawlStartTool(),
+    new CrawlStatusTool(),
+    new CrawlResultsTool(),
+    new SearchTool(),
     new GoogleSearchTool(),
     new GoogleAdsTool(),
     new GoogleLensTool(),
@@ -107,21 +118,15 @@ export class ScraperAPIBaseServer {
   ];
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {
-    if (toolsets.length === 0) {
-      this.registerAllTools();
-      return;
-    }
+    const isRequested = (tool: Tool) => toolsets.length === 0 || toolsets.includes(tool.toolset);
+    const isUsableWithAuth = (tool: Tool) =>
+      !tool.requiresApiKey || this.auth.type === AUTH_TYPE.API_KEY;
 
-    for (const toolset of toolsets) {
-      const tools = ScraperAPIBaseServer.allTools.filter(tool => tool.toolset === toolset);
-      for (const tool of tools) {
-        tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
-      }
-    }
-  }
+    const tools = ScraperAPIBaseServer.allTools.filter(
+      tool => isRequested(tool) && isUsableWithAuth(tool)
+    );
 
-  registerAllTools() {
-    for (const tool of ScraperAPIBaseServer.allTools) {
+    for (const tool of tools) {
       tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
     }
   }
