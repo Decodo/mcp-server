@@ -1,7 +1,7 @@
 import { Target } from '@decodo/sdk-ts';
 import { AUTH_TYPE } from '../../auth';
 import type { AuthCredential } from '../../auth';
-import { ScraperApiClient } from '../scraper-api-client';
+import { API_KEY_REQUIRED_MESSAGE, ScraperApiClient } from '../scraper-api-client';
 import { ScrapingMCPParams } from '../../types';
 
 const client = new ScraperApiClient({ maxRetries: 1, delayMs: 0 });
@@ -137,7 +137,9 @@ describe('ScraperApiClient', () => {
     });
 
     it('sends basic tokens to the configured scraper API host', async () => {
-      const staged = new ScraperApiClient({ hosts: { scraperApi: 'https://stage-scraper-api.example' } });
+      const staged = new ScraperApiClient({
+        hosts: { scraperApi: 'https://stage-scraper-api.example' },
+      });
 
       await staged.scrape(defaultArgs);
 
@@ -314,6 +316,95 @@ describe('ScraperApiClient', () => {
       mockFetch.mockRejectedValue(new RangeError('boom'));
 
       await expect(client.scrape(defaultArgs)).rejects.toThrow('boom');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('data API', () => {
+    const crawlStatus = { crawl_id: 'crawl-1', status: 'pending', completed: 3 };
+
+    it('posts search params to the data API search route', async () => {
+      respondWith(() => jsonResponse({ body: { organic: [] } }));
+
+      await client.search({ auth: apiKeyAuth, params: { query: 'mcp' } });
+
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/search');
+      expect(requestBody()).toEqual({ query: 'mcp' });
+    });
+
+    it('posts map params to the data API map route', async () => {
+      respondWith(() => jsonResponse({ body: { results: [] } }));
+
+      await client.map({ auth: apiKeyAuth, params: { url: 'https://a.com', limit: 10 } });
+
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/map');
+      expect(requestBody()).toEqual({ url: 'https://a.com', limit: 10 });
+    });
+
+    it('returns the crawl status for a crawl id', async () => {
+      respondWith(() => jsonResponse({ body: crawlStatus }));
+
+      await expect(
+        client.getCrawlStatus({ auth: apiKeyAuth, crawlId: 'crawl-1' })
+      ).resolves.toEqual(crawlStatus);
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/crawl/crawl-1/status');
+    });
+
+    it('retries a retryable status on read calls', async () => {
+      respondOnceWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
+      respondOnceWith(() => jsonResponse({ body: crawlStatus }));
+
+      await client.getCrawlStatus({ auth: apiKeyAuth, crawlId: 'crawl-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('lists one page of crawl content from the given cursor', async () => {
+      respondWith(() =>
+        jsonResponse({
+          body: {
+            crawl_id: 'crawl-1',
+            url: [{ url: 'https://a.com', status: 'done' }],
+            next: 'https://data.decodo.com/v1/crawl/crawl-1?type=content&cursor=def',
+          },
+        })
+      );
+
+      const list = await client.listCrawlPages({
+        auth: apiKeyAuth,
+        crawlId: 'crawl-1',
+        cursor: 'abc',
+      });
+
+      const url = new URL(lastRequest().url);
+      expect(url.pathname).toBe('/v1/crawl/crawl-1');
+      expect(url.searchParams.get('cursor')).toBe('abc');
+      expect(url.searchParams.get('type')).toBe('content');
+      expect(list.next).toBe('def');
+    });
+
+    it('cancels a crawl by id', async () => {
+      respondWith(() => jsonResponse({ body: { crawl_id: 'crawl-1', status: 'cancelled' } }));
+
+      await client.cancelCrawl({ auth: apiKeyAuth, crawlId: 'crawl-1' });
+
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/crawl/crawl-1/cancel');
+      expect(lastRequest().init.method).toBe('POST');
+    });
+
+    it('tells basic token users to switch to an API key without calling the API', async () => {
+      await expect(client.search({ auth, params: { query: 'mcp' } })).rejects.toThrow(
+        API_KEY_REQUIRED_MESSAGE
+      );
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('does not retry starting a crawl, so a slow success cannot start two', async () => {
+      respondWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
+
+      await expect(
+        client.startCrawl({ auth: apiKeyAuth, params: { url: 'https://a.com' } })
+      ).rejects.toThrow('(503)');
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
