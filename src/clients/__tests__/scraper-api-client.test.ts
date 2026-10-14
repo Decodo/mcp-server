@@ -137,7 +137,9 @@ describe('ScraperApiClient', () => {
     });
 
     it('sends basic tokens to the configured scraper API host', async () => {
-      const staged = new ScraperApiClient({ hosts: { scraperApi: 'https://stage-scraper-api.example' } });
+      const staged = new ScraperApiClient({
+        hosts: { scraperApi: 'https://stage-scraper-api.example' },
+      });
 
       await staged.scrape(defaultArgs);
 
@@ -261,6 +263,24 @@ describe('ScraperApiClient', () => {
       ).rejects.toThrow('Scraper API request failed (422):');
 
       expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('surfaces the API message when a scrape fails inside a 200 response', async () => {
+      respondWith(() =>
+        jsonResponse({
+          body: {
+            status: 'failed',
+            status_code: 613,
+            message: 'We were not able to scrape the target.',
+            task_id: '7516026999928784897',
+          },
+        })
+      );
+
+      await expect(client.scrape(defaultArgs)).rejects.toThrow(
+        'Scraper API request failed (613): We were not able to scrape the target.'
+      );
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('throws when the API returns no results', async () => {

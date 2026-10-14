@@ -32,6 +32,13 @@ const API_PARAM_ALIASES = new Map([
   ['deliveryZip', 'delivery_zip'],
 ]);
 
+type FailedScrape = { status?: string; status_code?: number; message?: string };
+
+const scrapeFailure = ({ status, status_code: statusCode, message }: FailedScrape) =>
+  message && statusCode
+    ? new DecodoError(message, statusCode, status)
+    : new Error('Scraper API returned no results.');
+
 export type AuthenticationErrorListener = (auth: AuthCredential) => void;
 
 export class ScraperApiClient {
@@ -89,6 +96,10 @@ export class ScraperApiClient {
   };
 
   transformResponse = <T>({ res }: { res: SyncResponse }) => {
+    if (!Array.isArray(res.results)) {
+      throw scrapeFailure(res as unknown as FailedScrape);
+    }
+
     const [result] = res.results;
 
     if (!result) {

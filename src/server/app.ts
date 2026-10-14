@@ -21,11 +21,13 @@ export const createApp = ({
   oauth: oauthConfig,
   trustProxy = false,
   revokedCredentials = new RevokedCredentials(),
+  hiddenTools = new Set(),
   fetch,
 }: {
   oauth: OAuthConfig;
   trustProxy?: TrustProxy;
   revokedCredentials?: RevokedCredentials;
+  hiddenTools?: ReadonlySet<string>;
   fetch?: FetchLike;
 }): express.Express => {
   const app = express();
@@ -78,6 +80,7 @@ export const createApp = ({
 
     const server = new ScraperAPIHttpServer({
       toolsets,
+      hiddenTools,
       auth: credential,
       onAuthenticationError: rejected => revokedCredentials.add(rejected),
     });
