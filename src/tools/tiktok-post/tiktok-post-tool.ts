@@ -20,7 +20,7 @@ export class TiktokPostTool extends Tool {
         title: 'TikTok Post',
         description:
           'Fetch a TikTok video post by URL through the Decodo Web Scraping API (`tiktok_post` target) and return the page\'s raw HTML, often several hundred KB. ' +
-          'Use it to analyse a specific TikTok video; set xhr to also capture the page\'s XHR/fetch responses. ' +
+          'Use it to analyse a specific TikTok video; set xhr to get a JSON list of the page\'s XHR/fetch requests instead of the HTML. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-tiktok-post',
         inputSchema: {
           url: z
