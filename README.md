@@ -277,8 +277,8 @@ The server exposes the following tools:
 | `reddit_subreddit`     | Scrapes Reddit subreddit results.                                                          | Scrape the top 5 posts on r/Python this week.                                           |
 | `reddit_user`          | Scrapes a Reddit user profile and their posts/comments.                                    | Scrape this Reddit user: https://www.reddit.com/user/IWasRightOnce/                     |
 | `bing_search`          | Scrapes Bing Search results.                                                               | Search Bing for laptop reviews.                                                         |
-| `chatgpt`              | Search and interact with ChatGPT for AI-powered responses and conversations.               | Ask ChatGPT to explain quantum computing in simple terms.                               |
-| `perplexity`           | Search and interact with Perplexity for AI-powered responses and conversations.            | Ask Perplexity what the latest trends in web development are.                           |
+| `chatgpt`              | Sends a single prompt to ChatGPT and returns its answer (no conversation history).         | Ask ChatGPT to explain quantum computing in simple terms.                               |
+| `perplexity`           | Sends a single prompt to Perplexity and returns its answer (no conversation history).      | Ask Perplexity what the latest trends in web development are.                           |
 
 ## Parameters
 
