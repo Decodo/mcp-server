@@ -82,6 +82,19 @@ const pageSummary = (page: CrawlPage) => ({
   contentError: page.content_error,
 });
 
+const entryOverheadBytes = (summary: ReturnType<typeof pageSummary>) =>
+  Buffer.byteLength(
+    JSON.stringify({
+      ...summary,
+      content: '',
+      contentPart: {
+        start: Number.MAX_SAFE_INTEGER,
+        end: Number.MAX_SAFE_INTEGER,
+        totalLength: Number.MAX_SAFE_INTEGER,
+      },
+    })
+  ) + 1;
+
 const collectPages = ({
   data,
   position,
@@ -98,19 +111,19 @@ const collectPages = ({
   while (offset < data.pages.length && pages.length < limit) {
     const page = data.pages[offset];
     const summary = pageSummary(page);
-    const summaryBytes = Buffer.byteLength(JSON.stringify(summary));
+    const overheadBytes = entryOverheadBytes(summary);
     const content = page.content ?? '';
     const remaining = content.slice(contentOffset);
-    const chunk = prefixWithinBudget(remaining, Math.max(0, budgetBytes - summaryBytes));
-    const isOutOfBudget = summaryBytes > budgetBytes || (remaining !== '' && chunk === '');
+    const chunk = prefixWithinBudget(remaining, Math.max(0, budgetBytes - overheadBytes));
+    const fitsWhole = overheadBytes <= budgetBytes && chunk.length === remaining.length;
 
-    if (isOutOfBudget && pages.length > 0) {
+    if (!fitsWhole && pages.length > 0) {
       break;
     }
 
     const isSplit = contentOffset > 0 || chunk.length < remaining.length;
 
-    pages.push({
+    const entry = {
       ...summary,
       content: page.content === undefined ? undefined : chunk,
       ...(isSplit && {
@@ -120,9 +133,10 @@ const collectPages = ({
           totalLength: content.length,
         },
       }),
-    });
+    };
 
-    budgetBytes -= summaryBytes + serializedBytes(chunk);
+    pages.push(entry);
+    budgetBytes -= Buffer.byteLength(JSON.stringify(entry)) + 1;
 
     if (chunk.length < remaining.length) {
       contentOffset += chunk.length;
@@ -194,7 +208,7 @@ export class CrawlResultsTool extends Tool {
         description:
           'Return crawled pages as Markdown from a crawl started with crawl_start, a few at a time. ' +
           'Call it once crawl_status reports the crawl is no longer "pending". ' +
-          'Each call returns at most about 50 KB and up to `limit` pages (10 by default). ' +
+          'Crawled pages can be long and overflow your context, so each call returns at most about 50 KB and up to `limit` pages (10 by default). ' +
           'A page too long for one call is split across calls; each part carries contentPart with its character range. ' +
           'Pass nextCursor back to get the rest; when it is missing, you have every page. ' +
           'For precise work, prefer map plus scrape_as_markdown on the pages you need.',

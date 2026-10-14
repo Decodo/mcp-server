@@ -186,6 +186,20 @@ describe('CrawlResultsTool', () => {
       expect(contentByUrl.get('https://a.com/2')).toBe('short');
     });
 
+    it.each([5, 50])(
+      'stays within budget for a high limit over many %i-character pages',
+      async length => {
+        const pages = Array.from({ length: 1_000 }, (_, i) =>
+          pageWith(`https://a.com/${i}`, 'z'.repeat(length))
+        );
+
+        const { parts, sizes } = await walk({ first: { pages, total: 1_000 } }, 1_000);
+
+        expect(Math.max(...sizes)).toBeLessThanOrEqual(MAX_RESPONSE_BYTES);
+        expect(parts).toHaveLength(1_000);
+      }
+    );
+
     it('keeps page metadata within budget when limit is high', async () => {
       const pages = Array.from({ length: 2_000 }, (_, i) => ({
         url: `https://a.com/a-fairly-long-path-to-pad-the-metadata/${i}`,
