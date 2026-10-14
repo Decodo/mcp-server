@@ -44,6 +44,11 @@ describe('CrawlStartTool', () => {
     });
   });
 
+  it('caps limit at 100 pages so an agent cannot start an oversized crawl', () => {
+    expect(inputSchema.limit.safeParse(100).success).toBe(true);
+    expect(inputSchema.limit.safeParse(101).success).toBe(false);
+  });
+
   it.each([0, 10001])('rejects maxDepth %s, which the API refuses', maxDepth => {
     expect(inputSchema.maxDepth.safeParse(maxDepth).success).toBe(false);
   });

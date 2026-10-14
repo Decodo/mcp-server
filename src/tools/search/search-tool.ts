@@ -38,7 +38,7 @@ export class SearchTool extends Tool {
           geo: zodGeo,
           locale: zodLocale,
           page: z.number().int().min(1).describe('Results page to return, 1 by default').optional(),
-          limit: zodLimit('results to return'),
+          limit: zodLimit({ limitedItems: 'results to return', max: 100 }),
         },
         annotations: {
           title: 'Web Search',

@@ -218,7 +218,7 @@ export class CrawlResultsTool extends Tool {
             .string()
             .describe('nextCursor from a previous crawl_results call; omit for the first pages')
             .optional(),
-          limit: zodLimit('pages to return'),
+          limit: zodLimit({ limitedItems: 'pages to return', max: 100 }),
         },
         annotations: {
           title: 'Crawl Results',

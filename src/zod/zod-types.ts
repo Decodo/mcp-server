@@ -36,8 +36,14 @@ export const zodDeviceType = z
   .describe('Device type to emulate for the request')
   .optional();
 
-export const zodLimit = (limitedItems: string) =>
-  z.number().int().min(1).default(10).describe(`Maximum number of ${limitedItems}, 10 by default`);
+export const zodLimit = ({ limitedItems, max }: { limitedItems: string; max: number }) =>
+  z
+    .number()
+    .int()
+    .min(1)
+    .max(max)
+    .default(10)
+    .describe(`Maximum number of ${limitedItems}, 10 by default and at most ${max}`);
 
 export const zodSitemap = z
   .enum(['include', 'only', 'skip'])

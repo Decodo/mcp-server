@@ -44,7 +44,7 @@ export class MapTool extends Tool {
           'For precise work, map the site, then scrape_as_markdown only the pages you need.',
         inputSchema: {
           url: z.string().describe('Website URL to map'),
-          limit: zodLimit('URLs to return'),
+          limit: zodLimit({ limitedItems: 'URLs to return', max: 500 }),
           sitemap: zodSitemap,
           domainFilter: zodDomainFilter,
           selectPaths: zodSelectPaths,

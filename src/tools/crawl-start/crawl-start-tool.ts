@@ -44,7 +44,7 @@ export class CrawlStartTool extends Tool {
           'For precise work, prefer map plus scrape_as_markdown on the pages you need.',
         inputSchema: {
           url: z.string().describe('Website URL to start crawling from'),
-          limit: zodLimit('pages to crawl'),
+          limit: zodLimit({ limitedItems: 'pages to crawl', max: 100 }),
           maxDepth: z
             .number()
             .int()

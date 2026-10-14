@@ -12,13 +12,18 @@ const auth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'key' };
 describe('MapTool', () => {
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let handler: (params: object) => Promise<{ content: { text: string }[] }>;
+  let inputSchema: Record<
+    string,
+    { safeParse: (value: unknown) => { success: boolean; data?: unknown } }
+  >;
 
   beforeEach(() => {
     const server = new McpServer({ name: 'test', version: '0.0.0' }) as jest.Mocked<McpServer>;
     sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
 
-    server.registerTool = jest.fn((_name, _config, registered) => {
+    server.registerTool = jest.fn((_name, config, registered) => {
       handler = registered as typeof handler;
+      inputSchema = config.inputSchema as typeof inputSchema;
       return server;
     }) as never;
 
@@ -47,6 +52,12 @@ describe('MapTool', () => {
       },
       extra: undefined,
     });
+  });
+
+  it('caps limit at 500 URLs, since the API would otherwise return up to 147700', () => {
+    expect(inputSchema.limit.safeParse(500).success).toBe(true);
+    expect(inputSchema.limit.safeParse(501).success).toBe(false);
+    expect(inputSchema.limit.safeParse(undefined).data).toBe(10);
   });
 
   it('returns a flat list of URLs', async () => {
