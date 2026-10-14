@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
@@ -56,11 +57,13 @@ export class ScraperAPIBaseServer {
   constructor({
     auth,
     toolsets = [],
+    hiddenTools = new Set(),
     onAuthenticationError,
     integrationHeader,
   }: {
     auth: AuthCredential;
     toolsets: TOOLSET[];
+    hiddenTools?: ReadonlySet<string>;
     onAuthenticationError?: AuthenticationErrorListener;
     integrationHeader?: string;
   }) {
@@ -71,6 +74,8 @@ export class ScraperAPIBaseServer {
     this.sapiClient = new ScraperApiClient({ onAuthenticationError, integrationHeader });
 
     this.auth = auth;
+
+    this.disableOnRegister(hiddenTools);
 
     this.registerTools({ toolsets });
 
@@ -119,6 +124,27 @@ export class ScraperAPIBaseServer {
     new ChatGPTTool(),
     new PerplexityTool(),
   ];
+
+  private disableOnRegister(hiddenTools: ReadonlySet<string>) {
+    if (hiddenTools.size === 0) {
+      return;
+    }
+
+    const registerTool = this.server.registerTool.bind(this.server) as (
+      name: string,
+      ...config: unknown[]
+    ) => RegisteredTool;
+
+    this.server.registerTool = ((name: string, ...config: unknown[]) => {
+      const tool = registerTool(name, ...config);
+
+      if (hiddenTools.has(name)) {
+        tool.disable();
+      }
+
+      return tool;
+    }) as McpServer['registerTool'];
+  }
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {
     const tools = ScraperAPIBaseServer.allTools.filter(

@@ -52,6 +52,13 @@ type RequestArgs<R> = {
   upstreamStatus?: (res: R) => number | null;
 };
 
+type FailedScrape = { status?: string; status_code?: number; message?: string };
+
+const scrapeFailure = ({ status, status_code: statusCode, message }: FailedScrape) =>
+  message && statusCode
+    ? new DecodoError(message, statusCode, status)
+    : new Error('Scraper API returned no results.');
+
 export type AuthenticationErrorListener = (auth: AuthCredential) => void;
 
 export class ScraperApiClient {
@@ -109,6 +116,10 @@ export class ScraperApiClient {
   };
 
   transformResponse = <T>({ res }: { res: SyncResponse }) => {
+    if (!Array.isArray(res.results)) {
+      throw scrapeFailure(res as unknown as FailedScrape);
+    }
+
     const [result] = res.results;
 
     if (!result) {
@@ -278,15 +289,19 @@ export class ScraperApiClient {
   }) => {
     const params = this.transformScrapingParams({ scrapingParams });
 
-    const res = await this.request({
+    const { result } = await this.request({
       auth,
       target: params.target,
       extra,
-      call: api => api.scrape(params),
-      upstreamStatus: ({ results }) => results[0]?.status_code ?? null,
+      call: async api => {
+        const res = await api.scrape(params);
+
+        return { res, result: this.transformResponse<T>({ res }) };
+      },
+      upstreamStatus: ({ res }) => res.results[0]?.status_code ?? null,
     });
 
-    return this.transformResponse<T>({ res });
+    return result;
   };
 
   private dataApiRequest = <R>(args: RequestArgs<R>): Promise<R> => {
