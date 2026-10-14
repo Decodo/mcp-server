@@ -18,7 +18,10 @@ export class TiktokShopUrlTool extends Tool {
       'tiktok_shop_url',
       {
         title: 'TikTok Shop URL',
-        description: 'Scrape TikTok Shop page by URL',
+        description:
+          'Fetch any TikTok Shop page by URL through the Decodo Web Scraping API (`tiktok` target) and return its data as JSON. ' +
+          'Use it for TikTok Shop pages that tiktok_shop_search and tiktok_shop_product do not cover, such as a shop or category URL. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-tiktok-shop-url',
         inputSchema: {
           url: z.string().describe('TikTok Shop URL (e.g., "https://www.tiktok.com/shop/s?q=HEADPHONES")'),
           jsRender: zodJsRender,

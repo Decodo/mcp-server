@@ -20,7 +20,10 @@ export class TargetProductTool extends Tool {
       'target_product',
       {
         title: 'Target Product',
-        description: 'Scrape Target Product page with automatic parsing',
+        description:
+          'Fetch a Target product page by product ID through the Decodo Web Scraping API (`target_product` target) and return its details parsed as JSON. ' +
+          'Use it when you know a Target product ID and need its price, availability or description. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-target-product',
         inputSchema: {
           product_id: z.string().describe('Target product ID (e.g., "1003921355")'),
           jsRender: zodJsRender,

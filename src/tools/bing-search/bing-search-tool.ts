@@ -33,7 +33,10 @@ export class BingSearchTool extends Tool {
       'bing_search',
       {
         title: 'Bing Search',
-        description: 'Scrape Bing Search results with automatic parsing',
+        description:
+          'Search Bing through the Decodo Web Scraping API (`bing_search` target) and return the parsed results page as JSON. ' +
+          'Use it when Bing results are needed specifically, or to compare them with Google. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-bing-search',
         inputSchema: {
           query: z.string().describe('Search query for Bing (e.g., "laptop")'),
           geo: zodGeo,

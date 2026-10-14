@@ -22,7 +22,10 @@ export class YoutubeSubtitlesTool extends Tool {
       'youtube_subtitles',
       {
         title: 'YouTube Subtitles',
-        description: 'Scrape YouTube video subtitles',
+        description:
+          'Fetch the subtitles of a YouTube video by video ID through the Decodo Web Scraping API (`youtube_subtitles` target) and return them as JSON. ' +
+          'Use it to read or summarise what is said in a video; set `language_code` for a specific language. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-youtube-subtitles',
         inputSchema: {
           query: z.string().describe('YouTube video ID (e.g., "L8zSWbQN-v8")'),
           language_code: zodLanguageCode,

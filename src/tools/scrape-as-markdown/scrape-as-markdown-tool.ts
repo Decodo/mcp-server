@@ -45,7 +45,10 @@ export class ScrapeAsMarkdownTool extends Tool {
       'scrape_as_markdown',
       {
         title: 'Scrape as Markdown',
-        description: 'Scrape the contents of a website and return Markdown-formatted results',
+        description:
+          'Fetch any public web page through the Decodo Web Scraping API (`universal` target) and return its content as Markdown. ' +
+          'Use it to read a specific URL when no site-specific tool fits; very long pages are truncated, and `tokenLimit` sets a lower cap. ' +
+          'Docs: https://help.decodo.com/docs/web-data-api-markdown-response',
         inputSchema: {
           url: z.string().describe('URL to scrape'),
           geo: zodGeo,

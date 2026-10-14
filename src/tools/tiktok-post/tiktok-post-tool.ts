@@ -19,7 +19,9 @@ export class TiktokPostTool extends Tool {
       {
         title: 'TikTok Post',
         description:
-          'Scrape a TikTok post URL for structured data such as engagement, captions, and hashtags',
+          'Fetch a TikTok video post by URL through the Decodo Web Scraping API (`tiktok_post` target) and return its data as JSON, such as engagement, caption and hashtags. ' +
+          'Use it to analyse a specific TikTok video. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-tiktok-post',
         inputSchema: {
           url: z
             .string()
