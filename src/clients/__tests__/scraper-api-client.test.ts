@@ -1,7 +1,7 @@
 import { Target } from '@decodo/sdk-ts';
 import { AUTH_TYPE } from '../../auth';
 import type { AuthCredential } from '../../auth';
-import { ScraperApiClient } from '../scraper-api-client';
+import { API_KEY_REQUIRED_MESSAGE, ScraperApiClient } from '../scraper-api-client';
 import { ScrapingMCPParams } from '../../types';
 
 const client = new ScraperApiClient({ maxRetries: 1, delayMs: 0 });
@@ -381,6 +381,22 @@ describe('ScraperApiClient', () => {
       expect(url.searchParams.get('cursor')).toBe('abc');
       expect(url.searchParams.get('type')).toBe('content');
       expect(list.next).toBe('def');
+    });
+
+    it('cancels a crawl by id', async () => {
+      respondWith(() => jsonResponse({ body: { crawl_id: 'crawl-1', status: 'cancelled' } }));
+
+      await client.cancelCrawl({ auth: apiKeyAuth, crawlId: 'crawl-1' });
+
+      expect(lastRequest().url).toBe('https://data.decodo.com/v1/crawl/crawl-1/cancel');
+      expect(lastRequest().init.method).toBe('POST');
+    });
+
+    it('tells basic token users to switch to an API key without calling the API', async () => {
+      await expect(client.search({ auth, params: { query: 'mcp' } })).rejects.toThrow(
+        API_KEY_REQUIRED_MESSAGE
+      );
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it('does not retry starting a crawl, so a slow success cannot start two', async () => {

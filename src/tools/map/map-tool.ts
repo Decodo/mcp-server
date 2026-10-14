@@ -27,8 +27,6 @@ type MapParams = {
 export class MapTool extends Tool {
   toolset = TOOLSET.WEB;
 
-  requiresApiKey = true;
-
   transformResponse = ({ data }: { data: MapSiteResponse }) => {
     const links = data.results.flatMap(result => result.content.links.map(link => link.url));
 

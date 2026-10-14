@@ -56,22 +56,19 @@ describe('Server registration', () => {
       expect(mockRegisterTool).toHaveBeenCalledTimes(webTools.length);
     });
 
-    it('registers the data API tools for API keys', () => {
-      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [] });
-
-      expect(registeredToolNames()).toEqual(
-        expect.arrayContaining(['search', 'map', 'crawl_start', 'crawl_status', 'crawl_results'])
-      );
-    });
-
-    it('skips the data API tools for basic tokens, which the data API rejects', () => {
+    it('registers the data API tools for basic tokens too, so calls can explain the API key requirement', () => {
       new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
-      const names = registeredToolNames();
-      expect(names).toContain('scrape_as_markdown');
-      for (const name of ['search', 'map', 'crawl_start', 'crawl_status', 'crawl_results']) {
-        expect(names).not.toContain(name);
-      }
+      expect(registeredToolNames()).toEqual(
+        expect.arrayContaining([
+          'search',
+          'map',
+          'crawl_start',
+          'crawl_status',
+          'crawl_results',
+          'crawl_cancel',
+        ])
+      );
     });
 
     it('registers only AI toolset tools when ai specified', () => {

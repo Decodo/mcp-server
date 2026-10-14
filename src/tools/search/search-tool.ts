@@ -16,8 +16,6 @@ type SearchParams = {
 export class SearchTool extends Tool {
   toolset = TOOLSET.SEARCH;
 
-  requiresApiKey = true;
-
   transformResponse = ({ data, limit }: { data: RunSearchResponse; limit: number }) => {
     if (data.status === 'failed') {
       throw new Error(`Search failed: ${data.message}`);

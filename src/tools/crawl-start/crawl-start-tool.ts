@@ -28,8 +28,6 @@ type CrawlStartParams = {
 export class CrawlStartTool extends Tool {
   toolset = TOOLSET.WEB;
 
-  requiresApiKey = true;
-
   transformResponse = ({ data }: { data: StartCrawlResponse }) => ({
     data: JSON.stringify({ crawl_id: data.crawl_id, status: data.status, url: data.url }),
   });
@@ -41,7 +39,7 @@ export class CrawlStartTool extends Tool {
         title: 'Start Crawl',
         description:
           'Start crawling a website and return the crawl id right away, without waiting for it to finish. ' +
-          'Check progress with crawl_status and read pages with crawl_results. ' +
+          'Check progress with crawl_status, read pages with crawl_results and stop it early with crawl_cancel. ' +
           'Crawled content can overflow your context, so `limit` defaults to 10 pages. ' +
           'For precise work, prefer map plus scrape_as_markdown on the pages you need.',
         inputSchema: {
@@ -50,7 +48,8 @@ export class CrawlStartTool extends Tool {
           maxDepth: z
             .number()
             .int()
-            .min(0)
+            .min(1)
+            .max(10000)
             .describe('How many links deep to follow from the start URL')
             .optional(),
           sitemap: zodSitemap,

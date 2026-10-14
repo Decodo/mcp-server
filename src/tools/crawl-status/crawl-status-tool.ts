@@ -7,8 +7,6 @@ import { Tool, ToolRegistrationArgs } from '../tool';
 export class CrawlStatusTool extends Tool {
   toolset = TOOLSET.WEB;
 
-  requiresApiKey = true;
-
   transformResponse = ({ data }: { data: GetCrawlStatusResponse }) => ({
     data: JSON.stringify(data),
   });

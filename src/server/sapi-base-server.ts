@@ -1,6 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { AUTH_TYPE } from '../auth';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import type { AuthenticationErrorListener } from '../clients/scraper-api-client';
@@ -41,6 +40,7 @@ import {
   CrawlStartTool,
   CrawlStatusTool,
   CrawlResultsTool,
+  CrawlCancelTool,
 } from '../tools';
 import { Tool } from '../tools/tool';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -88,6 +88,7 @@ export class ScraperAPIBaseServer {
     new CrawlStartTool(),
     new CrawlStatusTool(),
     new CrawlResultsTool(),
+    new CrawlCancelTool(),
     new SearchTool(),
     new GoogleSearchTool(),
     new GoogleAdsTool(),
@@ -120,12 +121,8 @@ export class ScraperAPIBaseServer {
   ];
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {
-    const isRequested = (tool: Tool) => toolsets.length === 0 || toolsets.includes(tool.toolset);
-    const isUsableWithAuth = (tool: Tool) =>
-      !tool.requiresApiKey || this.auth.type === AUTH_TYPE.API_KEY;
-
     const tools = ScraperAPIBaseServer.allTools.filter(
-      tool => isRequested(tool) && isUsableWithAuth(tool)
+      tool => toolsets.length === 0 || toolsets.includes(tool.toolset)
     );
 
     for (const tool of tools) {

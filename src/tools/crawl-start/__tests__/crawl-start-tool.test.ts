@@ -12,13 +12,15 @@ const auth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'key' };
 describe('CrawlStartTool', () => {
   let sapiClient: jest.Mocked<ScraperApiClient>;
   let handler: (params: object) => Promise<{ content: { text: string }[] }>;
+  let inputSchema: Record<string, { safeParse: (value: unknown) => { success: boolean } }>;
 
   beforeEach(() => {
     const server = new McpServer({ name: 'test', version: '0.0.0' }) as jest.Mocked<McpServer>;
     sapiClient = new ScraperApiClient() as jest.Mocked<ScraperApiClient>;
 
-    server.registerTool = jest.fn((_name, _config, registered) => {
+    server.registerTool = jest.fn((_name, config, registered) => {
       handler = registered as typeof handler;
+      inputSchema = config.inputSchema as typeof inputSchema;
       return server;
     }) as never;
 
@@ -40,6 +42,10 @@ describe('CrawlStartTool', () => {
       }),
       extra: undefined,
     });
+  });
+
+  it.each([0, 10001])('rejects maxDepth %s, which the API refuses', maxDepth => {
+    expect(inputSchema.maxDepth.safeParse(maxDepth).success).toBe(false);
   });
 
   it('returns the crawl id and status without the result URLs', async () => {

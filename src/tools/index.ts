@@ -33,3 +33,4 @@ export * from './map';
 export * from './crawl-start';
 export * from './crawl-status';
 export * from './crawl-results';
+export * from './crawl-cancel';

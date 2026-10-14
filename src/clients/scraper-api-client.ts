@@ -33,11 +33,24 @@ import {
 
 const REQUEST_TIMEOUT_MS = 180_000;
 
+export const API_KEY_REQUIRED_MESSAGE =
+  'This tool needs a Decodo API key; Basic authentication tokens cannot use the Web Data API. ' +
+  'Copy an API key from your Web Data API subscription at https://dashboard.decodo.com/web-data/playground and reconnect with it.';
+
 const API_PARAM_ALIASES = new Map([
   ['deviceType', 'device_type'],
   ['pageFrom', 'page_from'],
   ['deliveryZip', 'delivery_zip'],
 ]);
+
+type RequestArgs<R> = {
+  auth: AuthCredential;
+  target: string;
+  extra?: ProgressExtra;
+  maxRetries?: number;
+  call: (api: WebScrapingApi) => Promise<R>;
+  upstreamStatus?: (res: R) => number | null;
+};
 
 export type AuthenticationErrorListener = (auth: AuthCredential) => void;
 
@@ -181,14 +194,7 @@ export class ScraperApiClient {
     maxRetries = this.maxRetries,
     call,
     upstreamStatus = () => null,
-  }: {
-    auth: AuthCredential;
-    target: string;
-    extra?: ProgressExtra;
-    maxRetries?: number;
-    call: (api: WebScrapingApi) => Promise<R>;
-    upstreamStatus?: (res: R) => number | null;
-  }): Promise<R> => {
+  }: RequestArgs<R>): Promise<R> => {
     const notifier = new ProgressNotifier(extra);
     const startMs = Date.now();
 
@@ -283,6 +289,14 @@ export class ScraperApiClient {
     return this.transformResponse<T>({ res });
   };
 
+  private dataApiRequest = <R>(args: RequestArgs<R>): Promise<R> => {
+    if (args.auth.type !== AUTH_TYPE.API_KEY) {
+      return Promise.reject(new Error(API_KEY_REQUIRED_MESSAGE));
+    }
+
+    return this.request(args);
+  };
+
   search = ({
     auth,
     params,
@@ -291,7 +305,7 @@ export class ScraperApiClient {
     auth: AuthCredential;
     params: RunSearchRequest;
     extra?: ProgressExtra;
-  }) => this.request({ auth, target: 'search', extra, call: api => api.search(params) });
+  }) => this.dataApiRequest({ auth, target: 'search', extra, call: api => api.search(params) });
 
   map = ({
     auth,
@@ -302,7 +316,7 @@ export class ScraperApiClient {
     params: MapSiteRequest;
     extra?: ProgressExtra;
   }) =>
-    this.request({
+    this.dataApiRequest({
       auth,
       target: 'map',
       extra,
@@ -319,7 +333,7 @@ export class ScraperApiClient {
     params: StartCrawlRequest;
     extra?: ProgressExtra;
   }) =>
-    this.request({
+    this.dataApiRequest({
       auth,
       target: 'crawl',
       extra,
@@ -335,7 +349,8 @@ export class ScraperApiClient {
     auth: AuthCredential;
     crawlId: string;
     extra?: ProgressExtra;
-  }) => this.request({ auth, target: 'crawl', extra, call: api => api.getCrawlStatus(crawlId) });
+  }) =>
+    this.dataApiRequest({ auth, target: 'crawl', extra, call: api => api.getCrawlStatus(crawlId) });
 
   listCrawlPages = ({
     auth,
@@ -348,10 +363,21 @@ export class ScraperApiClient {
     cursor?: string;
     extra?: ProgressExtra;
   }) =>
-    this.request({
+    this.dataApiRequest({
       auth,
       target: 'crawl',
       extra,
       call: api => api.listCrawlPages(crawlId, { cursor }),
     });
+
+  cancelCrawl = ({
+    auth,
+    crawlId,
+    extra,
+  }: {
+    auth: AuthCredential;
+    crawlId: string;
+    extra?: ProgressExtra;
+  }) =>
+    this.dataApiRequest({ auth, target: 'crawl', extra, call: api => api.cancelCrawl(crawlId) });
 }
