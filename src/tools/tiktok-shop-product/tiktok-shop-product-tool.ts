@@ -18,7 +18,10 @@ export class TiktokShopProductTool extends Tool {
       'tiktok_shop_product',
       {
         title: 'TikTok Shop Product',
-        description: 'Scrape TikTok Shop Product page',
+        description:
+          'Fetch a TikTok Shop product page by product ID through the Decodo Web Scraping API (`tiktok_shop_product` target) and return it as Markdown. ' +
+          'Use it when you know a TikTok Shop product ID and need its price, seller or description. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-tiktok-shop-product',
         inputSchema: {
           product_id: z.string().describe('TikTok Shop product ID (e.g., "1731541214379741272")'),
           jsRender: zodJsRender,

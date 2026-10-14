@@ -23,7 +23,10 @@ export class RedditSubredditTool extends Tool {
       'reddit_subreddit',
       {
         title: 'Reddit Subreddit',
-        description: 'Scrape Reddit subreddit results with automatic parsing',
+        description:
+          'Fetch a subreddit by URL through the Decodo Web Scraping API (`reddit_subreddit` target) and return its post listing as JSON. ' +
+          'Use it to see what is being posted in a subreddit. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-reddit-subreddit',
         inputSchema: {
           url: z.string().describe('URL to subreddit'),
         },

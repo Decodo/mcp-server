@@ -31,7 +31,10 @@ export class GoogleSearchTool extends Tool {
       'google_search',
       {
         title: 'Google Search',
-        description: 'Scrape Google Search results with automatic parsing',
+        description:
+          'Search Google through the Decodo Web Scraping API (`google_search` target) and return the parsed results page as JSON, including organic results. ' +
+          'Use it for fresh web results or Google rankings for a query. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-google-search',
         inputSchema: {
           query: z.string().describe('Search query'),
           geo: zodGeo,

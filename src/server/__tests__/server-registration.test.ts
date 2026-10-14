@@ -5,6 +5,9 @@ import { ScraperAPIBaseServer } from '../sapi-base-server';
 import { TOOLSET } from '../../constants';
 
 const testAuth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: 'test' };
+const apiKeyAuth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'test' };
+
+const registeredToolNames = () => mockRegisterTool.mock.calls.map(([name]) => name);
 
 const mockRegisterTool = jest.fn().mockReturnThis();
 
@@ -25,7 +28,7 @@ describe('Server registration', () => {
 
       expect(McpServer).toHaveBeenCalledWith({
         name: 'decodo',
-        version: '1.3.1',
+        version: '1.4.0',
       });
     });
 
@@ -38,7 +41,7 @@ describe('Server registration', () => {
 
   describe('tool registration', () => {
     it('registers all tools when no toolsets specified', () => {
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
+      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [] });
 
       const expectedToolCount = ScraperAPIBaseServer.allTools.length;
       expect(mockRegisterTool).toHaveBeenCalledTimes(expectedToolCount);
@@ -47,10 +50,25 @@ describe('Server registration', () => {
     it('registers only web toolset tools when web specified', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.WEB] });
+      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [TOOLSET.WEB] });
 
       const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
       expect(mockRegisterTool).toHaveBeenCalledTimes(webTools.length);
+    });
+
+    it('registers the data API tools for basic tokens too, so calls can explain the API key requirement', () => {
+      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
+
+      expect(registeredToolNames()).toEqual(
+        expect.arrayContaining([
+          'search',
+          'map',
+          'crawl_start',
+          'crawl_status',
+          'crawl_results',
+          'crawl_cancel',
+        ])
+      );
     });
 
     it('registers only AI toolset tools when ai specified', () => {
@@ -65,7 +83,7 @@ describe('Server registration', () => {
     it('registers multiple toolsets when specified', () => {
       mockRegisterTool.mockClear();
 
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.WEB, TOOLSET.AI] });
+      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [TOOLSET.WEB, TOOLSET.AI] });
 
       const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
       const aiTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.AI);
