@@ -27,7 +27,10 @@ export class RedditUserTool extends Tool {
       'reddit_user',
       {
         title: 'Reddit User',
-        description: 'Scrape a Reddit user profile and their posts/comments',
+        description:
+          'Fetch a Reddit user profile by URL through the Decodo Web Scraping API (`reddit_user` target) and return the profile with its posts and comments as JSON. ' +
+          "Use it to review a Reddit user's activity. " +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-subreddit-user',
         inputSchema: {
           url: z
             .string()

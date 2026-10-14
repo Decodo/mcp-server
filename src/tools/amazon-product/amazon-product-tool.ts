@@ -34,7 +34,10 @@ export class AmazonProductTool extends Tool {
       'amazon_product',
       {
         title: 'Amazon Product',
-        description: 'Scrape Amazon Product page with automatic parsing',
+        description:
+          'Fetch an Amazon product page by ASIN through the Decodo Web Scraping API (`amazon_product` target) and return its details parsed as JSON. ' +
+          "Use it when you know the product's ASIN and need its title, price, rating or description. " +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-amazon-product',
         inputSchema: {
           query: z.string().describe('Amazon product ASIN (e.g., "B09H74FXNW")'),
           jsRender: zodJsRender,

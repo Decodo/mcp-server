@@ -18,7 +18,11 @@ export class ChatGPTTool extends Tool {
       'chatgpt',
       {
         title: 'ChatGPT',
-        description: 'Search and interact with ChatGPT for AI-powered responses and conversations',
+        description:
+          'Send one prompt to ChatGPT through the Decodo Web Scraping API (`chatgpt` target) and return its answer parsed as JSON. ' +
+          'Each call is a single prompt and answer, with no conversation history; set `search` to let ChatGPT use web search. ' +
+          'Use it to see how ChatGPT answers a question, for example to check how it describes a brand. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-chatgpt',
         inputSchema: {
           prompt: z.string().describe('Prompt to send to ChatGPT'),
           search: z.boolean().describe("Activates ChatGPT's web search functionality").optional(),

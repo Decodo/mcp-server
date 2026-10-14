@@ -34,7 +34,10 @@ export class WalmartSearchTool extends Tool {
       'walmart_search',
       {
         title: 'Walmart Search',
-        description: 'Scrape Walmart Search results with automatic parsing',
+        description:
+          'Search Walmart for a keyword through the Decodo Web Scraping API (`walmart_search` target) and return the results as Markdown. ' +
+          'Use it to find Walmart products, optionally for a store or delivery ZIP code. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-walmart-search',
         inputSchema: {
           query: z.string().describe('Search query for Walmart products (e.g., "camping tent")'),
           jsRender: zodJsRender,

@@ -23,7 +23,10 @@ export class GoogleTravelHotelsTool extends Tool {
       'google_travel_hotels',
       {
         title: 'Google Travel Hotels',
-        description: 'Scrape Google Travel Hotels search results',
+        description:
+          'Search Google Travel for hotels through the Decodo Web Scraping API (`google_travel_hotels` target) and return the listings as Markdown. ' +
+          'Use it to find hotel options and prices for a destination. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-google-travel-hotels',
         inputSchema: {
           query: z.string().describe('Hotel search query (e.g., "trivago", "hotels in Paris")'),
           jsRender: zodJsRender,

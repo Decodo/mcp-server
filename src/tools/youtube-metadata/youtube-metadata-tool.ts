@@ -17,7 +17,10 @@ export class YoutubeMetadataTool extends Tool {
       'youtube_metadata',
       {
         title: 'YouTube Metadata',
-        description: 'Scrape YouTube video metadata',
+        description:
+          "Fetch a YouTube video's metadata by video ID through the Decodo Web Scraping API (`youtube_metadata` target) and return it as JSON, such as title, channel, views and description. " +
+          'Use it when you know the video ID and need details about the video. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-youtube-metadata',
         inputSchema: {
           query: z.string().describe('YouTube video ID (e.g., "dFu9aKJoqGg")'),
         },

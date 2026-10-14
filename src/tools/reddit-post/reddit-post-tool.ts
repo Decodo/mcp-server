@@ -23,7 +23,10 @@ export class RedditPostTool extends Tool {
       'reddit_post',
       {
         title: 'Reddit Post',
-        description: 'Scrape a specific Reddit post',
+        description:
+          'Fetch a Reddit post by URL through the Decodo Web Scraping API (`reddit_post` target) and return the post and its comments as JSON. ' +
+          'Use it to read a specific Reddit thread. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-reddit-post',
         inputSchema: {
           url: z
             .string()

@@ -22,7 +22,10 @@ export class YoutubeChannelTool extends Tool {
       'youtube_channel',
       {
         title: 'YouTube Channel',
-        description: 'Scrape YouTube channel videos with automatic parsing',
+        description:
+          'Fetch the videos of a YouTube channel by handle or ID through the Decodo Web Scraping API (`youtube_channel` target) and return them parsed as JSON. ' +
+          'Use it to list what a channel has published. ' +
+          'Docs: https://help.decodo.com/docs/web-scraping-api-youtube-channel',
         inputSchema: {
           query: z.string().describe('YouTube channel handle or ID (e.g., "@decodo_official")'),
           limit: zodLimit,

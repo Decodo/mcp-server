@@ -17,7 +17,10 @@ export class ScreenshotTool extends Tool {
       'screenshot',
       {
         title: 'Screenshot',
-        description: 'Capture a screenshot of any webpage and return it as a PNG image',
+        description:
+          'Capture a PNG screenshot of a web page through the Decodo Web Scraping API (`universal` target with PNG output). ' +
+          'Use it when the page layout or visuals matter, not just its text. ' +
+          'Docs: https://help.decodo.com/docs/web-data-api-screenshot-response',
         inputSchema: {
           url: z.string().describe('URL to screenshot'),
           geo: zodGeo,
