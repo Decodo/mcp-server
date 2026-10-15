@@ -5,7 +5,10 @@ export const DIRECTORY_HIDDEN_TOOLS: readonly string[] = [
   'tiktok_shop_url',
   'youtube_search',
   'google_ads',
+  'reddit_post',
   'reddit_subreddit',
+  'reddit_user',
+  'target_product',
   'chatgpt',
   'perplexity',
 ];
