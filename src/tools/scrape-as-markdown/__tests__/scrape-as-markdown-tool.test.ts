@@ -4,7 +4,7 @@ import { ScrapeAsMarkdownTool } from '../scrape-as-markdown-tool';
 jest.mock('node-html-markdown');
 
 const mockedNHM = NodeHtmlMarkdown as jest.Mocked<typeof NodeHtmlMarkdown>;
-const LARGE_CONTENT_SYMBOL_COUNT = 100_000;
+const LARGE_CONTENT_SYMBOL_COUNT = 45_000;
 
 describe('ScrapeAsMarkdownTool', () => {
   let tool: ScrapeAsMarkdownTool;

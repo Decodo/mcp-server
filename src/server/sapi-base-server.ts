@@ -58,12 +58,14 @@ export class ScraperAPIBaseServer {
     auth,
     toolsets = [],
     hiddenTools = new Set(),
+    visibleTools,
     onAuthenticationError,
     integrationHeader,
   }: {
     auth: AuthCredential;
     toolsets: TOOLSET[];
     hiddenTools?: ReadonlySet<string>;
+    visibleTools?: ReadonlySet<string>;
     onAuthenticationError?: AuthenticationErrorListener;
     integrationHeader?: string;
   }) {
@@ -75,7 +77,9 @@ export class ScraperAPIBaseServer {
 
     this.auth = auth;
 
-    this.disableOnRegister(hiddenTools);
+    this.disableOnRegister(
+      name => hiddenTools.has(name) || (visibleTools !== undefined && !visibleTools.has(name))
+    );
 
     this.registerTools({ toolsets });
 
@@ -125,11 +129,7 @@ export class ScraperAPIBaseServer {
     new PerplexityTool(),
   ];
 
-  private disableOnRegister(hiddenTools: ReadonlySet<string>) {
-    if (hiddenTools.size === 0) {
-      return;
-    }
-
+  private disableOnRegister(isHidden: (name: string) => boolean) {
     const registerTool = this.server.registerTool.bind(this.server) as (
       name: string,
       ...config: unknown[]
@@ -138,7 +138,7 @@ export class ScraperAPIBaseServer {
     this.server.registerTool = ((name: string, ...config: unknown[]) => {
       const tool = registerTool(name, ...config);
 
-      if (hiddenTools.has(name)) {
+      if (isHidden(name)) {
         tool.disable();
       }
 

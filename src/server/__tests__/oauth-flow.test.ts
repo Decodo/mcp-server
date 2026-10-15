@@ -11,6 +11,7 @@ import { OAUTH_BACKEND, oauthConfigFromEnv } from '../../oauth';
 import { cookieValue } from '../../oauth/cookies';
 import { PENDING_COOKIE } from '../../oauth/provider';
 import { createApp } from '../app';
+import { CLAUDE_TOOLS } from '../claude-tools';
 import { RevokedCredentials } from '../revoked-credentials';
 
 const CLIENT_REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
@@ -183,6 +184,26 @@ describe('OAuth against the mock backend', () => {
       await client.close();
     });
 
+    it('signs in on /claude and lists only the Claude directory tools', async () => {
+      const claudeUrl = new URL('/claude', origin);
+      const authProvider = new TestOAuthClient();
+      const client = new Client({ name: 'e2e', version: '0.0.0' });
+
+      const first = new StreamableHTTPClientTransport(claudeUrl, { authProvider });
+      await expect(client.connect(first)).rejects.toBeInstanceOf(UnauthorizedError);
+      await first.close();
+
+      const clientRedirect = await browser.authorize(authProvider.authorizationUrl as URL);
+      const second = new StreamableHTTPClientTransport(claudeUrl, { authProvider });
+      await second.finishAuth(clientRedirect.searchParams.get('code') as string);
+
+      await client.connect(second);
+      const { tools } = await client.listTools();
+      expect(tools.map(tool => tool.name).sort()).toEqual([...CLAUDE_TOOLS].sort());
+
+      await client.close();
+    });
+
     it('surfaces a denial to the client as access_denied', async () => {
       const authProvider = new TestOAuthClient();
       const client = new Client({ name: 'e2e', version: '0.0.0' });
@@ -275,6 +296,25 @@ describe('OAuth against the mock backend', () => {
         resource: `${origin}/mcp`,
         authorization_servers: [`${origin}/`],
       });
+    });
+
+    it('advertises protected resource metadata for /claude', async () => {
+      const response = await fetch(`${origin}/.well-known/oauth-protected-resource/claude`);
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({
+        resource: `${origin}/claude`,
+        authorization_servers: [`${origin}/`],
+      });
+    });
+
+    it('answers an unauthenticated /claude call with 401 pointing at its own resource metadata', async () => {
+      const response = await fetch(`${origin}/claude`, { method: 'POST' });
+
+      expect(response.status).toBe(401);
+      expect(response.headers.get('www-authenticate')).toBe(
+        `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/claude"`
+      );
     });
 
     it('answers an unauthenticated /mcp call with 401 pointing at the resource metadata', async () => {

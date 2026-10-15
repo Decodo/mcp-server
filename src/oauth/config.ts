@@ -42,6 +42,8 @@ export const CALLBACK_PATH = '/oauth/callback';
 
 export const MCP_PATH = '/mcp';
 
+export const CLAUDE_PATH = '/claude';
+
 type Env = Record<string, string | undefined>;
 
 const urlFromEnv = (env: Env, key: string, fallback: string): URL => {

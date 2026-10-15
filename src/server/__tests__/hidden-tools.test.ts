@@ -20,11 +20,12 @@ describe('hiddenToolsFromEnv', () => {
 });
 
 describe('hidden tools on a connected server', () => {
-  const connect = async (hiddenTools?: ReadonlySet<string>) => {
+  const connect = async (hiddenTools?: ReadonlySet<string>, visibleTools?: ReadonlySet<string>) => {
     const { server } = new ScraperAPIBaseServer({
       auth: { type: AUTH_TYPE.API_KEY, value: 'key' },
       toolsets: [],
       hiddenTools,
+      visibleTools,
     });
     const client = new Client({ name: 'test', version: '0.0.0' });
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -62,5 +63,11 @@ describe('hidden tools on a connected server', () => {
     const names = await listedNames(await connect());
 
     expect(names).toHaveLength(ScraperAPIBaseServer.allTools.length);
+  });
+
+  it('lists only the allowed tools when given an allow-list', async () => {
+    const names = await listedNames(await connect(undefined, new Set(['search', 'map'])));
+
+    expect(names.sort()).toEqual(['map', 'search']);
   });
 });
