@@ -11,10 +11,6 @@ export class ScrapeAsMarkdownTool extends Tool {
 
   private static LARGE_CONTENT_SYMBOL_COUNT = 45_000;
 
-  isResponseOverLimit = (content: string) => {
-    return content.length > ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT;
-  };
-
   truncateResponse = ({ content, limit }: { content: string; limit: number }) => {
     return content.substring(0, limit);
   };
@@ -28,16 +24,15 @@ export class ScrapeAsMarkdownTool extends Tool {
       markdown = data;
     }
 
-    if (tokenLimit || this.isResponseOverLimit(markdown)) {
-      const truncated = this.truncateResponse({
-        content: markdown,
-        limit: tokenLimit || ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT,
-      });
+    const limit = tokenLimit || ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT;
 
-      return { data: truncated, isTruncated: true };
+    if (markdown.length > limit) {
+      const truncated = this.truncateResponse({ content: markdown, limit });
+
+      return { data: truncated, isTruncated: true, totalLength: markdown.length };
     }
 
-    return { data: markdown, isTruncated: false };
+    return { data: markdown, isTruncated: false, totalLength: markdown.length };
   };
 
   register = ({ server, sapiClient, auth }: ToolRegistrationArgs) => {
@@ -66,7 +61,11 @@ export class ScrapeAsMarkdownTool extends Tool {
       async (scrapingParams: ScrapingMCPParams, extra: ProgressExtra) => {
         const { data } = await sapiClient.scrape({ auth, scrapingParams, extra });
 
-        const { data: markdown, isTruncated } = this.transformResponse({
+        const {
+          data: markdown,
+          isTruncated,
+          totalLength,
+        } = this.transformResponse({
           data,
           tokenLimit: scrapingParams.tokenLimit,
         });
@@ -76,7 +75,7 @@ export class ScrapeAsMarkdownTool extends Tool {
             {
               type: 'text',
               text: isTruncated
-                ? `The website content is over ${ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT} symbols, therefore, the content has been truncated. If you wish to obtain the full response, just say "full response". Alternatively, you say a specific token limit in the prompt.`
+                ? `Truncated to ${markdown.length} of ${totalLength} characters. Call again with a higher tokenLimit to get more.`
                 : 'Full website content retrieved.',
             },
             {
