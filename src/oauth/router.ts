@@ -45,11 +45,11 @@ const buildOAuthMetadata = ({
 export const oauthRouter = ({
   provider,
   issuerUrl,
-  resourceServerUrl,
+  resourceServerUrls,
 }: {
   provider: DecodoOAuthProvider;
   issuerUrl: URL;
-  resourceServerUrl: URL;
+  resourceServerUrls: URL[];
 }): express.Router => {
   const metadata = buildOAuthMetadata({ provider, issuerUrl });
   const router = express.Router();
@@ -64,14 +64,16 @@ export const oauthRouter = ({
     );
   }
 
-  router.use(
-    mcpAuthMetadataRouter({
-      oauthMetadata: metadata,
-      resourceServerUrl,
-      resourceName: RESOURCE_NAME,
-      serviceDocumentationUrl: DOCUMENTATION_URL,
-    })
-  );
+  for (const resourceServerUrl of resourceServerUrls) {
+    router.use(
+      mcpAuthMetadataRouter({
+        oauthMetadata: metadata,
+        resourceServerUrl,
+        resourceName: RESOURCE_NAME,
+        serviceDocumentationUrl: DOCUMENTATION_URL,
+      })
+    );
+  }
 
   router.get(CALLBACK_PATH, (req, res) => {
     res.setHeader('Cache-Control', 'no-store');

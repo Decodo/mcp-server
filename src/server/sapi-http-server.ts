@@ -13,11 +13,13 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
   constructor({
     toolsets = [],
     hiddenTools,
+    visibleTools,
     auth,
     onAuthenticationError,
   }: {
     toolsets: TOOLSET[];
     hiddenTools?: ReadonlySet<string>;
+    visibleTools?: ReadonlySet<string>;
     auth: AuthCredential;
     onAuthenticationError?: AuthenticationErrorListener;
   }) {
@@ -25,6 +27,7 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
       auth,
       toolsets,
       hiddenTools,
+      visibleTools,
       onAuthenticationError,
       integrationHeader: 'mcp-hosted',
     });

@@ -9,7 +9,7 @@ import { ProgressExtra } from '../../utils';
 export class ScrapeAsMarkdownTool extends Tool {
   toolset = TOOLSET.WEB;
 
-  private static LARGE_CONTENT_SYMBOL_COUNT = 100_000;
+  private static LARGE_CONTENT_SYMBOL_COUNT = 45_000;
 
   isResponseOverLimit = (content: string) => {
     return content.length > ScrapeAsMarkdownTool.LARGE_CONTENT_SYMBOL_COUNT;
