@@ -22,7 +22,7 @@ export const zodXhr = z
 export const zodTokenLimit = z
   .number()
   .describe(
-    `The number of tokens to return in the response - anything above this limit will be truncated`
+    `Maximum number of characters to return; longer content is truncated. Defaults to 45000.`
   )
   .optional();
 

@@ -60,6 +60,30 @@ describe('ScrapeAsMarkdownTool', () => {
       expect(isTruncated).toBe(true);
     });
 
+    it('reports the total length when truncating', () => {
+      mockedNHM.translate.mockReturnValue('a'.repeat(20_000));
+
+      const { isTruncated, totalLength } = tool.transformResponse({
+        data: '<p>long</p>',
+        tokenLimit: 5000,
+      });
+
+      expect(isTruncated).toBe(true);
+      expect(totalLength).toBe(20_000);
+    });
+
+    it('does not report truncation when tokenLimit exceeds the content', () => {
+      mockedNHM.translate.mockReturnValue('a'.repeat(156));
+
+      const { data, isTruncated } = tool.transformResponse({
+        data: '<p>short</p>',
+        tokenLimit: 500,
+      });
+
+      expect(data.length).toBe(156);
+      expect(isTruncated).toBe(false);
+    });
+
     it('does not truncate when response is below limit', () => {
       const longMarkdown = 'a'.repeat(20_000);
       mockedNHM.translate.mockReturnValue(longMarkdown);
