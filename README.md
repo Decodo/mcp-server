@@ -78,7 +78,7 @@ scraping infrastructure from scratch. Common scenarios:
 
 ## Quick start
 
-1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
+1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 10K
    free requests, no credit card required.
 2. **Get your API key.** Copy your Web Data API key from your Web Data API subscription on the
    [dashboard](https://dashboard.decodo.com/web-data/playground). Older plans have a basic
