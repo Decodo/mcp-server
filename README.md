@@ -159,11 +159,7 @@ Once connected, try this prompt in your client:
 You should get a structured list back within seconds. If you see an auth error, double-check your
 API key on the dashboard.
 
-## Optional: enable specific toolsets
-
-To load only some of the tools, see [Toolsets](#toolsets).
-
-## Building from source
+## Local development
 
 Only needed if you want to change the server code.
 
