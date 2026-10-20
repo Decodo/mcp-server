@@ -48,7 +48,7 @@ JavaScript-heavy pages, without handling proxy rotation, CAPTCHA solving, or ant
 screenshots (for visual context), built for RAG pipelines, AI research agents, and automation flows.
 
 **Built-in support for popular targets.** Ready-made tools for Google and Bing (SERPs), Amazon,
-Walmart, and Target (eCommerce), Reddit, TikTok, and YouTube (social media), and ChatGPT and
+Walmart, and Target (eCommerce), TikTok and YouTube (social media), and ChatGPT and
 Perplexity (AI search).
 
 **Global proxy infrastructure.** 125M+ residential IPs, 195+ geo-locations, and a 99.99% success
@@ -71,14 +71,14 @@ scraping infrastructure from scratch. Common scenarios:
   pipelines.
 - **eCommerce intelligence** – track product prices, listings, and sellers across marketplaces
   without getting blocked.
-- **Social media data collection** – gather posts, channels, and engagement data from Reddit,
-  TikTok, and YouTube.
+- **Social media data collection** – gather posts, channels, and engagement data from TikTok
+  and YouTube.
 - **Travel and price aggregation** – build tools that collect live pricing and availability across
   websites.
 
 ## Quick start
 
-1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 2K
+1. **Create a free account** at [dashboard.decodo.com](https://dashboard.decodo.com/) – up to 10K
    free requests, no credit card required.
 2. **Get your API key.** Copy your Web Data API key from your Web Data API subscription on the
    [dashboard](https://dashboard.decodo.com/web-data/playground). Older plans have a basic
@@ -159,11 +159,12 @@ Once connected, try this prompt in your client:
 You should get a structured list back within seconds. If you see an auth error, double-check your
 API key on the dashboard.
 
-## Optional: enable specific toolsets
+## Local development
 
-# Running the MCP server locally
+Only needed if you want to change the server code.
 
 <details>
+<summary>Build and run the server from this repository</summary>
 
 ### Prerequisites
 
@@ -182,7 +183,7 @@ git clone https://github.com/Decodo/mcp-server
 2. Run the following commands in the terminal:
 
 ```
-cd decodo-mcp-server
+cd mcp-server
 npm install
 npm run build
 ```
@@ -198,7 +199,7 @@ Adding `index.js` to the end of this directory, your build file location should 
 this:
 
 ```
-/Users/your.user/projects/decodo-mcp/build/index.js
+/Users/your.user/projects/mcp-server/build/index.js
 ```
 
 4. Update your MCP client with the server information:
@@ -208,7 +209,7 @@ this:
   "mcpServers": {
     "decodo-mcp": {
       "command": "node",
-      "args": ["/Users/your.user/projects/decodo-mcp/build/index.js"],
+      "args": ["/Users/your.user/projects/mcp-server/build/index.js"],
       "env": {
         "SCRAPER_API_TOKEN": "<api_key>"
       }
@@ -221,8 +222,21 @@ this:
 
 ## Toolsets
 
-Tools are organized into toolsets. You can selectively enable specific toolsets by passing a
-comma-separated list via the `toolsets` query parameter:
+Tools are organized into toolsets. Which ones you get depends on how you connect.
+
+### Claude (official connector)
+
+The Decodo connector in Claude's connector directory includes the Web Data API tools only:
+
+| Toolset  | Tools                                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------------------- |
+| `web`    | `scrape_as_markdown`, `screenshot`, `map`, `crawl_start`, `crawl_status`, `crawl_results`, `crawl_cancel` |
+| `search` | `search`                                                                                                  |
+
+### Any MCP client
+
+You can selectively enable specific toolsets by passing a comma-separated list via the `toolsets`
+query parameter:
 
 ```
     "Decodo MCP Server": {
@@ -240,7 +254,7 @@ When no toolsets are specified, all tools are registered.
 | `web`          | `scrape_as_markdown`, `screenshot`, `map`, `crawl_start`, `crawl_status`, `crawl_results`, `crawl_cancel`                                                                                                                           |
 | `search`       | `search`, `google_search`, `google_ads`, `google_lens`, `google_travel_hotels`, `bing_search`                                                                                                                                       |
 | `ecommerce`    | `amazon_search`, `amazon_product`, `amazon_pricing`, `amazon_sellers`, `amazon_bestsellers`, `walmart_search`, `walmart_product`, `target_search`, `target_product`, `tiktok_shop_search`, `tiktok_shop_product`, `tiktok_shop_url` |
-| `social_media` | `reddit_post`, `reddit_subreddit`, `reddit_user`, `tiktok_post`, `youtube_metadata`, `youtube_channel`, `youtube_subtitles`, `youtube_search`                                                                                       |
+| `social_media` | `tiktok_post`, `youtube_metadata`, `youtube_channel`, `youtube_subtitles`, `youtube_search`                                                                                                                                         |
 | `ai`           | `chatgpt`, `perplexity`, `google_ai_mode`                                                                                                                                                                                           |
 
 ## Tools
@@ -279,9 +293,6 @@ The server exposes the following tools:
 | `youtube_channel`      | Scrapes YouTube channel videos.                                                            | Scrape YouTube channel @decodo_official.                                                |
 | `youtube_subtitles`    | Scrapes YouTube video subtitles.                                                           | Get subtitles for YouTube video L8zSWbQN-v8.                                            |
 | `youtube_search`       | Search YouTube videos.                                                                     | Search YouTube for "How to care for chinchillas".                                       |
-| `reddit_post`          | Scrapes a specific Reddit post.                                                            | Scrape the following Reddit post: https://www.reddit.com/r/horseracing/comments/1nsrn3/ |
-| `reddit_subreddit`     | Scrapes Reddit subreddit results.                                                          | Scrape the top 5 posts on r/Python this week.                                           |
-| `reddit_user`          | Scrapes a Reddit user profile and their posts/comments.                                    | Scrape this Reddit user: https://www.reddit.com/user/IWasRightOnce/                     |
 | `bing_search`          | Scrapes Bing Search results.                                                               | Search Bing for laptop reviews.                                                         |
 | `chatgpt`              | Sends a single prompt to ChatGPT and returns its answer (no conversation history).         | Ask ChatGPT to explain quantum computing in simple terms.                               |
 | `perplexity`           | Sends a single prompt to Perplexity and returns its answer (no conversation history).      | Ask Perplexity what the latest trends in web development are.                           |
