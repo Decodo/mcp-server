@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      matrix:
+        node-version: [22, 24]
 
     steps:
       - name: Checkout
@@ -21,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 'lts/*'
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies

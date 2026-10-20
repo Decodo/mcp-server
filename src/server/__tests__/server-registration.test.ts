@@ -3,6 +3,7 @@ import type { AuthCredential } from '../../auth';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ScraperAPIBaseServer } from '../sapi-base-server';
 import { TOOLSET } from '../../constants';
+import { PACKAGE_VERSION } from '../../version';
 
 const testAuth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: 'test' };
 const apiKeyAuth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'test' };
@@ -28,7 +29,7 @@ describe('Server registration', () => {
 
       expect(McpServer).toHaveBeenCalledWith({
         name: 'decodo',
-        version: '1.5.2',
+        version: PACKAGE_VERSION,
       });
     });
 

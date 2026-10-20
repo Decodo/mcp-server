@@ -35,8 +35,8 @@ server.
 
 # Releasing
 
-- When bumping server versions, make sure all instances of the old server version are updated. These
-  are in `package.json`, `server.json` and possibly in other files.
+- Never bump versions. Releases are automated from the PR title, which must follow Conventional
+  Commits; see `CONTRIBUTING.md`.
 
 # Documentation
 

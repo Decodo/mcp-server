@@ -4,81 +4,37 @@ on:
   push:
     branches:
       - main
-    paths:
-      - package.json
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  changes:
+  release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     outputs:
-      publish: ${{ steps.release.outputs.publish }}
-      registry: ${{ steps.release.outputs.registry }}
-      version: ${{ steps.release.outputs.version }}
+      version: ${{ steps.released.outputs.version }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 2
-
-      - name: Detect version bump
-        id: release
-        run: |
-          set -euo pipefail
-
-          NEW=$(jq -r .version package.json)
-
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual run: publishing ${NEW} to the MCP registry only"
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "registry=true" >> "$GITHUB_OUTPUT"
-            echo "version=${NEW}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          OLD=$(git show HEAD^:package.json | jq -r .version)
-          MANIFEST=$(jq -r .version server.json)
-
-          if [ "$OLD" = "$NEW" ]; then
-            echo "No version bump (${OLD} -> ${NEW}), skipping publish"
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "$MANIFEST" != "$NEW" ]; then
-            echo "server.json is at ${MANIFEST} but package.json is at ${NEW}; bump both"
-            exit 1
-          fi
-
-          if npm view "@decodo/mcp-server@${NEW}" version >/dev/null 2>&1; then
-            echo "Version ${NEW} already on npm, skipping publish"
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Publishing new version ${NEW} (was ${OLD})"
-          echo "publish=true" >> "$GITHUB_OUTPUT"
-          echo "registry=true" >> "$GITHUB_OUTPUT"
-          echo "version=${NEW}" >> "$GITHUB_OUTPUT"
-
-  publish:
-    needs: changes
-    if: needs.changes.outputs.publish == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 'lts/*'
-          registry-url: https://registry.npmjs.org
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -93,25 +49,51 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Ensure npm supports trusted publishing
-        run: npm install -g npm@latest
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
 
-      - name: Publish to npm
-        run: npm publish --access public
+      # semantic-release tags HEAD only when it published, so no tag means nothing was released
+      - name: Read released version
+        id: released
+        run: |
+          TAG=$(git tag --points-at HEAD --list 'v*' | head -n 1)
+          if [ -n "$TAG" ]; then
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          fi
 
   registry:
-    needs: [changes, publish]
+    needs: release
     if: >-
-      !cancelled() && needs.changes.outputs.registry == 'true' &&
-      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+      !cancelled() &&
+      (github.event_name == 'workflow_dispatch' ||
+      (needs.release.result == 'success' && needs.release.outputs.version != ''))
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      VERSION: ${{ needs.changes.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # A manual run republishes the latest release to the MCP registry only
+      - name: Resolve version
+        env:
+          RELEASED: ${{ needs.release.outputs.version }}
+        run: |
+          VERSION="${RELEASED:-$(git describe --tags --abbrev=0 --match 'v*' | sed 's/^v//')}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      # server.json keeps a placeholder in git, like package.json
+      - name: Stamp version into server.json
+        run: |
+          jq --arg v "$VERSION" '.version = $v | .packages[].version = $v' server.json > server.json.tmp
+          mv server.json.tmp server.json
 
       - name: Install mcp-publisher
         run: |
