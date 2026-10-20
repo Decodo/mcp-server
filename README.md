@@ -161,9 +161,14 @@ API key on the dashboard.
 
 ## Optional: enable specific toolsets
 
-# Running the MCP server locally
+To load only some of the tools, see [Toolsets](#toolsets).
+
+## Building from source
+
+Only needed if you want to change the server code.
 
 <details>
+<summary>Build and run the server from this repository</summary>
 
 ### Prerequisites
 
@@ -182,7 +187,7 @@ git clone https://github.com/Decodo/mcp-server
 2. Run the following commands in the terminal:
 
 ```
-cd decodo-mcp-server
+cd mcp-server
 npm install
 npm run build
 ```
@@ -198,7 +203,7 @@ Adding `index.js` to the end of this directory, your build file location should 
 this:
 
 ```
-/Users/your.user/projects/decodo-mcp/build/index.js
+/Users/your.user/projects/mcp-server/build/index.js
 ```
 
 4. Update your MCP client with the server information:
@@ -208,7 +213,7 @@ this:
   "mcpServers": {
     "decodo-mcp": {
       "command": "node",
-      "args": ["/Users/your.user/projects/decodo-mcp/build/index.js"],
+      "args": ["/Users/your.user/projects/mcp-server/build/index.js"],
       "env": {
         "SCRAPER_API_TOKEN": "<api_key>"
       }
