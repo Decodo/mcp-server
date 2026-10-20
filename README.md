@@ -221,8 +221,21 @@ this:
 
 ## Toolsets
 
-Tools are organized into toolsets. You can selectively enable specific toolsets by passing a
-comma-separated list via the `toolsets` query parameter:
+Tools are organized into toolsets. Which ones you get depends on how you connect.
+
+### Claude (official connector)
+
+The Decodo connector in Claude's connector directory includes the Web Data API tools only:
+
+| Toolset  | Tools                                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------------------- |
+| `web`    | `scrape_as_markdown`, `screenshot`, `map`, `crawl_start`, `crawl_status`, `crawl_results`, `crawl_cancel` |
+| `search` | `search`                                                                                                  |
+
+### Any MCP client
+
+You can selectively enable specific toolsets by passing a comma-separated list via the `toolsets`
+query parameter:
 
 ```
     "Decodo MCP Server": {
