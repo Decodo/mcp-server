@@ -4,7 +4,8 @@
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=Decodo&config=eyJ1cmwiOiJodHRwczovL21jcC5kZWNvZG8uY29tL21jcCIsImhlYWRlcnMiOnsiQXV0aG9yaXphdGlvbiI6IkJlYXJlciA8YXBpX2tleT4ifX0%3D)
 
 <p align="center">
-<a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"> <img src="https://github.com/user-attachments/assets/a1e52a9e-3da1-4081-b3c6-053aafb8f196"/></a>
+  <a href="https://dashboard.decodo.com/integrations?utm_source=github&utm_medium=social&utm_campaign=mcp_server"><img src="https://raw.githubusercontent.com/Decodo/mcp-server/main/assets/banner.png" alt="Decodo: one-click web access for your AI agents"/></a>
+</p>
 
 Connect LLMs and AI agents to live web data using MCP (Model Context Protocol). The Decodo MCP
 Server lets you scrape websites, search engines, eCommerce platforms, and social media directly from
