@@ -52,7 +52,7 @@ screenshots (for visual context), built for RAG pipelines, AI research agents, a
 Walmart, and Target (eCommerce), TikTok and YouTube (social media), and ChatGPT and
 Perplexity (AI search).
 
-**Global proxy infrastructure.** 125M+ residential IPs, 195+ geo-locations, and a 99.99% success
+**Global proxy infrastructure.** 115M+ residential IPs, 195+ geo-locations, and a 99.99% success
 rate on even the most protected targets.
 
 **Modular MCP toolsets.** Enable only what you need: `web`, `search`, `ecommerce`, `social_media`,
