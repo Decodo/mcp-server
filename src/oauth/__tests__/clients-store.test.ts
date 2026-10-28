@@ -7,7 +7,7 @@ import {
   MAX_SCOPE_LENGTH,
   isClientIdMetadataUrl,
 } from '../clients-store';
-import { CLAUDE_REDIRECT_URIS } from '../config';
+import { CONNECTOR_REDIRECT_URIS } from '../config';
 import { Sealer } from '../sealer';
 
 const CLAUDE_CODE_CLIENT_ID = 'https://claude.ai/oauth/claude-code-client-metadata';
@@ -35,7 +35,7 @@ const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 const storeWith = (fetchMock: jest.Mock = jest.fn(), sealer = new Sealer('secret')) =>
-  new ClientsStore({ sealer, allowedRedirectUris: CLAUDE_REDIRECT_URIS, fetch: fetchMock as unknown as typeof fetch });
+  new ClientsStore({ sealer, allowedRedirectUris: CONNECTOR_REDIRECT_URIS, fetch: fetchMock as unknown as typeof fetch });
 
 describe('isClientIdMetadataUrl', () => {
   it('accepts an https url with a path', () => {

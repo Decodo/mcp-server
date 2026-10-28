@@ -216,6 +216,7 @@ describe('OAuth against the mock backend', () => {
 
       expect(clientRedirect.searchParams.get('error')).toBe('access_denied');
       expect(clientRedirect.searchParams.get('state')).toBe(authProvider.authorizationUrl?.searchParams.get('state'));
+      expect(clientRedirect.searchParams.get('iss')).toBe(`${origin}/`);
     });
   });
 
@@ -285,6 +286,7 @@ describe('OAuth against the mock backend', () => {
         grant_types_supported: ['authorization_code'],
         token_endpoint_auth_methods_supported: ['none'],
         client_id_metadata_document_supported: true,
+        authorization_response_iss_parameter_supported: true,
       });
     });
 
@@ -350,6 +352,16 @@ describe('OAuth against the mock backend', () => {
       await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
     });
 
+    it('registers the ChatGPT and Perplexity connector callbacks', async () => {
+      for (const redirectUri of [
+        'https://chatgpt.com/connector_platform_oauth_redirect',
+        'https://www.perplexity.ai/rest/connections/oauth_callback',
+        'https://enterprise.perplexity.ai/rest/connections/oauth_callback',
+      ]) {
+        expect((await register({ redirect_uris: [redirectUri] })).status).toBe(201);
+      }
+    });
+
     it('refuses to register a confidential client', async () => {
       const response = await register({ token_endpoint_auth_method: 'client_secret_post' });
 
@@ -365,6 +377,7 @@ describe('OAuth against the mock backend', () => {
       expect(dashboardUrl.href.startsWith(`${origin}/mock/dashboard/authorize?`)).toBe(true);
       expect(dashboardUrl.searchParams.get('request_uuid')).toMatch(/^[0-9a-f-]{36}$/);
       expect(dashboardUrl.searchParams.has('request')).toBe(false);
+      expect(dashboardUrl.searchParams.has('iss')).toBe(false);
 
       const consent = await fetch(dashboardUrl);
       expect(consent.status).toBe(200);
@@ -377,6 +390,7 @@ describe('OAuth against the mock backend', () => {
 
       const clientRedirect = await browser.authorize(authorizeUrl(clientId, challenge), 'approve', 'sk-live-from-form');
       expect(clientRedirect.searchParams.get('state')).toBe('claude-state');
+      expect(clientRedirect.searchParams.get('iss')).toBe(`${origin}/`);
 
       const tokenResponse = await requestToken({
         grant_type: 'authorization_code',
@@ -384,6 +398,7 @@ describe('OAuth against the mock backend', () => {
         code: clientRedirect.searchParams.get('code') as string,
         code_verifier: verifier,
         redirect_uri: CLIENT_REDIRECT,
+        resource: `${origin}/mcp`,
       });
 
       expect(tokenResponse.status).toBe(200);
@@ -490,6 +505,7 @@ describe('OAuth against the mock backend', () => {
 
       expect(redirect.origin + redirect.pathname).toBe(CLIENT_REDIRECT);
       expect(redirect.searchParams.get('error')).toBe('invalid_request');
+      expect(redirect.searchParams.get('iss')).toBe(`${origin}/`);
     });
 
     it('refuses an over-long code_challenge up front with an oauth error', async () => {
