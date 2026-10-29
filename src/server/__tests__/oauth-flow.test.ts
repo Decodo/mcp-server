@@ -284,7 +284,7 @@ describe('OAuth against the mock backend', () => {
         registration_endpoint: `${origin}/register`,
         code_challenge_methods_supported: ['S256'],
         grant_types_supported: ['authorization_code'],
-        token_endpoint_auth_methods_supported: ['none'],
+        token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
         client_id_metadata_document_supported: true,
         authorization_response_iss_parameter_supported: true,
       });
@@ -362,11 +362,27 @@ describe('OAuth against the mock backend', () => {
       }
     });
 
-    it('refuses to register a confidential client', async () => {
+    it('requires the issued secret on token requests from a confidential client', async () => {
       const response = await register({ token_endpoint_auth_method: 'client_secret_post' });
+      expect(response.status).toBe(201);
+      const { client_id: clientId, client_secret: clientSecret } = (await response.json()) as { client_id: string; client_secret: string };
+      expect(clientSecret).toMatch(/^[0-9a-f]{64}$/);
 
-      expect(response.status).toBe(400);
-      await expect(response.json()).resolves.toMatchObject({ error: 'invalid_client_metadata' });
+      const { verifier, challenge } = pkce();
+      const clientRedirect = await browser.authorize(authorizeUrl(clientId, challenge));
+      const exchange = (secret: Record<string, string>) =>
+        requestToken({
+          grant_type: 'authorization_code',
+          client_id: clientId,
+          code: clientRedirect.searchParams.get('code') as string,
+          code_verifier: verifier,
+          redirect_uri: CLIENT_REDIRECT,
+          ...secret,
+        });
+
+      expect((await exchange({})).status).toBe(400);
+      expect((await exchange({ client_secret: 'wrong' })).status).toBe(400);
+      expect((await exchange({ client_secret: clientSecret })).status).toBe(200);
     });
 
     it('registers the signed request with the backend and sends the browser to the consent page with its uuid', async () => {

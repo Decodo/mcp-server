@@ -38,7 +38,7 @@ const buildOAuthMetadata = ({
 }): OAuthMetadata => ({
   ...createOAuthMetadata({ provider, issuerUrl, serviceDocumentationUrl: DOCUMENTATION_URL }),
   grant_types_supported: ['authorization_code'],
-  token_endpoint_auth_methods_supported: ['none'],
+  token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
   client_id_metadata_document_supported: true,
   authorization_response_iss_parameter_supported: true,
 });
@@ -81,7 +81,11 @@ export const oauthRouter = ({
   if (metadata.registration_endpoint) {
     router.use(
       new URL(metadata.registration_endpoint).pathname,
-      clientRegistrationHandler({ clientsStore: provider.clientsStore, rateLimit: RATE_LIMITS.register })
+      clientRegistrationHandler({
+        clientsStore: provider.clientsStore,
+        clientSecretExpirySeconds: 0,
+        rateLimit: RATE_LIMITS.register,
+      })
     );
   }
 

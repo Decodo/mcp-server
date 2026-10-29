@@ -123,11 +123,16 @@ describe('ClientsStore dynamic registration', () => {
     expect(() => storeWith().registerClient({ ...registration, scope: 's'.repeat(MAX_SCOPE_LENGTH) })).not.toThrow();
   });
 
-  it('rejects confidential clients', () => {
-    expect(() =>
-      storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post', client_secret: 's' })
-    ).toThrow(InvalidClientMetadataError);
-    expect(() => storeWith().registerClient({ ...registration, token_endpoint_auth_method: undefined })).toThrow(
+  it('seals a confidential client secret into the client id', async () => {
+    const registered = storeWith().registerClient({ ...registration, token_endpoint_auth_method: undefined, client_secret: 's3cret' });
+
+    expect(registered).toMatchObject({ token_endpoint_auth_method: 'client_secret_post', client_secret: 's3cret', client_secret_expires_at: 0 });
+    expect(registered.client_id).not.toContain('s3cret');
+    await expect(storeWith().getClient(registered.client_id)).resolves.toMatchObject({ client_secret: 's3cret' });
+  });
+
+  it('rejects a confidential client without a secret', () => {
+    expect(() => storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post' })).toThrow(
       InvalidClientMetadataError
     );
   });
