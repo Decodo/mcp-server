@@ -4,7 +4,7 @@ import { OAuthClientMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth
 import type { OAuthClientInformationFull, OAuthClientMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
 import { readBoundedText } from './bounded-body';
-import { disallowedRedirectUris } from './redirect-uris';
+import { disallowedRedirectUris, isAllowedRedirectUri } from './redirect-uris';
 import type { Sealer } from './sealer';
 import { TtlStore } from './ttl-store';
 
@@ -13,6 +13,8 @@ type FetchLike = typeof fetch;
 const SEAL_PURPOSE = 'client';
 
 const PUBLIC_CLIENT = 'none';
+
+const CONFIDENTIAL_CLIENT = 'client_secret_post';
 
 export const MAX_CLIENT_NAME_LENGTH = 128;
 
@@ -36,6 +38,7 @@ type SealedClient = Pick<
   OAuthClientMetadata,
   'client_name' | 'redirect_uris' | 'grant_types' | 'response_types' | 'scope' | 'token_endpoint_auth_method'
 > & {
+  client_secret?: string;
   client_id_issued_at?: number;
 };
 
@@ -102,12 +105,14 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
   }
 
   registerClient(client: Omit<OAuthClientInformationFull, 'client_id' | 'client_id_issued_at'>): OAuthClientInformationFull {
-    if (client.token_endpoint_auth_method !== PUBLIC_CLIENT) {
-      throw new InvalidClientMetadataError(`only public clients are supported (token_endpoint_auth_method "${PUBLIC_CLIENT}")`);
-    }
-
     assertClientMetadataBounded(client);
     this.assertRedirectUrisAllowed(client.redirect_uris);
+
+    const isPublic = client.token_endpoint_auth_method === PUBLIC_CLIENT;
+
+    if (!isPublic && !client.client_secret) {
+      throw new InvalidClientMetadataError('confidential clients need a client_secret');
+    }
 
     const sealed: SealedClient = {
       client_name: client.client_name,
@@ -115,7 +120,8 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
       grant_types: client.grant_types,
       response_types: client.response_types,
       scope: client.scope,
-      token_endpoint_auth_method: PUBLIC_CLIENT,
+      token_endpoint_auth_method: isPublic ? PUBLIC_CLIENT : CONFIDENTIAL_CLIENT,
+      client_secret: isPublic ? undefined : client.client_secret,
       client_id_issued_at: Math.floor(Date.now() / 1000),
     };
 
@@ -123,8 +129,7 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
       ...client,
       ...sealed,
       client_id: this.sealer.seal(SEAL_PURPOSE, sealed),
-      client_secret: undefined,
-      client_secret_expires_at: undefined,
+      client_secret_expires_at: isPublic ? undefined : 0,
     };
   }
 
@@ -187,15 +192,16 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
         return;
       }
 
-      const disallowed = disallowedRedirectUris(parsed.data.redirect_uris, this.allowedRedirectUris);
+      const redirectUris = parsed.data.redirect_uris.filter(uri => isAllowedRedirectUri(uri, this.allowedRedirectUris));
 
-      if (disallowed.length > 0) {
-        log('warn', 'oauth.client_metadata.redirect_uri_not_allowed', { clientId, disallowed });
+      if (redirectUris.length === 0) {
+        log('warn', 'oauth.client_metadata.redirect_uri_not_allowed', { clientId, disallowed: parsed.data.redirect_uris });
         return;
       }
 
       const client: OAuthClientInformationFull = {
         ...parsed.data,
+        redirect_uris: redirectUris,
         client_id: clientId,
         token_endpoint_auth_method: PUBLIC_CLIENT,
       };

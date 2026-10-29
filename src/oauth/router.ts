@@ -38,9 +38,26 @@ const buildOAuthMetadata = ({
 }): OAuthMetadata => ({
   ...createOAuthMetadata({ provider, issuerUrl, serviceDocumentationUrl: DOCUMENTATION_URL }),
   grant_types_supported: ['authorization_code'],
-  token_endpoint_auth_methods_supported: ['none'],
+  token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
   client_id_metadata_document_supported: true,
+  authorization_response_iss_parameter_supported: true,
 });
+
+const withIssuer = (redirect: string, issuer: string): string => {
+  const url = new URL(redirect);
+  url.searchParams.set('iss', issuer);
+  return url.href;
+};
+
+const issuerOnErrorRedirects =
+  (issuer: string): express.RequestHandler =>
+  (_req, res, next) => {
+    const redirect = res.redirect.bind(res) as (status: number, url: string) => void;
+
+    res.redirect = ((status: number, url: string) =>
+      redirect(status, new URL(url).searchParams.has('error') ? withIssuer(url, issuer) : url)) as express.Response['redirect'];
+    next();
+  };
 
 export const oauthRouter = ({
   provider,
@@ -54,13 +71,21 @@ export const oauthRouter = ({
   const metadata = buildOAuthMetadata({ provider, issuerUrl });
   const router = express.Router();
 
-  router.use(new URL(metadata.authorization_endpoint).pathname, authorizationHandler({ provider, rateLimit: RATE_LIMITS.authorize }));
+  router.use(
+    new URL(metadata.authorization_endpoint).pathname,
+    issuerOnErrorRedirects(metadata.issuer),
+    authorizationHandler({ provider, rateLimit: RATE_LIMITS.authorize })
+  );
   router.use(new URL(metadata.token_endpoint).pathname, tokenHandler({ provider, rateLimit: RATE_LIMITS.token }));
 
   if (metadata.registration_endpoint) {
     router.use(
       new URL(metadata.registration_endpoint).pathname,
-      clientRegistrationHandler({ clientsStore: provider.clientsStore, rateLimit: RATE_LIMITS.register })
+      clientRegistrationHandler({
+        clientsStore: provider.clientsStore,
+        clientSecretExpirySeconds: 0,
+        rateLimit: RATE_LIMITS.register,
+      })
     );
   }
 
@@ -85,7 +110,7 @@ export const oauthRouter = ({
         res,
       });
 
-      res.redirect(302, redirect);
+      res.redirect(302, withIssuer(redirect, metadata.issuer));
     } catch (error) {
       if (error instanceof UnknownAuthorizationRequestError) {
         res.status(400).send(errorPage(error.message));

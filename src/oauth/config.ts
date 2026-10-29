@@ -33,9 +33,12 @@ export const DEFAULT_TOKEN_EXCHANGE_BASE_URL =
 
 export const DEFAULT_TOKEN_EXCHANGE_CLIENT_ID = 'scrapper-mcp';
 
-export const CLAUDE_REDIRECT_URIS = [
+export const CONNECTOR_REDIRECT_URIS = [
   'https://claude.ai/api/mcp/auth_callback',
   'https://claude.com/api/mcp/auth_callback',
+  'https://chatgpt.com/connector_platform_oauth_redirect',
+  'https://www.perplexity.ai/rest/connections/oauth_callback',
+  'https://enterprise.perplexity.ai/rest/connections/oauth_callback',
 ];
 
 export const CALLBACK_PATH = '/oauth/callback';
@@ -101,6 +104,6 @@ export const oauthConfigFromEnv = (env: Env, port: number): OAuthConfig => ({
     privateKey: privateKeyFromEnv(env),
     baseUrl: urlFromEnv(env, 'TOKEN_EXCHANGE_BASE_URL', DEFAULT_TOKEN_EXCHANGE_BASE_URL),
   },
-  allowedRedirectUris: [...CLAUDE_REDIRECT_URIS, ...listFromEnv(env, 'OAUTH_ALLOWED_REDIRECT_URIS')],
+  allowedRedirectUris: [...CONNECTOR_REDIRECT_URIS, ...listFromEnv(env, 'OAUTH_ALLOWED_REDIRECT_URIS')],
   mockScraperApiKey: env.MOCK_SCRAPER_API_KEY?.trim() || '',
 });

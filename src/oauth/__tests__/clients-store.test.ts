@@ -7,7 +7,7 @@ import {
   MAX_SCOPE_LENGTH,
   isClientIdMetadataUrl,
 } from '../clients-store';
-import { CLAUDE_REDIRECT_URIS } from '../config';
+import { CONNECTOR_REDIRECT_URIS } from '../config';
 import { Sealer } from '../sealer';
 
 const CLAUDE_CODE_CLIENT_ID = 'https://claude.ai/oauth/claude-code-client-metadata';
@@ -35,7 +35,7 @@ const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 const storeWith = (fetchMock: jest.Mock = jest.fn(), sealer = new Sealer('secret')) =>
-  new ClientsStore({ sealer, allowedRedirectUris: CLAUDE_REDIRECT_URIS, fetch: fetchMock as unknown as typeof fetch });
+  new ClientsStore({ sealer, allowedRedirectUris: CONNECTOR_REDIRECT_URIS, fetch: fetchMock as unknown as typeof fetch });
 
 describe('isClientIdMetadataUrl', () => {
   it('accepts an https url with a path', () => {
@@ -123,11 +123,16 @@ describe('ClientsStore dynamic registration', () => {
     expect(() => storeWith().registerClient({ ...registration, scope: 's'.repeat(MAX_SCOPE_LENGTH) })).not.toThrow();
   });
 
-  it('rejects confidential clients', () => {
-    expect(() =>
-      storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post', client_secret: 's' })
-    ).toThrow(InvalidClientMetadataError);
-    expect(() => storeWith().registerClient({ ...registration, token_endpoint_auth_method: undefined })).toThrow(
+  it('seals a confidential client secret into the client id', async () => {
+    const registered = storeWith().registerClient({ ...registration, token_endpoint_auth_method: undefined, client_secret: 's3cret' });
+
+    expect(registered).toMatchObject({ token_endpoint_auth_method: 'client_secret_post', client_secret: 's3cret', client_secret_expires_at: 0 });
+    expect(registered.client_id).not.toContain('s3cret');
+    await expect(storeWith().getClient(registered.client_id)).resolves.toMatchObject({ client_secret: 's3cret' });
+  });
+
+  it('rejects a confidential client without a secret', () => {
+    expect(() => storeWith().registerClient({ ...registration, token_endpoint_auth_method: 'client_secret_post' })).toThrow(
       InvalidClientMetadataError
     );
   });
@@ -189,12 +194,20 @@ describe('ClientsStore client id metadata documents', () => {
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
   });
 
-  it('rejects a document with a redirect uri outside the allowlist', async () => {
+  it('rejects a document with no redirect uri inside the allowlist', async () => {
     const fetchMock = jest
       .fn()
       .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: ['https://evil.example/cb'] }));
 
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
+  });
+
+  it('keeps only the allowlisted redirect uris of a document', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: ['https://evil.example/cb', CLAUDE_CALLBACK] }));
+
+    await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toMatchObject({ redirect_uris: [CLAUDE_CALLBACK] });
   });
 
   it('rejects a document without redirect_uris', async () => {

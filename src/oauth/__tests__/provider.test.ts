@@ -9,7 +9,7 @@ import {
 import type { OAuthClientInformationFull } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { OAuthBackend } from '../backend';
 import { ClientsStore } from '../clients-store';
-import { CLAUDE_REDIRECT_URIS } from '../config';
+import { CONNECTOR_REDIRECT_URIS } from '../config';
 import {
   DecodoOAuthProvider,
   MAX_CODE_CHALLENGE_LENGTH,
@@ -58,7 +58,7 @@ const setup = (exchange: jest.Mock = jest.fn()) => {
     exchange,
   };
   const provider = new DecodoOAuthProvider({
-    clientsStore: new ClientsStore({ sealer, allowedRedirectUris: CLAUDE_REDIRECT_URIS }),
+    clientsStore: new ClientsStore({ sealer, allowedRedirectUris: CONNECTOR_REDIRECT_URIS }),
     backend,
     sealer,
     callbackUrl: CALLBACK,
