@@ -194,12 +194,20 @@ describe('ClientsStore client id metadata documents', () => {
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
   });
 
-  it('rejects a document with a redirect uri outside the allowlist', async () => {
+  it('rejects a document with no redirect uri inside the allowlist', async () => {
     const fetchMock = jest
       .fn()
       .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: ['https://evil.example/cb'] }));
 
     await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toBeUndefined();
+  });
+
+  it('keeps only the allowlisted redirect uris of a document', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ ...metadataDocument, redirect_uris: ['https://evil.example/cb', CLAUDE_CALLBACK] }));
+
+    await expect(storeWith(fetchMock).getClient(CLAUDE_CODE_CLIENT_ID)).resolves.toMatchObject({ redirect_uris: [CLAUDE_CALLBACK] });
   });
 
   it('rejects a document without redirect_uris', async () => {

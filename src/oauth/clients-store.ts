@@ -4,7 +4,7 @@ import { OAuthClientMetadataSchema } from '@modelcontextprotocol/sdk/shared/auth
 import type { OAuthClientInformationFull, OAuthClientMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { log } from '../logger';
 import { readBoundedText } from './bounded-body';
-import { disallowedRedirectUris } from './redirect-uris';
+import { disallowedRedirectUris, isAllowedRedirectUri } from './redirect-uris';
 import type { Sealer } from './sealer';
 import { TtlStore } from './ttl-store';
 
@@ -192,15 +192,16 @@ export class ClientsStore implements OAuthRegisteredClientsStore {
         return;
       }
 
-      const disallowed = disallowedRedirectUris(parsed.data.redirect_uris, this.allowedRedirectUris);
+      const redirectUris = parsed.data.redirect_uris.filter(uri => isAllowedRedirectUri(uri, this.allowedRedirectUris));
 
-      if (disallowed.length > 0) {
-        log('warn', 'oauth.client_metadata.redirect_uri_not_allowed', { clientId, disallowed });
+      if (redirectUris.length === 0) {
+        log('warn', 'oauth.client_metadata.redirect_uri_not_allowed', { clientId, disallowed: parsed.data.redirect_uris });
         return;
       }
 
       const client: OAuthClientInformationFull = {
         ...parsed.data,
+        redirect_uris: redirectUris,
         client_id: clientId,
         token_endpoint_auth_method: PUBLIC_CLIENT,
       };
