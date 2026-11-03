@@ -151,6 +151,31 @@ The local server reads either credential from `SCRAPER_API_TOKEN` and works out 
 3.  Add the same configuration as above.
 4.  Save and restart Windsurf.
 
+### eve (Vercel)
+
+1.  In your [eve](https://eve.dev) agent project, run `eve add connection/decodo`, or create
+    `agent/connections/decodo.ts`:
+
+```ts
+import { always } from 'eve/tools/approval';
+import { defineMcpClientConnection } from 'eve/connections';
+
+export default defineMcpClientConnection({
+  url: 'https://mcp.decodo.com/mcp',
+  description:
+    'Decodo: scrape web pages as Markdown, search the web, map and crawl sites, and read e-commerce and YouTube data.',
+  headers: () => ({
+    Authorization: `Bearer ${process.env.DECODO_API_KEY!}`,
+  }),
+  approval: always(),
+});
+```
+
+2.  Set `DECODO_API_KEY=<api_key>` in the agent's server-side environment (`.env.local` locally,
+    project env vars on Vercel).
+3.  `approval: always()` asks before every call, since calls use your plan; relax it with eve's
+    approval rules if you prefer.
+
 ## Test your setup
 
 Once connected, try this prompt in your client:
