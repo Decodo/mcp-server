@@ -16,7 +16,7 @@
       "interface": {
         "displayName": "Decodo",
         "shortDescription": "Live web data for your chats",
-        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, and pull structured results from Google, Bing, Amazon, Walmart, Target, TikTok and YouTube. Requests run through Decodo's Web Scraping API, which handles JavaScript rendering, proxies and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Scraping API plan.",
+        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, and pull structured results from Google, Amazon, Walmart, Target, TikTok and YouTube. Requests run through Decodo's Web Scraping API, which handles JavaScript rendering, proxies and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Scraping API plan.",
         "developerName": "Decodo",
         "category": "Developer Tools",
         "capabilities": [
