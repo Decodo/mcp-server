@@ -1,0 +1,95 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "decodo",
+  "version": "1.0.0",
+  "description": "Scrape websites, search engines, eCommerce platforms and social media with Decodo's Web Scraping API.",
+  "author": {
+    "name": "Decodo",
+    "url": "https://decodo.com"
+  },
+  "homepage": "https://decodo.com",
+  "repository": "https://github.com/Decodo/mcp-server",
+  "license": "ISC",
+  "keywords": ["web scraping", "search", "ecommerce", "web data"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Decodo",
+        "shortDescription": "Live web data for your chats",
+        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, and pull structured results from Google, Amazon, Walmart, Target, TikTok and YouTube. Requests run through Decodo's Web Scraping API, which handles JavaScript rendering, proxies and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Scraping API plan.",
+        "developerName": "Decodo",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Scrape web pages",
+          "Search the web",
+          "Scrape eCommerce sites",
+          "Scrape social media"
+        ],
+        "websiteURL": "https://decodo.com",
+        "supportURL": "https://help.decodo.com",
+        "privacyPolicyURL": "https://decodo.com/legal",
+        "termsOfServiceURL": "https://decodo.com/legal",
+        "defaultPrompt": [
+          "Scrape decodo.com from a US IP and summarize the pricing.",
+          "Search the web for MCP server hosting options.",
+          "Find wireless keyboards on Amazon and compare the top three."
+        ]
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Scrape a page as Markdown",
+              "prompt": "Scrape https://decodo.com/scraping/web and list the plans it mentions.",
+              "tools_triggered": "scrape_as_markdown",
+              "expected_behavior": "Returns the page content and lists the plans named on it."
+            },
+            {
+              "description": "Search the web",
+              "prompt": "Search the web for MCP server hosting options.",
+              "tools_triggered": "search",
+              "expected_behavior": "Returns ranked web results with titles and links."
+            },
+            {
+              "description": "Scrape Google Search from a location",
+              "prompt": "Search Google for running shoes from Germany and tell me the top result.",
+              "tools_triggered": "google_search",
+              "expected_behavior": "Returns parsed German Google results and names the top organic result."
+            },
+            {
+              "description": "Scrape Amazon Search",
+              "prompt": "Find wireless keyboards on Amazon and compare the top three.",
+              "tools_triggered": "amazon_search",
+              "expected_behavior": "Returns Amazon listings and compares price and rating of the first three."
+            },
+            {
+              "description": "Take a screenshot",
+              "prompt": "Take a screenshot of github.com from a US IP address.",
+              "tools_triggered": "screenshot",
+              "expected_behavior": "Returns a PNG screenshot of the github.com home page."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Purchasing is not supported",
+              "prompt": "Buy the cheapest wireless keyboard on Amazon for me."
+            },
+            {
+              "description": "Signing in to third-party accounts is not supported",
+              "prompt": "Log in to my bank account and show my balance."
+            },
+            {
+              "description": "Posting content is not supported",
+              "prompt": "Post a comment on this YouTube video saying it was great."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "The plugin does not sell products or process payments."
+      },
+      "publication": {
+        "release_notes": "Initial release: web scraping, web search, and eCommerce and social media scrapers."
+      }
+    }
+  }
+}
