@@ -1,0 +1,37 @@
+{
+  "manifest_version": "0.3",
+  "name": "decodo-mcp-server",
+  "display_name": "Decodo MCP Server",
+  "version": "1.2.3",
+  "description": "Enable your AI agents to scrape and parse web content dynamically, including geo-restricted sites",
+  "author": {
+    "name": "Decodo"
+  },
+  "homepage": "https://github.com/Decodo/mcp-server#readme",
+  "documentation": "https://github.com/Decodo/mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Decodo/mcp-server.git"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/index.js"],
+      "env": {
+        "SCRAPER_API_TOKEN": "${user_config.scraper_api_token}"
+      }
+    }
+  },
+  "user_config": {
+    "scraper_api_token": {
+      "type": "string",
+      "title": "Scraper API Token",
+      "description": "Authentication token for the Decodo Scraper API",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "tools": []
+}
