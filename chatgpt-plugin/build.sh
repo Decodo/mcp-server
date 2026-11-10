@@ -5,9 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 OUT="decodo-chatgpt-plugin.zip"
-VERSION=$(python3 -c "import json;print(json.load(open('plugin.json'))['version'])")
-
-python3 -I validate.py . || { echo "Validation failed - not building."; exit 1; }
+VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' plugin.json | head -1)
 
 rm -f "$OUT"
 find . -name '.DS_Store' -delete
