@@ -11,7 +11,8 @@ chatgpt-plugin/
 │   ├── icon.png                      composerIcon, 512x512
 │   └── logo.png                      logo, 1024x1024
 ├── skills/getting-started/SKILL.md   onboarding skill
-└── build.sh                          produces decodo-chatgpt-plugin.zip
+├── validate.py                       checks the package against OpenAI's rules
+└── build.sh                          validates, then produces the ZIP
 ```
 
 ## Building the ZIP
@@ -20,7 +21,9 @@ chatgpt-plugin/
 ./build.sh
 ```
 
-The plugin files land at the archive root, which is what OpenAI's validator expects.
+`build.sh` runs `validate.py` first and refuses to build if anything fails, so a bad
+package never reaches the upload form. The plugin files land at the archive root, which
+is what OpenAI's validator expects.
 Bump `version` in `plugin.json` before every re-upload - reusing a version triggers
 `plugin_version_unchanged`.
 
