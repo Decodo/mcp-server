@@ -3,3 +3,6 @@ build
 
 .env
 .vscode
+
+# ChatGPT plugin build artifact
+chatgpt-plugin/*.zip
