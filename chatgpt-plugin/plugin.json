@@ -42,7 +42,6 @@
           "Find wireless keyboards on Amazon and compare the top three."
         ]
       },
-      "onboardingSkill": "./skills/getting-started/SKILL.md",
       "review": {
         "test_cases": {
           "positive": [

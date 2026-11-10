@@ -10,7 +10,6 @@ chatgpt-plugin/
 ├── assets/
 │   ├── icon.png                      composerIcon, 512x512
 │   └── logo.png                      logo, 1024x1024
-├── skills/getting-started/SKILL.md   onboarding skill
 ├── validate.py                       checks the package against OpenAI's rules
 └── build.sh                          validates, then produces the ZIP
 ```
@@ -48,6 +47,12 @@ start with `./`. `category` must be one of OpenAI's 13 values; `Developer Tools`
 
 `review.test_cases` needs exactly 5 positive and 3 negative cases. Every
 `tools_triggered` value must match a tool name registered in `src/tools/`.
+
+This package ships no `skills/`, because the whole surface is the remote MCP server.
+OpenAI's `archive_plugin_files_missing` error says a public ZIP needs at least one
+skill, while the submission page describes a remote-MCP-only flow. If upload is
+rejected for that reason, add a skill under `skills/<name>/SKILL.md` and point
+`extensions."com.openai".onboardingSkill` at it.
 
 Never put credentials, `test_credentials` or `reviewer_instructions` in the ZIP - the
 validator rejects them. They go in the dashboard.
