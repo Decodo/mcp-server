@@ -27,7 +27,7 @@ export class TargetSearchTool extends Tool {
       {
         title: 'Target Search',
         description:
-          'Search Target for a keyword through the Decodo Web Scraping API (`target_search` target) and return the results as Markdown. ' +
+          'Search Target for a keyword through the Decodo Web Data API (`target_search` target) and return the results as Markdown. ' +
           'Use it to find products sold by the Target retail store, optionally for a delivery ZIP code. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-target-search',
         inputSchema: {

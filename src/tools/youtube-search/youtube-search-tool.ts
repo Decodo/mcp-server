@@ -18,7 +18,7 @@ export class YoutubeSearchTool extends Tool {
       {
         title: 'YouTube Search',
         description:
-          'Search YouTube for videos through the Decodo Web Scraping API (`youtube_search` target) and return the results as JSON. ' +
+          'Search YouTube for videos through the Decodo Web Data API (`youtube_search` target) and return the results as JSON. ' +
           'Use it to find videos on a topic before fetching their metadata or subtitles. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-youtube-search',
         inputSchema: {

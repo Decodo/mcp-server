@@ -25,7 +25,7 @@ export class GoogleLensTool extends Tool {
       {
         title: 'Google Lens',
         description:
-          'Run a Google Lens image search for an image URL through the Decodo Web Scraping API (`google_lens` target) and return the parsed visual matches as JSON. ' +
+          'Run a Google Lens image search for an image URL through the Decodo Web Data API (`google_lens` target) and return the parsed visual matches as JSON. ' +
           'Use it to identify what an image shows or find pages where it appears. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-google-lens',
         inputSchema: {

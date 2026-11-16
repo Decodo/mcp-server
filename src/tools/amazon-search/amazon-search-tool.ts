@@ -35,7 +35,7 @@ export class AmazonSearchTool extends Tool {
       {
         title: 'Amazon Search',
         description:
-          'Search Amazon for a keyword through the Decodo Web Scraping API (`amazon_search` target) and return the product listings parsed as JSON. ' +
+          'Search Amazon for a keyword through the Decodo Web Data API (`amazon_search` target) and return the product listings parsed as JSON. ' +
           'Use it to find products and compare listings on a chosen Amazon domain. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-amazon-search',
         inputSchema: {

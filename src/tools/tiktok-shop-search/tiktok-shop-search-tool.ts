@@ -25,7 +25,7 @@ export class TiktokShopSearchTool extends Tool {
       {
         title: 'TikTok Shop Search',
         description:
-          'Search TikTok Shop for a keyword through the Decodo Web Scraping API (`tiktok_shop_search` target) and return the results as Markdown. ' +
+          'Search TikTok Shop for a keyword through the Decodo Web Data API (`tiktok_shop_search` target) and return the results as Markdown. ' +
           'Use it to find products sold on TikTok Shop in a given country. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-tiktok-shop-search',
         inputSchema: {

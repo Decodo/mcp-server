@@ -25,7 +25,7 @@ export class GoogleAiModeTool extends Tool {
       {
         title: 'Google AI Mode',
         description:
-          'Ask Google AI Mode a question through the Decodo Web Scraping API (`google_ai_mode` target) and return its AI answer as JSON. ' +
+          'Ask Google AI Mode a question through the Decodo Web Data API (`google_ai_mode` target) and return its AI answer as JSON. ' +
           "Use it to see what Google's AI search says about a query. " +
           'Docs: https://help.decodo.com/docs/web-scraping-api-google-ai-mode',
         inputSchema: {

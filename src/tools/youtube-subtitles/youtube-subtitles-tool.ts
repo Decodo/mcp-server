@@ -23,7 +23,7 @@ export class YoutubeSubtitlesTool extends Tool {
       {
         title: 'YouTube Subtitles',
         description:
-          'Fetch the subtitles of a YouTube video by video ID through the Decodo Web Scraping API (`youtube_subtitles` target) and return them as JSON. ' +
+          'Fetch the subtitles of a YouTube video by video ID through the Decodo Web Data API (`youtube_subtitles` target) and return them as JSON. ' +
           'Use it to read or summarise what is said in a video; set `language_code` for a specific language. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-youtube-subtitles',
         inputSchema: {
