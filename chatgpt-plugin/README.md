@@ -45,7 +45,11 @@ Icons must be square, at least 48x48, at most 4096x4096 and 5 MiB, and their pat
 start with `./`. `category` must be one of OpenAI's 13 values; `Developer Tools` is ours.
 
 `review.test_cases` needs exactly 5 positive and 3 negative cases. Every
-`tools_triggered` value must match a tool name registered in `src/tools/`.
+`tools_triggered` value must match a tool name registered in `src/tools/` **and** be
+visible on `/mcp` - anything listed in `DIRECTORY_HIDDEN_TOOLS`
+(`src/server/hidden-tools.ts`) is not there when a reviewer connects. The same goes for
+the listing copy: `longDescription` and `capabilities` must only describe tools that
+path actually serves.
 
 This package ships no `skills/`, because the whole surface is the remote MCP server.
 OpenAI's `archive_plugin_files_missing` error says a public ZIP needs at least one
@@ -63,8 +67,10 @@ These are entered in the OpenAI dashboard, not the ZIP:
 - Reviewer demo credentials (a test account that works without MFA or magic links)
 - The demo recording URL
 - The OAuth client secret, if one is ever needed (not needed for `dcr`)
-- Domain verification: host the token OpenAI gives you as plain text at
-  `https://mcp.decodo.com/.well-known/openai-apps-challenge`
+- Domain verification: the token OpenAI generates in the portal. The server serves it
+  from `OPENAI_APPS_CHALLENGE` at `/.well-known/openai-apps-challenge`
+  (`src/server/openai-apps-challenge.ts`), so set that variable in the `mcp.decodo.com`
+  environment, redeploy, then press **Verify Domain**
 - A justification for each tool's `readOnlyHint`, `openWorldHint` and `destructiveHint`
 
 ## References

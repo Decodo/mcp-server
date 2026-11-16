@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "decodo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scrape web pages, search the web, crawl whole sites, and pull structured results from search engines, eCommerce platforms and social media with Decodo's Web Data API.",
   "author": {
     "name": "Decodo",
@@ -16,17 +16,16 @@
       "interface": {
         "displayName": "Decodo",
         "shortDescription": "Live web data for your chats",
-        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, crawl and map entire sites, and pull structured results from Google, Bing, Amazon, Walmart, Target, TikTok, YouTube and ChatGPT. Requests run through Decodo's Web Data API, which handles JavaScript rendering, proxy rotation and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Data API plan.",
+        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, crawl and map entire sites, and pull structured results from Google Search, Google AI Mode, Amazon, Walmart, Target, TikTok Shop and YouTube. Requests run through Decodo's Web Data API, which handles JavaScript rendering, proxy rotation and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Data API plan.",
         "developerName": "Decodo",
         "category": "Developer Tools",
         "capabilities": [
           "Scrape web pages as Markdown or screenshots",
           "Search the web",
           "Crawl and map entire websites",
-          "Scrape Google and Bing search results",
+          "Scrape Google Search and Google AI Mode results",
           "Scrape Amazon, Walmart and Target",
-          "Scrape TikTok and YouTube",
-          "Scrape ChatGPT answers"
+          "Scrape TikTok and YouTube"
         ],
         "composerIcon": "./assets/icon.png",
         "logo": "./assets/logo.png",
@@ -95,7 +94,7 @@
         "commerce_description": "The plugin does not sell products or process payments."
       },
       "publication": {
-        "release_notes": "Initial release: web scraping, web search, site crawling, and eCommerce, social media and AI search scrapers."
+        "release_notes": "Initial release: scrape web pages, search the web, crawl and map sites, and pull structured results from Google, Amazon, Walmart, Target, TikTok and YouTube."
       }
     }
   }
