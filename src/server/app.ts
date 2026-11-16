@@ -8,6 +8,7 @@ import type { OAuthConfig } from '../oauth';
 import { resolveToolsets } from '../utils';
 import { CLAUDE_TOOLS } from './claude-tools';
 import { corsOptions } from './cors';
+import { OPENAI_APPS_CHALLENGE_PATH } from './openai-apps-challenge';
 import { RevokedCredentials } from './revoked-credentials';
 import { ScraperAPIHttpServer } from './sapi-http-server';
 import type { TrustProxy } from './trust-proxy';
@@ -24,12 +25,14 @@ export const createApp = ({
   trustProxy = false,
   revokedCredentials = new RevokedCredentials(),
   hiddenTools = new Set(),
+  openaiAppsChallenge,
   fetch,
 }: {
   oauth: OAuthConfig;
   trustProxy?: TrustProxy;
   revokedCredentials?: RevokedCredentials;
   hiddenTools?: ReadonlySet<string>;
+  openaiAppsChallenge?: string;
   fetch?: FetchLike;
 }): express.Express => {
   const app = express();
@@ -50,6 +53,12 @@ export const createApp = ({
   app.use(express.json());
 
   app.use(oauth.router);
+
+  if (openaiAppsChallenge) {
+    app.get(OPENAI_APPS_CHALLENGE_PATH, (_req, res) => {
+      res.type('text/plain').status(200).send(openaiAppsChallenge);
+    });
+  }
 
   const serveMcp =
     (
