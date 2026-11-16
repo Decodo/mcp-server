@@ -35,7 +35,7 @@ export class WalmartProductTool extends Tool {
       {
         title: 'Walmart Product',
         description:
-          'Fetch a Walmart product page by product ID through the Decodo Web Scraping API (`walmart_product` target) and return its details parsed as JSON. ' +
+          'Fetch a Walmart product page by product ID through the Decodo Web Data API (`walmart_product` target) and return its details parsed as JSON. ' +
           'Use it when you know the product ID and need its price, availability or description. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-walmart-product',
         inputSchema: {

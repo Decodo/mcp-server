@@ -19,7 +19,7 @@ from scratch.
 ## What is Decodo MCP server?
 
 The Decodo MCP Server is a web scraping layer for AI agents. It connects MCP-compatible clients to
-Decodo's Web Scraping API, enabling:
+Decodo's Web Data API, enabling:
 
 - Web scraping for LLMs
 - Real-time data retrieval for RAG

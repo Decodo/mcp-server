@@ -28,7 +28,7 @@ export class AmazonBestsellersTool extends Tool {
       {
         title: 'Amazon Bestsellers',
         description:
-          'Fetch the Amazon Best Sellers list for a category through the Decodo Web Scraping API (`amazon_bestsellers` target) and return it parsed as JSON. ' +
+          'Fetch the Amazon Best Sellers list for a category through the Decodo Web Data API (`amazon_bestsellers` target) and return it parsed as JSON. ' +
           'Use it to see the top-selling products in a category. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-amazon-bestsellers',
         inputSchema: {

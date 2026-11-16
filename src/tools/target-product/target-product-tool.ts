@@ -21,7 +21,7 @@ export class TargetProductTool extends Tool {
       {
         title: 'Target Product',
         description:
-          'Fetch a Target product page by product ID through the Decodo Web Scraping API (`target_product` target) and return its details parsed as JSON. ' +
+          'Fetch a Target product page by product ID through the Decodo Web Data API (`target_product` target) and return its details parsed as JSON. ' +
           'Use it when you know a Target product ID and need its price, availability or description. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-target-product',
         inputSchema: {

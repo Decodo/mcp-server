@@ -30,7 +30,7 @@ export class GoogleAdsTool extends Tool {
       {
         title: 'Google Ads',
         description:
-          'Search Google through the Decodo Web Scraping API (`google_ads` target) and return the paid Google Ads shown for a query, parsed as JSON. ' +
+          'Search Google through the Decodo Web Data API (`google_ads` target) and return the paid Google Ads shown for a query, parsed as JSON. ' +
           'Use it to see which advertisers bid on a keyword and what their ads say. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-google-ads',
         inputSchema: {

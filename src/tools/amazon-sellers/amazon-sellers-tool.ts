@@ -29,7 +29,7 @@ export class AmazonSellersTool extends Tool {
       {
         title: 'Amazon Sellers',
         description:
-          'Fetch an Amazon seller profile by seller ID through the Decodo Web Scraping API (`amazon_sellers` target) and return it parsed as JSON. ' +
+          'Fetch an Amazon seller profile by seller ID through the Decodo Web Data API (`amazon_sellers` target) and return it parsed as JSON. ' +
           "Use it to check a seller's name, rating and feedback. " +
           'Docs: https://help.decodo.com/docs/web-scraping-api-amazon-sellers',
         inputSchema: {

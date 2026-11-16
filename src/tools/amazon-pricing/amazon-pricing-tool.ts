@@ -40,7 +40,7 @@ export class AmazonPricingTool extends Tool {
       {
         title: 'Amazon Pricing',
         description:
-          'Fetch the offers for an Amazon product by ASIN through the Decodo Web Scraping API (`amazon_pricing` target) and return them parsed as JSON. ' +
+          'Fetch the offers for an Amazon product by ASIN through the Decodo Web Data API (`amazon_pricing` target) and return them parsed as JSON. ' +
           'Use it to compare what different sellers charge for the same product. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-amazon-pricing',
         inputSchema: {

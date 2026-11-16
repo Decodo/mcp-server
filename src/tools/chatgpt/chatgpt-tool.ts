@@ -19,7 +19,7 @@ export class ChatGPTTool extends Tool {
       {
         title: 'ChatGPT',
         description:
-          'Send one prompt to ChatGPT through the Decodo Web Scraping API (`chatgpt` target) and return its answer parsed as JSON. ' +
+          'Send one prompt to ChatGPT through the Decodo Web Data API (`chatgpt` target) and return its answer parsed as JSON. ' +
           'Each call is a single prompt and answer, with no conversation history; set `search` to let ChatGPT use web search. ' +
           'Use it to see how ChatGPT answers a question, for example to check how it describes a brand. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-chatgpt',

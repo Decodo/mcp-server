@@ -19,7 +19,7 @@ export class PerplexityTool extends Tool {
       {
         title: 'Perplexity',
         description:
-          'Send one prompt to Perplexity through the Decodo Web Scraping API (`perplexity` target) and return its answer parsed as JSON. ' +
+          'Send one prompt to Perplexity through the Decodo Web Data API (`perplexity` target) and return its answer parsed as JSON. ' +
           'Each call is a single prompt and answer, with no conversation history. ' +
           'Use it to see how Perplexity answers a question and which sources it draws on. ' +
           'Docs: https://help.decodo.com/docs/web-scraping-api-perplexity',
