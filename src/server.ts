@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { oauthConfigFromEnv } from './oauth';
 import { createApp } from './server/app';
 import { hiddenToolsFromEnv } from './server/hidden-tools';
-import { openaiAppsChallengeFromEnv } from './server/openai-apps-challenge';
 import { trustProxyFromEnv } from './server/trust-proxy';
 
 const port = parseInt(process.env.PORT || '3000');
@@ -13,7 +12,6 @@ createApp({
   oauth,
   trustProxy: trustProxyFromEnv(process.env.TRUST_PROXY),
   hiddenTools: hiddenToolsFromEnv(process.env.HIDDEN_TOOLS),
-  openaiAppsChallenge: openaiAppsChallengeFromEnv(process.env.OPENAI_APPS_CHALLENGE),
 })
   .listen(port, () => {
     console.log(

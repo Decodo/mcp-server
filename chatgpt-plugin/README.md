@@ -67,10 +67,12 @@ These are entered in the OpenAI dashboard, not the ZIP:
 - Reviewer demo credentials (a test account that works without MFA or magic links)
 - The demo recording URL
 - The OAuth client secret, if one is ever needed (not needed for `dcr`)
-- Domain verification: the token OpenAI generates in the portal. The server serves it
-  from `OPENAI_APPS_CHALLENGE` at `/.well-known/openai-apps-challenge`
-  (`src/server/openai-apps-challenge.ts`), so set that variable in the `mcp.decodo.com`
-  environment, redeploy, then press **Verify Domain**
+- Domain verification: host the token OpenAI generates in the portal at
+  `https://mcp.decodo.com/.well-known/openai-apps-challenge` as plain text - the bare
+  token, not JSON and not a list - then press **Verify Domain**. It has to be the MCP
+  host or an eligible parent, not `decodo.com`. Nothing in the server serves this path
+  today; a Cloudflare rule in front of `mcp.decodo.com` is the cheapest way to add it.
+  Only directory submission needs it - connecting the server to ChatGPT does not
 - A justification for each tool's `readOnlyHint`, `openWorldHint` and `destructiveHint`
 
 ## References
