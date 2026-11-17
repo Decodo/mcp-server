@@ -59,7 +59,7 @@ export const zodDomainFilter = z
 
 export const zodSelectPaths = z
   .array(z.string())
-  .describe('Only keep URLs whose path matches one of these patterns, e.g. /blog/*')
+  .describe('Only keep URLs whose path matches one of these patterns, e.g. ^/blog')
   .optional();
 
 export const zodExcludePaths = z
