@@ -4,7 +4,7 @@ import type { OAuthBackendFactory } from './backend';
 import { createDecodoBackend } from './backends/decodo';
 import { createMockBackend } from './backends/mock';
 import { ClientsStore } from './clients-store';
-import { CALLBACK_PATH, CLAUDE_PATH, MCP_PATH, OAUTH_BACKEND } from './config';
+import { AI_PATH, CALLBACK_PATH, CLAUDE_PATH, MCP_PATH, OAUTH_BACKEND } from './config';
 import type { OAuthBackendKind, OAuthConfig } from './config';
 import { DecodoOAuthProvider } from './provider';
 import { oauthRouter } from './router';
@@ -30,7 +30,7 @@ export const createOAuth = (
   { fetch, onTokenIssued }: { fetch?: FetchLike; onTokenIssued?: (scraperApiKey: string) => void } = {}
 ): OAuth => {
   const callbackUrl = new URL(CALLBACK_PATH, config.publicUrl);
-  const resourceServerUrls = [MCP_PATH, CLAUDE_PATH].map(path => new URL(path, config.publicUrl));
+  const resourceServerUrls = [MCP_PATH, CLAUDE_PATH, AI_PATH].map(path => new URL(path, config.publicUrl));
   const sealer = new Sealer(config.stateSecret);
   const backend = BACKENDS[config.backend](config, { callbackUrl, fetch });
 

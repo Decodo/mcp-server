@@ -47,6 +47,8 @@ export const MCP_PATH = '/mcp';
 
 export const CLAUDE_PATH = '/claude';
 
+export const AI_PATH = '/ai';
+
 type Env = Record<string, string | undefined>;
 
 const urlFromEnv = (env: Env, key: string, fallback: string): URL => {

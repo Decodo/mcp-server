@@ -184,8 +184,8 @@ describe('OAuth against the mock backend', () => {
       await client.close();
     });
 
-    it('signs in on /claude and lists only the Claude directory tools', async () => {
-      const claudeUrl = new URL('/claude', origin);
+    it.each(['/claude', '/ai'])('signs in on %s and lists only the trimmed toolset', async path => {
+      const claudeUrl = new URL(path, origin);
       const authProvider = new TestOAuthClient();
       const client = new Client({ name: 'e2e', version: '0.0.0' });
 
@@ -300,24 +300,27 @@ describe('OAuth against the mock backend', () => {
       });
     });
 
-    it('advertises protected resource metadata for /claude', async () => {
-      const response = await fetch(`${origin}/.well-known/oauth-protected-resource/claude`);
+    it.each(['/claude', '/ai'])('advertises protected resource metadata for %s', async path => {
+      const response = await fetch(`${origin}/.well-known/oauth-protected-resource${path}`);
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
-        resource: `${origin}/claude`,
+        resource: `${origin}${path}`,
         authorization_servers: [`${origin}/`],
       });
     });
 
-    it('answers an unauthenticated /claude call with 401 pointing at its own resource metadata', async () => {
-      const response = await fetch(`${origin}/claude`, { method: 'POST' });
+    it.each(['/claude', '/ai'])(
+      'answers an unauthenticated %s call with 401 pointing at its own resource metadata',
+      async path => {
+        const response = await fetch(`${origin}${path}`, { method: 'POST' });
 
-      expect(response.status).toBe(401);
-      expect(response.headers.get('www-authenticate')).toBe(
-        `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/claude"`
-      );
-    });
+        expect(response.status).toBe(401);
+        expect(response.headers.get('www-authenticate')).toBe(
+          `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource${path}"`
+        );
+      }
+    );
 
     it('answers an unauthenticated /mcp call with 401 pointing at the resource metadata', async () => {
       const response = await postMcp();
