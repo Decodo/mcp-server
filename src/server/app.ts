@@ -3,7 +3,7 @@ import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { credentialFromAuthHeader, credentialFromValue } from '../auth';
 import { createOAuth } from '../oauth';
-import { CLAUDE_PATH, MCP_PATH } from '../oauth/config';
+import { AI_PATH, CLAUDE_PATH, MCP_PATH } from '../oauth/config';
 import type { OAuthConfig } from '../oauth';
 import { resolveToolsets } from '../utils';
 import { CLAUDE_TOOLS } from './claude-tools';
@@ -103,7 +103,7 @@ export const createApp = ({
       await transport.handleRequest(req, res, req.body);
     };
 
-  for (const path of [MCP_PATH, CLAUDE_PATH]) {
+  for (const path of [MCP_PATH, CLAUDE_PATH, AI_PATH]) {
     app.get(path, (_req, res) => {
       res.status(200).send(`server up, use POST ${path} to see available tools`);
     });
@@ -112,6 +112,8 @@ export const createApp = ({
   app.post(MCP_PATH, serveMcp(MCP_PATH, { hiddenTools }));
 
   app.post(CLAUDE_PATH, serveMcp(CLAUDE_PATH, { visibleTools: CLAUDE_TOOLS }));
+
+  app.post(AI_PATH, serveMcp(AI_PATH, { visibleTools: CLAUDE_TOOLS }));
 
   app.get('/healthz', (_req, res) => {
     res.status(200).send('ok');
