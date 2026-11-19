@@ -3,7 +3,7 @@
   "mcpServers": {
     "decodo": {
       "type": "streamable-http",
-      "url": "https://mcp.decodo.com/mcp",
+      "url": "https://mcp.decodo.com/ai",
       "extensions": {
         "com.openai": {
           "auth": {
