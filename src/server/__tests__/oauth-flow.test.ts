@@ -577,4 +577,14 @@ describe('OAuth against the mock backend', () => {
       }
     });
   });
+
+  describe('OpenAI apps domain verification', () => {
+    it('serves the challenge token as plain text without authorization', async () => {
+      const response = await fetch(`${origin}/.well-known/openai-apps-challenge`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toMatch(/^text\/plain/);
+      await expect(response.text()).resolves.toBe('UtWP_qoN-Pas26V8NjuvYKxIgyuxoOYaYW-yAun9b7A');
+    });
+  });
 });
