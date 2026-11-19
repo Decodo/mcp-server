@@ -14,6 +14,9 @@ import type { TrustProxy } from './trust-proxy';
 
 type FetchLike = typeof fetch;
 
+const OPENAI_APPS_CHALLENGE_PATH = '/.well-known/openai-apps-challenge';
+const OPENAI_APPS_CHALLENGE_TOKEN = 'UtWP_qoN-Pas26V8NjuvYKxIgyuxoOYaYW-yAun9b7A';
+
 const wwwAuthenticate = (resourceMetadataUrl: string, error?: string): string =>
   error
     ? `Bearer error="${error}", resource_metadata="${resourceMetadataUrl}"`
@@ -114,6 +117,10 @@ export const createApp = ({
   app.post(CLAUDE_PATH, serveMcp(CLAUDE_PATH, { visibleTools: CLAUDE_TOOLS }));
 
   app.post(AI_PATH, serveMcp(AI_PATH, { visibleTools: CLAUDE_TOOLS }));
+
+  app.get(OPENAI_APPS_CHALLENGE_PATH, (_req, res) => {
+    res.status(200).type('text/plain').send(OPENAI_APPS_CHALLENGE_TOKEN);
+  });
 
   app.get('/healthz', (_req, res) => {
     res.status(200).send('ok');
