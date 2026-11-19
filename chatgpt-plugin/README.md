@@ -6,7 +6,7 @@ Source for the ZIP uploaded to the OpenAI plugin directory at
 ```
 chatgpt-plugin/
 ├── plugin.json                       listing metadata + review test cases
-├── mcp.json                          points ChatGPT at https://mcp.decodo.com/mcp
+├── mcp.json                          points ChatGPT at https://mcp.decodo.com/ai
 ├── assets/
 │   ├── icon.png                      composerIcon, 512x512
 │   └── logo.png                      logo, 1024x1024
@@ -44,10 +44,14 @@ the ones that matter:
 Icons must be square, at least 48x48, at most 4096x4096 and 5 MiB, and their paths must
 start with `./`. `category` must be one of OpenAI's 13 values; `Developer Tools` is ours.
 
+The submission points at `/ai`, not `/mcp`. That route serves only the trimmed toolset
+in `CLAUDE_TOOLS` (`src/server/claude-tools.ts`): `scrape_as_markdown`, `search`, `map`,
+`screenshot` and the four `crawl_*` tools - not the Google, Amazon, Walmart, Target,
+TikTok or YouTube ones. (`DIRECTORY_HIDDEN_TOOLS` governs `/mcp`, not this.)
+
 `review.test_cases` needs exactly 5 positive and 3 negative cases. Every
-`tools_triggered` value must match a tool name registered in `src/tools/` **and** be
-visible on `/mcp` - anything listed in `DIRECTORY_HIDDEN_TOOLS`
-(`src/server/hidden-tools.ts`) is not there when a reviewer connects. The same goes for
+`tools_triggered` value must match a tool name registered in `src/tools/` **and** be in
+`CLAUDE_TOOLS`, or it is not there when a reviewer connects to `/ai`. The same goes for
 the listing copy: `longDescription` and `capabilities` must only describe tools that
 path actually serves.
 
@@ -70,9 +74,9 @@ These are entered in the OpenAI dashboard, not the ZIP:
 - Domain verification: host the token OpenAI generates in the portal at
   `https://mcp.decodo.com/.well-known/openai-apps-challenge` as plain text - the bare
   token, not JSON and not a list - then press **Verify Domain**. It has to be the MCP
-  host or an eligible parent, not `decodo.com`. Nothing in the server serves this path
-  today; a Cloudflare rule in front of `mcp.decodo.com` is the cheapest way to add it.
-  Only directory submission needs it - connecting the server to ChatGPT does not
+  host or an eligible parent, not `decodo.com`; leave **Challenge Base URL** blank. The
+  server serves that path as of #87. Only directory submission needs it - connecting
+  the server to ChatGPT does not
 - A justification for each tool's `readOnlyHint`, `openWorldHint` and `destructiveHint`
 
 ## References

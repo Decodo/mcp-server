@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "decodo",
-  "version": "1.0.1",
-  "description": "Scrape web pages, search the web, crawl whole sites, and pull structured results from search engines, eCommerce platforms and social media with Decodo's Web Data API.",
+  "version": "1.0.2",
+  "description": "Scrape any web page as Markdown or a screenshot, search the web, and crawl or map entire sites with Decodo's Web Data API.",
   "author": {
     "name": "Decodo",
     "url": "https://decodo.com"
@@ -10,35 +10,34 @@
   "homepage": "https://decodo.com",
   "repository": "https://github.com/Decodo/mcp-server",
   "license": "ISC",
-  "keywords": ["web scraping", "search", "ecommerce", "web data"],
+  "keywords": ["web scraping", "search", "crawling", "web data"],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Decodo",
         "shortDescription": "Live web data for your chats",
-        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, crawl and map entire sites, and pull structured results from Google Search, Google AI Mode, Amazon, Walmart, Target, TikTok Shop and YouTube. Requests run through Decodo's Web Data API, which handles JavaScript rendering, proxy rotation and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Data API plan.",
+        "longDescription": "Scrape any web page as Markdown or a screenshot, search the web, and crawl or map an entire site to collect pages in bulk. Requests run through Decodo's Web Data API, which handles JavaScript rendering, proxy rotation and anti-bot systems, with geo-targeting across 195+ locations. Requires a Decodo account; each request uses your Web Data API plan.",
         "developerName": "Decodo",
         "category": "Developer Tools",
         "capabilities": [
-          "Scrape web pages as Markdown or screenshots",
+          "Scrape web pages as Markdown",
+          "Take full-page screenshots of web pages",
           "Search the web",
-          "Crawl and map entire websites",
-          "Scrape Google Search and Google AI Mode results",
-          "Scrape Amazon, Walmart and Target",
-          "Scrape TikTok and YouTube"
+          "Crawl an entire website and collect its pages",
+          "Map the URLs a website exposes"
         ],
         "composerIcon": "./assets/icon.png",
         "logo": "./assets/logo.png",
         "brandColor": "#8356F5",
         "brandColorDark": "#8356F5",
-        "websiteURL": "https://decodo.com/ai/mcp-server",
+        "websiteURL": "https://decodo.com",
         "supportURL": "https://help.decodo.com",
         "privacyPolicyURL": "https://decodo.com/legal",
         "termsOfServiceURL": "https://decodo.com/legal/license-agreement",
         "defaultPrompt": [
           "Scrape decodo.com from a US IP and summarize the pricing.",
           "Search the web for MCP server hosting options.",
-          "Find wireless keyboards on Amazon and compare the top three."
+          "Map the URLs under help.decodo.com."
         ]
       },
       "review": {
@@ -48,7 +47,7 @@
               "description": "Scrape a page as Markdown",
               "prompt": "Scrape https://decodo.com/scraping/web and list the plans it mentions.",
               "tools_triggered": "scrape_as_markdown",
-              "expected_behavior": "Returns the page content and lists the plans named on it."
+              "expected_behavior": "Returns the page content as Markdown and lists the plans named on it."
             },
             {
               "description": "Search the web",
@@ -57,22 +56,22 @@
               "expected_behavior": "Returns ranked web results with titles and links."
             },
             {
-              "description": "Scrape Google Search from a location",
-              "prompt": "Search Google for running shoes from Germany and tell me the top result.",
-              "tools_triggered": "google_search",
-              "expected_behavior": "Returns parsed German Google results and names the top organic result."
-            },
-            {
-              "description": "Scrape Amazon Search",
-              "prompt": "Find wireless keyboards on Amazon and compare the top three.",
-              "tools_triggered": "amazon_search",
-              "expected_behavior": "Returns Amazon listings and compares price and rating of the first three."
+              "description": "Map the URLs on a site",
+              "prompt": "Map the URLs under help.decodo.com and group them by section.",
+              "tools_triggered": "map",
+              "expected_behavior": "Returns the URLs the site exposes and groups them by section."
             },
             {
               "description": "Take a screenshot",
               "prompt": "Take a screenshot of github.com from a US IP address.",
               "tools_triggered": "screenshot",
               "expected_behavior": "Returns a PNG screenshot of the github.com home page."
+            },
+            {
+              "description": "Crawl a site and summarize it",
+              "prompt": "Crawl https://decodo.com/blog and summarize what the most recent posts cover.",
+              "tools_triggered": "crawl_start",
+              "expected_behavior": "Starts a crawl, polls it with crawl_status, reads the pages with crawl_results and summarizes them."
             }
           ],
           "negative": [
@@ -94,7 +93,7 @@
         "commerce_description": "The plugin does not sell products or process payments."
       },
       "publication": {
-        "release_notes": "Initial release: scrape web pages, search the web, crawl and map sites, and pull structured results from Google, Amazon, Walmart, Target, TikTok and YouTube."
+        "release_notes": "First public release. Scrape web pages as Markdown or screenshots, search the web, and crawl or map entire sites through Decodo's Web Data API."
       }
     }
   }
