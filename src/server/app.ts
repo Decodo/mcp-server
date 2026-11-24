@@ -10,6 +10,12 @@ import { CLAUDE_TOOLS } from './claude-tools';
 import { corsOptions } from './cors';
 import { RevokedCredentials } from './revoked-credentials';
 import { ScraperAPIHttpServer } from './sapi-http-server';
+import {
+  buildServerCard,
+  SERVER_CARD_CACHE_CONTROL,
+  SERVER_CARD_MEDIA_TYPE,
+  SERVER_CARD_PATH,
+} from './server-card';
 import type { TrustProxy } from './trust-proxy';
 
 type FetchLike = typeof fetch;
@@ -48,6 +54,23 @@ export const createApp = ({
   });
 
   app.set('trust proxy', trustProxy);
+
+  // Registered ahead of the allowlist CORS below: the card is public metadata, readable from any origin.
+  const serverCard = JSON.stringify(buildServerCard(oauthConfig.publicUrl));
+
+  app
+    .route(SERVER_CARD_PATH)
+    .all(
+      cors({
+        origin: '*',
+        methods: ['GET'],
+        allowedHeaders: ['Content-Type', 'If-None-Match'],
+        exposedHeaders: ['ETag'],
+      })
+    )
+    .get((_req, res) => {
+      res.set('Cache-Control', SERVER_CARD_CACHE_CONTROL).type(SERVER_CARD_MEDIA_TYPE).send(serverCard);
+    });
 
   app.use(cors(corsOptions));
   app.use(express.json());
