@@ -1,8 +1,8 @@
-import { Target } from '@decodo/sdk-ts';
+import { BundledSchema } from '@decodo/sdk-ts';
+import type { IrSurfaceTool } from '@decodo/sdk-ts';
 import { AUTH_TYPE } from '../../auth';
 import type { AuthCredential } from '../../auth';
 import { API_KEY_REQUIRED_MESSAGE, ScraperApiClient } from '../scraper-api-client';
-import { ScrapingMCPParams } from '../../types';
 
 const client = new ScraperApiClient({ maxRetries: 1, delayMs: 0 });
 
@@ -12,7 +12,22 @@ const apiKeyValue = 'sk-test-api-key';
 const auth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: tokenValue };
 const apiKeyAuth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: apiKeyValue };
 
-const defaultArgs = { auth, scrapingParams: { url: 'https://example.com' } };
+const tool = (name: string): IrSurfaceTool => {
+  const found = BundledSchema.shared.getSurface('mcp')?.tools.find(t => t.name === name);
+
+  if (!found) {
+    throw new Error(`no ${name} tool in the bundled IR`);
+  }
+
+  return found;
+};
+
+const scrape = (credential = auth, sapiClient = client) =>
+  sapiClient.runSurfaceTool({
+    auth: credential,
+    tool: tool('scrape_as_markdown'),
+    args: { url: 'https://example.com' },
+  });
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as unknown as typeof fetch;
@@ -23,8 +38,8 @@ const jsonResponse = ({ status = 200, body }: { status?: number; body: unknown }
     headers: { 'content-type': 'application/json' },
   });
 
-const scrapeResponse = (content: unknown) =>
-  jsonResponse({ body: { results: [{ content, status_code: 200, task_id: 'abc' }] } });
+const scrapeResponse = (content: unknown, statusCode = 200) =>
+  jsonResponse({ body: { results: [{ content, status_code: statusCode, task_id: 'abc' }] } });
 
 const networkError = (code: string) =>
   Object.assign(new TypeError('fetch failed'), { cause: { code } });
@@ -46,14 +61,14 @@ beforeEach(() => {
   mockFetch.mockReset();
 });
 
-describe('ScraperApiClient', () => {
-  describe('scrape - request', () => {
+describe('ScraperApiClient.runSurfaceTool', () => {
+  describe('scrape tools - request', () => {
     beforeEach(() => {
       respondWith(() => scrapeResponse('<html></html>'));
     });
 
-    it('posts to the SDK scrape route with Basic auth and the mcp integration header', async () => {
-      await client.scrape(defaultArgs);
+    it('posts to the scraper API with Basic auth and the mcp integration header', async () => {
+      await scrape();
 
       const { url, init } = lastRequest();
 
@@ -66,19 +81,13 @@ describe('ScraperApiClient', () => {
     });
 
     it('sends a custom integration header when configured', async () => {
-      const hostedClient = new ScraperApiClient({
-        maxRetries: 1,
-        delayMs: 0,
-        integrationHeader: 'mcp-hosted',
-      });
-
-      await hostedClient.scrape(defaultArgs);
+      await scrape(auth, new ScraperApiClient({ integrationHeader: 'mcp-hosted' }));
 
       expect(lastRequest().init.headers).toMatchObject({ 'x-integration': 'mcp-hosted' });
     });
 
     it('posts to the data API with Bearer auth when given an API key', async () => {
-      await client.scrape({ ...defaultArgs, auth: apiKeyAuth });
+      await scrape(apiKeyAuth);
 
       const { url, init } = lastRequest();
 
@@ -89,124 +98,54 @@ describe('ScraperApiClient', () => {
       });
     });
 
-    it('sends the same body on both transports', async () => {
-      await client.scrape(defaultArgs);
+    it("sends the same body on both transports, with the tool's fixed values", async () => {
+      await scrape();
       const tokenBody = requestBody();
 
-      await client.scrape({ ...defaultArgs, auth: apiKeyAuth });
+      await scrape(apiKeyAuth);
       const apiKeyBody = requestBody();
 
+      expect(tokenBody).toEqual({ target: 'universal', url: 'https://example.com' });
       expect(apiKeyBody).toEqual(tokenBody);
     });
 
-    it('returns the first result content', async () => {
+    it('returns the first result content on both transports', async () => {
       respondWith(() => scrapeResponse({ title: 'Example' }));
 
-      const { data } = await client.scrape<{ title: string }>(defaultArgs);
-
-      expect(data).toEqual({ title: 'Example' });
-    });
-
-    it('defaults to the universal target when a tool sends none', async () => {
-      await client.scrape(defaultArgs);
-
-      expect(requestBody()).toEqual({ target: Target.Universal, url: 'https://example.com' });
-    });
-
-    it('keeps an explicit target', async () => {
-      await client.scrape({
-        auth,
-        scrapingParams: { target: Target.GoogleSearch, query: 'mcp' },
-      });
-
-      expect(requestBody()).toMatchObject({ target: Target.GoogleSearch, query: 'mcp' });
+      await expect(scrape()).resolves.toEqual({ title: 'Example' });
+      await expect(scrape(apiKeyAuth)).resolves.toEqual({ title: 'Example' });
     });
   });
 
-  describe('scrape - hosts', () => {
+  describe('scrape tools - hosts', () => {
     beforeEach(() => {
       respondWith(() => scrapeResponse('<html></html>'));
     });
 
     it('sends api keys to the configured data API host', async () => {
-      const staged = new ScraperApiClient({ hosts: { dataApi: 'https://stage-data.example' } });
-
-      await staged.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
+      await scrape(
+        apiKeyAuth,
+        new ScraperApiClient({ hosts: { dataApi: 'https://stage-data.example' } })
+      );
 
       expect(lastRequest().url).toBe('https://stage-data.example/v1/scrape');
     });
 
     it('sends basic tokens to the configured scraper API host', async () => {
-      const staged = new ScraperApiClient({
-        hosts: { scraperApi: 'https://stage-scraper-api.example' },
-      });
-
-      await staged.scrape(defaultArgs);
+      await scrape(
+        auth,
+        new ScraperApiClient({ hosts: { scraperApi: 'https://stage-scraper-api.example' } })
+      );
 
       expect(lastRequest().url).toBe('https://stage-scraper-api.example/v2/scrape');
     });
-
-    it('keeps the SDK defaults when no host is configured', async () => {
-      const bare = new ScraperApiClient({ hosts: {} });
-
-      await bare.scrape(defaultArgs);
-      expect(lastRequest().url).toBe('https://scraper-api.decodo.com/v2/scrape');
-
-      await bare.scrape({ auth: apiKeyAuth, scrapingParams: { url: 'https://example.com' } });
-      expect(lastRequest().url).toBe('https://data.decodo.com/v1/scrape');
-    });
   });
 
-  describe('transformScrapingParams', () => {
-    it('maps jsRender to headless html', () => {
-      expect(client.transformScrapingParams({ scrapingParams: { jsRender: true } })).toMatchObject({
-        headless: 'html',
-      });
-    });
-
-    it('leaves an explicit headless value untouched', () => {
-      expect(
-        client.transformScrapingParams({ scrapingParams: { jsRender: true, headless: 'png' } })
-      ).toMatchObject({ headless: 'png' });
-    });
-
-    it('omits headless when jsRender is false', () => {
-      expect(
-        client.transformScrapingParams({ scrapingParams: { jsRender: false } })
-      ).not.toHaveProperty('headless');
-    });
-
-    it('renames camelCase params to their API equivalents', () => {
-      const params = client.transformScrapingParams({
-        scrapingParams: {
-          deviceType: 'mobile',
-          pageFrom: 2,
-          deliveryZip: '10001',
-        } as ScrapingMCPParams,
-      });
-
-      expect(params).toMatchObject({
-        device_type: 'mobile',
-        page_from: 2,
-        delivery_zip: '10001',
-      });
-      expect(params).not.toHaveProperty('deviceType');
-      expect(params).not.toHaveProperty('pageFrom');
-      expect(params).not.toHaveProperty('deliveryZip');
-    });
-
-    it('drops MCP-only params the API would reject', () => {
-      expect(
-        client.transformScrapingParams({ scrapingParams: { url: 'https://a.com', tokenLimit: 10 } })
-      ).not.toHaveProperty('tokenLimit');
-    });
-  });
-
-  describe('scrape - error handling', () => {
+  describe('errors', () => {
     it('throws a friendly message on 401', async () => {
       respondWith(() => jsonResponse({ status: 401, body: { message: 'Unauthorized' } }));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
+      await expect(scrape()).rejects.toThrow(
         'Scraper API request failed (401): Authentication failed.'
       );
     });
@@ -216,24 +155,18 @@ describe('ScraperApiClient', () => {
       const reporting = new ScraperApiClient({ maxRetries: 0, onAuthenticationError });
 
       respondOnceWith(() => jsonResponse({ status: 401, body: { message: 'Unauthorized' } }));
-      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(401)');
+      await expect(scrape(auth, reporting)).rejects.toThrow('(401)');
       expect(onAuthenticationError).toHaveBeenCalledWith(auth);
 
       respondOnceWith(() => jsonResponse({ status: 502, body: { message: 'Bad gateway' } }));
-      await expect(reporting.scrape(defaultArgs)).rejects.toThrow('(502)');
+      await expect(scrape(auth, reporting)).rejects.toThrow('(502)');
       expect(onAuthenticationError).toHaveBeenCalledTimes(1);
-    });
-
-    it('surfaces the server message on 429', async () => {
-      respondWith(() => jsonResponse({ status: 429, body: { message: 'Rate limit exceeded' } }));
-
-      await expect(client.scrape(defaultArgs)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('surfaces the server message on 502', async () => {
       respondWith(() => jsonResponse({ status: 502, body: { message: 'Upstream server error' } }));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
+      await expect(scrape()).rejects.toThrow(
         'Scraper API request failed (502): Upstream server error'
       );
     });
@@ -241,28 +174,26 @@ describe('ScraperApiClient', () => {
     it('falls back to the status when the server provides no message', async () => {
       respondWith(() => new Response('not json', { status: 500 }));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
-        'Scraper API request failed (500): HTTP 500'
-      );
+      await expect(scrape()).rejects.toThrow('Scraper API request failed (500): HTTP 500');
     });
 
     it('reports the syscall code on network failure', async () => {
       mockFetch.mockRejectedValue(networkError('ECONNRESET'));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
+      await expect(scrape()).rejects.toThrow(
         'Scraper API request failed: network error ECONNRESET'
       );
     });
 
-    it('rejects params the target does not accept before sending a request', async () => {
-      await expect(
-        client.scrape({
-          auth,
-          scrapingParams: { target: Target.GoogleSearch, query: 'mcp', nope: true } as never,
-        })
-      ).rejects.toThrow('Scraper API request failed (422):');
+    it.each([
+      ['a basic token', auth],
+      ['an API key', apiKeyAuth],
+    ])("applies the IR's failure rules with %s", async (_name, credential) => {
+      respondWith(() => scrapeResponse('<h1>Not found</h1>', 404));
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      await expect(scrape(credential)).rejects.toThrow(
+        'Scraper API request failed (404): The target site answered with HTTP 404'
+      );
     });
 
     it('surfaces the API message when a scrape fails inside a 200 response', async () => {
@@ -272,39 +203,29 @@ describe('ScraperApiClient', () => {
             status: 'failed',
             status_code: 613,
             message: 'We were not able to scrape the target.',
-            task_id: '7516026999928784897',
           },
         })
       );
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(
+      await expect(scrape()).rejects.toThrow(
         'Scraper API request failed (613): We were not able to scrape the target.'
       );
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('throws when the API returns no results', async () => {
-      respondWith(() => jsonResponse({ body: { results: [] } }));
-
-      await expect(client.scrape(defaultArgs)).rejects.toThrow('Scraper API returned no results.');
     });
 
     it('re-throws unexpected errors as-is', async () => {
       const error = new RangeError('unexpected failure');
       mockFetch.mockRejectedValue(error);
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow(error);
+      await expect(scrape()).rejects.toThrow(error);
     });
   });
 
-  describe('scrape - retries', () => {
+  describe('retries', () => {
     it('retries a retryable status and returns the eventual success', async () => {
       respondOnceWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
       respondOnceWith(() => scrapeResponse('ok'));
 
-      const { data } = await client.scrape(defaultArgs);
-
-      expect(data).toBe('ok');
+      await expect(scrape()).resolves.toBe('ok');
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
@@ -312,58 +233,76 @@ describe('ScraperApiClient', () => {
       mockFetch.mockRejectedValueOnce(networkError('ETIMEDOUT'));
       respondOnceWith(() => scrapeResponse('ok'));
 
-      await expect(client.scrape(defaultArgs)).resolves.toMatchObject({ data: 'ok' });
+      await expect(scrape()).resolves.toBe('ok');
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
     it('stops after maxRetries', async () => {
       respondWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow('Unavailable');
+      await expect(scrape()).rejects.toThrow('Unavailable');
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
     it('does not retry a non-retryable status', async () => {
       respondWith(() => jsonResponse({ status: 401, body: { message: 'Unauthorized' } }));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow('(401)');
+      await expect(scrape()).rejects.toThrow('(401)');
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('does not retry an unexpected error', async () => {
       mockFetch.mockRejectedValue(new RangeError('boom'));
 
-      await expect(client.scrape(defaultArgs)).rejects.toThrow('boom');
+      await expect(scrape()).rejects.toThrow('boom');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([613, 400])(
+      'does not retry an API failure reported in a 200 response (%i)',
+      async statusCode => {
+        respondWith(() =>
+          jsonResponse({ body: { status: 'failed', status_code: statusCode, message: 'Failed.' } })
+        );
+
+        await expect(scrape(apiKeyAuth)).rejects.toThrow(`(${statusCode}): Failed.`);
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it('does not retry when the target site itself returns an error status', async () => {
+      respondWith(() => scrapeResponse('<h1>Unavailable</h1>', 503));
+
+      await expect(scrape(apiKeyAuth)).rejects.toThrow('(503)');
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('data API', () => {
+  describe('data API tools', () => {
     const crawlStatus = { crawl_id: 'crawl-1', status: 'pending', completed: 3 };
 
     it('posts search params to the data API search route', async () => {
       respondWith(() => jsonResponse({ body: { organic: [] } }));
 
-      await client.search({ auth: apiKeyAuth, params: { query: 'mcp' } });
+      await client.runSurfaceTool({
+        auth: apiKeyAuth,
+        tool: tool('search'),
+        args: { query: 'mcp' },
+      });
 
       expect(lastRequest().url).toBe('https://data.decodo.com/v1/search');
       expect(requestBody()).toEqual({ query: 'mcp' });
-    });
-
-    it('posts map params to the data API map route', async () => {
-      respondWith(() => jsonResponse({ body: { results: [] } }));
-
-      await client.map({ auth: apiKeyAuth, params: { url: 'https://a.com', limit: 10 } });
-
-      expect(lastRequest().url).toBe('https://data.decodo.com/v1/map');
-      expect(requestBody()).toEqual({ url: 'https://a.com', limit: 10 });
     });
 
     it('returns the crawl status for a crawl id', async () => {
       respondWith(() => jsonResponse({ body: crawlStatus }));
 
       await expect(
-        client.getCrawlStatus({ auth: apiKeyAuth, crawlId: 'crawl-1' })
+        client.runSurfaceTool({
+          auth: apiKeyAuth,
+          tool: tool('crawl_status'),
+          args: { crawl_id: 'crawl-1' },
+        })
       ).resolves.toEqual(crawlStatus);
       expect(lastRequest().url).toBe('https://data.decodo.com/v1/crawl/crawl-1/status');
     });
@@ -372,9 +311,46 @@ describe('ScraperApiClient', () => {
       respondOnceWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
       respondOnceWith(() => jsonResponse({ body: crawlStatus }));
 
-      await client.getCrawlStatus({ auth: apiKeyAuth, crawlId: 'crawl-1' });
+      await client.runSurfaceTool({
+        auth: apiKeyAuth,
+        tool: tool('crawl_status'),
+        args: { crawl_id: 'crawl-1' },
+      });
 
       expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('tells basic token users to switch to an API key without calling the API', async () => {
+      await expect(
+        client.runSurfaceTool({ auth, tool: tool('search'), args: { query: 'mcp' } })
+      ).rejects.toThrow(API_KEY_REQUIRED_MESSAGE);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('does not retry starting a crawl, so a slow success cannot start two', async () => {
+      respondWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
+
+      await expect(
+        client.runSurfaceTool({
+          auth: apiKeyAuth,
+          tool: tool('crawl_start'),
+          args: { url: 'https://a.com' },
+        })
+      ).rejects.toThrow('(503)');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry starting a batch, which would queue and bill it twice', async () => {
+      respondWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
+
+      await expect(
+        client.runSurfaceTool({
+          auth: apiKeyAuth,
+          tool: { name: 'batch', description: '', flow: 'task_batch' },
+          args: { url: ['https://a.com', 'https://b.com'], target: 'universal' },
+        })
+      ).rejects.toThrow('(503)');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('lists one page of crawl content from the given cursor', async () => {
@@ -400,30 +376,28 @@ describe('ScraperApiClient', () => {
       expect(url.searchParams.get('type')).toBe('content');
       expect(list.next).toBe('def');
     });
+  });
 
-    it('cancels a crawl by id', async () => {
-      respondWith(() => jsonResponse({ body: { crawl_id: 'crawl-1', status: 'cancelled' } }));
+  describe('logging', () => {
+    it('logs the target and the status the scraped site returned', async () => {
+      const write = jest.spyOn(process.stderr, 'write').mockReturnValue(true);
+      respondWith(() => scrapeResponse({ organic: [] }));
 
-      await client.cancelCrawl({ auth: apiKeyAuth, crawlId: 'crawl-1' });
+      await client.runSurfaceTool({
+        auth: apiKeyAuth,
+        tool: tool('google_search'),
+        args: { query: 'coffee' },
+      });
 
-      expect(lastRequest().url).toBe('https://data.decodo.com/v1/crawl/crawl-1/cancel');
-      expect(lastRequest().init.method).toBe('POST');
-    });
+      const entry = JSON.parse(String(write.mock.calls.at(-1)?.[0]));
+      write.mockRestore();
 
-    it('tells basic token users to switch to an API key without calling the API', async () => {
-      await expect(client.search({ auth, params: { query: 'mcp' } })).rejects.toThrow(
-        API_KEY_REQUIRED_MESSAGE
-      );
-      expect(mockFetch).not.toHaveBeenCalled();
-    });
-
-    it('does not retry starting a crawl, so a slow success cannot start two', async () => {
-      respondWith(() => jsonResponse({ status: 503, body: { message: 'Unavailable' } }));
-
-      await expect(
-        client.startCrawl({ auth: apiKeyAuth, params: { url: 'https://a.com' } })
-      ).rejects.toThrow('(503)');
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(entry).toMatchObject({
+        event: 'tool_call',
+        outcome: 'success',
+        target: 'google_search',
+        upstream_status: 200,
+      });
     });
   });
 });

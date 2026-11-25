@@ -49,8 +49,7 @@ JavaScript-heavy pages, without handling proxy rotation, CAPTCHA solving, or ant
 screenshots (for visual context), built for RAG pipelines, AI research agents, and automation flows.
 
 **Built-in support for popular targets.** Ready-made tools for Google and Bing (SERPs), Amazon,
-Walmart, and Target (eCommerce), TikTok and YouTube (social media), and ChatGPT and
-Perplexity (AI search).
+Walmart, and Target (eCommerce), TikTok and YouTube (social media), and ChatGPT (AI search).
 
 **Global proxy infrastructure.** 115M+ residential IPs, 195+ geo-locations, and a 99.99% success
 rate on even the most protected targets.
@@ -273,77 +272,94 @@ query parameter:
     }
 ```
 
-When no toolsets are specified, all tools are registered.
+When no toolsets are specified, all tools are registered. The hosted server lists these:
 
-| Toolset        | Tools                                                                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `web`          | `scrape_as_markdown`, `screenshot`, `map`, `crawl_start`, `crawl_status`, `crawl_results`, `crawl_cancel`                                                                                                                           |
-| `search`       | `search`, `google_search`, `google_ads`, `google_lens`, `google_travel_hotels`, `bing_search`                                                                                                                                       |
-| `ecommerce`    | `amazon_search`, `amazon_product`, `amazon_pricing`, `amazon_sellers`, `amazon_bestsellers`, `walmart_search`, `walmart_product`, `target_search`, `target_product`, `tiktok_shop_search`, `tiktok_shop_product`, `tiktok_shop_url` |
-| `social_media` | `tiktok_post`, `youtube_metadata`, `youtube_channel`, `youtube_subtitles`, `youtube_search`                                                                                                                                         |
-| `ai`           | `chatgpt`, `perplexity`, `google_ai_mode`                                                                                                                                                                                           |
+| Toolset        | Tools                                                                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `web`          | `scrape_as_markdown`, `screenshot`, `map`, `crawl_start`, `crawl_status`, `crawl_results`, `crawl_cancel`                                                                                      |
+| `search`       | `search`, `google_search`, `google_travel_hotels`                                                                                                                                              |
+| `ecommerce`    | `amazon_search`, `amazon_product`, `amazon_pricing`, `amazon_sellers`, `amazon_bestsellers`, `walmart_search`, `walmart_product`, `target_search`, `tiktok_shop_search`, `tiktok_shop_product` |
+| `social_media` | `youtube_metadata`, `youtube_channel`, `youtube_subtitles`                                                                                                                                     |
+| `ai`           | `google_ai_mode`                                                                                                                                                                               |
+
+### Local server and Docker
+
+The local server and the Docker MCP Catalog image also list the tools the hosted server leaves out:
+
+| Toolset        | Extra tools                                |
+| -------------- | ------------------------------------------ |
+| `search`       | `google_ads`, `google_lens`, `bing_search` |
+| `ecommerce`    | `target_product`, `tiktok_shop_url`        |
+| `social_media` | `tiktok_post`, `youtube_search`            |
+| `ai`           | `chatgpt`                                  |
+
+Each channel's tool list comes from its surface in the Decodo IR (`mcp-hosted`, `mcp` and
+`mcp-docker`), which the server loads when it starts, so a tool can be added or removed there
+without a new server release.
 
 ## Tools
 
 The server exposes the following tools:
 
-| Tool                   | Description                                                                                | Example prompt                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `scrape_as_markdown`   | Scrapes any target URL, expects a URL to be given via prompt. Returns results in Markdown. | Scrape peacock.com from a US IP address and tell me the pricing.                        |
-| `screenshot`           | Captures a screenshot of any webpage and returns it as a PNG image.                        | Take a screenshot of github.com from a US IP address.                                   |
-| `map`                  | Lists the URLs on a website without fetching their content. API key only.                  | Map docs.decodo.com and list the pages under /scraping-api.                             |
-| `crawl_start`          | Starts crawling a website and returns the crawl id without waiting. API key only.          | Crawl the first 10 pages of decodo.com/blog.                                            |
-| `crawl_status`         | Reports a crawl's progress: pages discovered, completed and failed. API key only.          | Is my crawl finished yet?                                                               |
-| `crawl_results`        | Returns crawled pages as Markdown, a few at a time with a cursor. API key only.            | Show me the pages my crawl found.                                                       |
-| `crawl_cancel`         | Stops a running crawl; pages crawled so far stay readable. API key only.                   | Cancel my crawl.                                                                        |
-| `search`               | Searches the web and returns ranked results. API key only.                                 | Search the web for MCP server hosting options.                                          |
-| `google_search`        | Scrapes Google Search for a given query, and returns parsed results.                       | Scrape Google Search for shoes and tell me the top position.                            |
-| `google_ads`           | Scrapes Google Ads search results.                                                         | Scrape Google Ads for laptop and show me the top ads.                                   |
-| `google_lens`          | Scrapes Google Lens image search results.                                                  | Search Google Lens for this image: https://example.com/image.jpg                        |
-| `google_ai_mode`       | Scrapes Google AI Mode (Search with AI) results.                                           | Ask Google AI Mode: What are the top three dog breeds?                                  |
-| `google_travel_hotels` | Scrapes Google Travel Hotels search results.                                               | Search Google Travel Hotels for hotels in Paris.                                        |
-| `amazon_search`        | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for wireless keyboard.                                             |
-| `amazon_product`       | Scrapes Amazon Product page.                                                               | Scrape Amazon product B09H74FXNW and show me the details.                               |
-| `amazon_pricing`       | Scrapes Amazon Product pricing information.                                                | Get pricing for Amazon product B09H74FXNW.                                              |
-| `amazon_sellers`       | Scrapes Amazon Seller information.                                                         | Get information about Amazon seller A1R0Z7FJGTKESH.                                     |
-| `amazon_bestsellers`   | Scrapes Amazon Bestsellers list.                                                           | Show me Amazon bestsellers in electronics.                                              |
-| `walmart_search`       | Scrapes Walmart Search for a given query, and returns parsed results.                      | Scrape Walmart Search for camping tent.                                                 |
-| `walmart_product`      | Scrapes Walmart Product page.                                                              | Scrape Walmart product 15296401808.                                                     |
-| `target_search`        | Scrapes Target Search for a given query, and returns parsed results.                       | Scrape Target Search for kitchen appliances.                                            |
-| `target_product`       | Scrapes Target Product page.                                                               | Scrape Target product 92186007.                                                         |
-| `tiktok_post`          | Scrapes a TikTok post URL for structured data (e.g. engagement, caption, hashtags).        | Scrape this TikTok post: https://www.tiktok.com/@nba/video/7393013274725403950          |
-| `tiktok_shop_search`   | Scrapes TikTok Shop Search for a given query, and returns parsed results.                  | Scrape TikTok Shop Search for phone cases.                                              |
-| `tiktok_shop_product`  | Scrapes TikTok Shop Product page.                                                          | Scrape TikTok Shop product 1731541214379741272.                                         |
-| `tiktok_shop_url`      | Scrapes TikTok Shop page by URL.                                                           | Scrape this TikTok Shop URL: https://www.tiktok.com/shop/s?q=HEADPHONES                 |
-| `youtube_metadata`     | Scrapes YouTube video metadata.                                                            | Get metadata for YouTube video dFu9aKJoqGg.                                             |
-| `youtube_channel`      | Scrapes YouTube channel videos.                                                            | Scrape YouTube channel @decodo_official.                                                |
-| `youtube_subtitles`    | Scrapes YouTube video subtitles.                                                           | Get subtitles for YouTube video L8zSWbQN-v8.                                            |
-| `youtube_search`       | Search YouTube videos.                                                                     | Search YouTube for "How to care for chinchillas".                                       |
-| `bing_search`          | Scrapes Bing Search results.                                                               | Search Bing for laptop reviews.                                                         |
-| `chatgpt`              | Sends a single prompt to ChatGPT and returns its answer (no conversation history).         | Ask ChatGPT to explain quantum computing in simple terms.                               |
-| `perplexity`           | Sends a single prompt to Perplexity and returns its answer (no conversation history).      | Ask Perplexity what the latest trends in web development are.                           |
+| Tool                   | Description                                                                                | Example prompt                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `scrape_as_markdown`   | Scrapes any target URL, expects a URL to be given via prompt. Returns results in Markdown. | Scrape peacock.com from a US IP address and tell me the pricing.               |
+| `screenshot`           | Captures a screenshot of any webpage and returns it as a PNG image.                        | Take a screenshot of github.com from a US IP address.                          |
+| `map`                  | Lists the URLs on a website without fetching their content. API key only.                  | Map docs.decodo.com and list the pages under /scraping-api.                    |
+| `crawl_start`          | Starts crawling a website and returns the crawl id without waiting. API key only.          | Crawl the first 10 pages of decodo.com/blog.                                   |
+| `crawl_status`         | Reports a crawl's progress: pages discovered, completed and failed. API key only.          | Is my crawl finished yet?                                                      |
+| `crawl_results`        | Returns crawled pages as Markdown, a few at a time with a cursor. API key only.            | Show me the pages my crawl found.                                              |
+| `crawl_cancel`         | Stops a running crawl; pages crawled so far stay readable. API key only.                   | Cancel my crawl.                                                               |
+| `search`               | Searches the web and returns ranked results. API key only.                                 | Search the web for MCP server hosting options.                                 |
+| `google_search`        | Scrapes Google Search for a given query, and returns parsed results.                       | Scrape Google Search for shoes and tell me the top position.                   |
+| `google_ads`           | Scrapes Google Ads search results.                                                         | Scrape Google Ads for laptop and show me the top ads.                          |
+| `google_lens`          | Scrapes Google Lens image search results.                                                  | Search Google Lens for this image: https://example.com/image.jpg               |
+| `google_ai_mode`       | Scrapes Google AI Mode (Search with AI) results.                                           | Ask Google AI Mode: What are the top three dog breeds?                         |
+| `google_travel_hotels` | Scrapes Google Travel Hotels search results.                                               | Search Google Travel Hotels for hotels in Paris.                               |
+| `amazon_search`        | Scrapes Amazon Search for a given query, and returns parsed results.                       | Scrape Amazon Search for wireless keyboard.                                    |
+| `amazon_product`       | Scrapes Amazon Product page.                                                               | Scrape Amazon product B09H74FXNW and show me the details.                      |
+| `amazon_pricing`       | Scrapes Amazon Product pricing information.                                                | Get pricing for Amazon product B09H74FXNW.                                     |
+| `amazon_sellers`       | Scrapes Amazon Seller information.                                                         | Get information about Amazon seller A1R0Z7FJGTKESH.                            |
+| `amazon_bestsellers`   | Scrapes Amazon Bestsellers list.                                                           | Show me Amazon bestsellers in electronics.                                     |
+| `walmart_search`       | Scrapes Walmart Search for a given query, and returns parsed results.                      | Scrape Walmart Search for camping tent.                                        |
+| `walmart_product`      | Scrapes Walmart Product page.                                                              | Scrape Walmart product 15296401808.                                            |
+| `target_search`        | Scrapes Target Search for a given query, and returns parsed results.                       | Scrape Target Search for kitchen appliances.                                   |
+| `target_product`       | Scrapes Target Product page.                                                               | Scrape Target product 92186007.                                                |
+| `tiktok_post`          | Scrapes a TikTok post URL for structured data (e.g. engagement, caption, hashtags).        | Scrape this TikTok post: https://www.tiktok.com/@nba/video/7393013274725403950 |
+| `tiktok_shop_search`   | Scrapes TikTok Shop Search for a given query, and returns parsed results.                  | Scrape TikTok Shop Search for phone cases.                                     |
+| `tiktok_shop_product`  | Scrapes TikTok Shop Product page.                                                          | Scrape TikTok Shop product 1731541214379741272.                                |
+| `tiktok_shop_url`      | Scrapes TikTok Shop page by URL.                                                           | Scrape this TikTok Shop URL: https://www.tiktok.com/shop/s?q=HEADPHONES        |
+| `youtube_metadata`     | Scrapes YouTube video metadata.                                                            | Get metadata for YouTube video dFu9aKJoqGg.                                    |
+| `youtube_channel`      | Scrapes YouTube channel videos.                                                            | Scrape YouTube channel @decodo_official.                                       |
+| `youtube_subtitles`    | Scrapes YouTube video subtitles.                                                           | Get subtitles for YouTube video L8zSWbQN-v8.                                   |
+| `youtube_search`       | Search YouTube videos.                                                                     | Search YouTube for "How to care for chinchillas".                              |
+| `bing_search`          | Scrapes Bing Search results.                                                               | Search Bing for laptop reviews.                                                |
+| `chatgpt`              | Sends a single prompt to ChatGPT and returns its answer (no conversation history).         | Ask ChatGPT to explain quantum computing in simple terms.                      |
 
 ## Parameters
 
-The following parameters are inferred from user prompts:
+Tools and their inputs are generated from the Decodo IR, so inputs use the API's own names. The
+following parameters are inferred from user prompts:
 
-| Parameter       | Description                                                                                                                                                                                                |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `jsRender`      | Renders target URL in a headless browser.                                                                                                                                                                  |
-| `geo`           | Sets the country from which the request will originate.                                                                                                                                                    |
-| `locale`        | Sets the locale of the request.                                                                                                                                                                            |
-| `tokenLimit`    | Maximum number of characters to return (default 45000). Useful if the context window is small.                                                                                                             |
-| `prompt`        | Prompt to send to AI tools (`chatgpt`, `perplexity`).                                                                                                                                                      |
-| `search`        | Activates ChatGPT's web search functionality (`chatgpt` only).                                                                                                                                             |
-| `xhr`           | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`).                                                                                                      |
-| `deviceType`    | Device type to emulate (`desktop`, `mobile`, `tablet`). Parsed targets are stricter: Amazon tools are desktop-only so they omit it, and `bing_search`/`google_ai_mode` accept `desktop` and `mobile` only. |
-| `domain`        | Domain to use for the request (e.g., `amazon.com`, `amazon.co.uk`, `bing.com`).                                                                                                                            |
-| `pageFrom`      | Starting page number for pagination.                                                                                                                                                                       |
-| `deliveryZip`   | ZIP code for delivery location (Target, Walmart).                                                                                                                                                          |
-| `storeId`       | Store ID for local inventory (Walmart).                                                                                                                                                                    |
-| `country`       | Country for TikTok Shop requests.                                                                                                                                                                          |
-| `limit`         | Maximum number of results to return (e.g., YouTube channel videos).                                                                                                                                        |
-| `language_code` | Language code for subtitles (e.g., `en`, `es`).                                                                                                                                                            |
+| Parameter                                                                | Description                                                                                                                                                                                                |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `headless`                                                               | Set to `html` to render the target URL in a headless browser.                                                                                                                                              |
+| `geo`                                                                    | Sets the country from which the request will originate.                                                                                                                                                    |
+| `locale`                                                                 | Sets the locale of the request.                                                                                                                                                                            |
+| `tokenLimit`                                                             | Maximum number of characters to return (default 45000). Useful if the context window is small.                                                                                                             |
+| `prompt`                                                                 | Prompt to send to `chatgpt`.                                                                                                                                                                               |
+| `search`                                                                 | Activates ChatGPT's web search functionality (`chatgpt` only).                                                                                                                                             |
+| `xhr`                                                                    | When true, includes XHR or fetch responses in the scrape result where supported (e.g. `tiktok_post`).                                                                                                      |
+| `device_type`                                                            | Device type to emulate (`desktop`, `mobile`, `tablet`). Parsed targets are stricter: Amazon tools are desktop-only so they omit it, and `bing_search`/`google_ai_mode` accept `desktop` and `mobile` only. |
+| `domain`                                                                 | Domain to use for the request (e.g., `amazon.com`, `amazon.co.uk`, `bing.com`).                                                                                                                            |
+| `page_from`                                                              | Starting page number for pagination.                                                                                                                                                                       |
+| `delivery_zip`                                                           | ZIP code for delivery location (Target, Walmart).                                                                                                                                                          |
+| `walmart_store_id`                                                       | Store ID for local inventory (Walmart).                                                                                                                                                                    |
+| `country`                                                                | Country for TikTok Shop requests.                                                                                                                                                                          |
+| `limit`                                                                  | Maximum number of results to return (e.g., YouTube channel videos).                                                                                                                                        |
+| `language_code`                                                          | Language code for subtitles (e.g., `en`, `es`).                                                                                                                                                            |
+| `crawl_id`                                                               | Crawl id returned by `crawl_start`, for `crawl_status`, `crawl_results` and `crawl_cancel`.                                                                                                                |
+| `max_depth`, `sitemap`, `domain_filter`, `select_paths`, `exclude_paths` | How far `map` and `crawl_start` follow links and which URLs they keep.                                                                                                                                     |
 
 ## Examples
 

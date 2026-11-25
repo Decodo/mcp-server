@@ -47,10 +47,10 @@ start with `./`. `category` must be one of OpenAI's 13 values; `Developer Tools`
 The submission points at `/ai`, not `/mcp`. That route serves only the trimmed toolset
 in `CLAUDE_TOOLS` (`src/server/claude-tools.ts`): `scrape_as_markdown`, `search`, `map`,
 `screenshot` and the four `crawl_*` tools - not the Google, Amazon, Walmart, Target,
-TikTok or YouTube ones. (`DIRECTORY_HIDDEN_TOOLS` governs `/mcp`, not this.)
+TikTok or YouTube ones. (`/mcp` serves the IR's `mcp-hosted` surface instead.)
 
 `review.test_cases` needs exactly 5 positive and 3 negative cases. Every
-`tools_triggered` value must match a tool name registered in `src/tools/` **and** be in
+`tools_triggered` value must match a tool in the IR's `mcp-hosted` surface **and** be in
 `CLAUDE_TOOLS`, or it is not there when a reviewer connects to `/ai`. The same goes for
 the listing copy: `longDescription` and `capabilities` must only describe tools that
 path actually serves.

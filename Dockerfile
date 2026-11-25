@@ -17,4 +17,6 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/build ./build
 
+ENV DECODO_INTEGRATION_HEADER=mcp-docker
+
 ENTRYPOINT ["node", "build/index.js"]

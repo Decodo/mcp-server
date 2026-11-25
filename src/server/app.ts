@@ -16,6 +16,7 @@ import {
   SERVER_CARD_MEDIA_TYPE,
   SERVER_CARD_PATH,
 } from './server-card';
+import type { FlowSchema } from '@decodo/sdk-ts';
 import type { TrustProxy } from './trust-proxy';
 
 type FetchLike = typeof fetch;
@@ -33,12 +34,14 @@ export const createApp = ({
   trustProxy = false,
   revokedCredentials = new RevokedCredentials(),
   hiddenTools = new Set(),
+  schema,
   fetch,
 }: {
   oauth: OAuthConfig;
   trustProxy?: TrustProxy;
   revokedCredentials?: RevokedCredentials;
   hiddenTools?: ReadonlySet<string>;
+  schema?: () => FlowSchema;
   fetch?: FetchLike;
 }): express.Express => {
   const app = express();
@@ -113,6 +116,7 @@ export const createApp = ({
         ...tools,
         auth: credential,
         onAuthenticationError: rejected => revokedCredentials.add(rejected),
+        schema: schema?.(),
       });
 
       const transport = new StreamableHTTPServerTransport({
