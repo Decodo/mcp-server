@@ -18,7 +18,6 @@ import {
   GoogleLensTool,
   GoogleAiModeTool,
   GoogleTravelHotelsTool,
-  PerplexityTool,
   TargetSearchTool,
   TargetProductTool,
   TiktokPostTool,
@@ -120,7 +119,6 @@ export class ScraperAPIBaseServer {
     new YoutubeSearchTool(),
     new BingSearchTool(),
     new ChatGPTTool(),
-    new PerplexityTool(),
   ];
 
   private disableOnRegister(isHidden: (name: string) => boolean) {

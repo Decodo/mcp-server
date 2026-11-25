@@ -7,7 +7,6 @@ export const DIRECTORY_HIDDEN_TOOLS: readonly string[] = [
   'google_ads',
   'target_product',
   'chatgpt',
-  'perplexity',
 ];
 
 export const hiddenToolsFromEnv = (value: string | undefined): ReadonlySet<string> => {

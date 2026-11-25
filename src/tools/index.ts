@@ -10,7 +10,6 @@ export * from './google-ads';
 export * from './google-lens';
 export * from './google-ai-mode';
 export * from './google-travel-hotels';
-export * from './perplexity';
 export * from './target-search';
 export * from './target-product';
 export * from './tiktok-post';
