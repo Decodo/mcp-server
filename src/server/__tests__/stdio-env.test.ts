@@ -7,21 +7,21 @@ const BASIC_TOKEN = 'dGVzdHVzZXI6dGVzdHBhc3M=';
 
 describe('parseStdioEnv', () => {
   describe('credential', () => {
-    it('reads an API key from SCRAPER_API_KEY', () => {
-      expect(parseStdioEnv({ SCRAPER_API_KEY: API_KEY }).auth).toEqual({
+    it('reads an API key from DECODO_API_KEY', () => {
+      expect(parseStdioEnv({ DECODO_API_KEY: API_KEY }).auth).toEqual({
         type: AUTH_TYPE.API_KEY,
         value: API_KEY,
       });
     });
 
-    it('prefers SCRAPER_API_KEY over SCRAPER_API_TOKEN', () => {
+    it('prefers DECODO_API_KEY over SCRAPER_API_TOKEN', () => {
       expect(
-        parseStdioEnv({ SCRAPER_API_KEY: API_KEY, SCRAPER_API_TOKEN: BASIC_TOKEN }).auth
+        parseStdioEnv({ DECODO_API_KEY: API_KEY, SCRAPER_API_TOKEN: BASIC_TOKEN }).auth
       ).toEqual({ type: AUTH_TYPE.API_KEY, value: API_KEY });
     });
 
-    it('falls back to SCRAPER_API_TOKEN when SCRAPER_API_KEY is blank', () => {
-      expect(parseStdioEnv({ SCRAPER_API_KEY: ' ', SCRAPER_API_TOKEN: BASIC_TOKEN }).auth).toEqual({
+    it('falls back to SCRAPER_API_TOKEN when DECODO_API_KEY is blank', () => {
+      expect(parseStdioEnv({ DECODO_API_KEY: ' ', SCRAPER_API_TOKEN: BASIC_TOKEN }).auth).toEqual({
         type: AUTH_TYPE.TOKEN,
         value: BASIC_TOKEN,
       });
@@ -41,10 +41,10 @@ describe('parseStdioEnv', () => {
       });
     });
 
-    it.each([{}, { SCRAPER_API_TOKEN: '' }, { SCRAPER_API_KEY: ' ', SCRAPER_API_TOKEN: ' ' }])(
-      'throws naming SCRAPER_API_KEY when no credential is set: %p',
+    it.each([{}, { SCRAPER_API_TOKEN: '' }, { DECODO_API_KEY: ' ', SCRAPER_API_TOKEN: ' ' }])(
+      'throws naming DECODO_API_KEY when no credential is set: %p',
       env => {
-        expect(() => parseStdioEnv(env)).toThrow('env SCRAPER_API_KEY missing');
+        expect(() => parseStdioEnv(env)).toThrow('env DECODO_API_KEY missing');
       }
     );
   });
