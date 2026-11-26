@@ -12,12 +12,16 @@ export type StdioEnv = {
 
 type Env = Record<string, string | undefined>;
 
+const CREDENTIAL_ENVS = ['SCRAPER_API_KEY', 'SCRAPER_API_TOKEN'];
+
 export const parseStdioEnv = (env: Env): StdioEnv => {
-  const value = env.SCRAPER_API_TOKEN?.trim();
+  const value = CREDENTIAL_ENVS.map(name => env[name]?.trim()).find(Boolean);
   const auth = value ? credentialFromValue(value) : undefined;
 
   if (!auth) {
-    throw new Error('env SCRAPER_API_TOKEN missing: set your API key or basic auth token');
+    throw new Error(
+      'env SCRAPER_API_KEY missing: set your API key (SCRAPER_API_TOKEN, with an API key or basic auth token, is also accepted)'
+    );
   }
 
   return {

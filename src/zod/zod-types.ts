@@ -2,6 +2,8 @@ import z from 'zod';
 
 export const zodTokenLimit = z
   .number()
+  .int()
+  .min(1)
   .describe(
     `Maximum number of characters to return; longer content is truncated. Defaults to 45000.`
   )

@@ -109,10 +109,10 @@ Cursor, Windsurf bellow):
 
 | Credential                                   | Where to get it                                                                                | Hosted server header                      | Local server env                       |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------- |
-| **API key** (recommended)                    | Web Data API subscription on the [dashboard](https://dashboard.decodo.com/web-data/playground) | `Authorization: Bearer <api_key>`         | `SCRAPER_API_TOKEN=<api_key>`          |
+| **API key** (recommended)                    | Web Data API subscription on the [dashboard](https://dashboard.decodo.com/web-data/playground) | `Authorization: Bearer <api_key>`         | `SCRAPER_API_KEY=<api_key>`            |
 | **Basic authentication token** (older plans) | Web Scraping API page on the dashboard                                                         | `Authorization: Basic <basic_auth_token>` | `SCRAPER_API_TOKEN=<basic_auth_token>` |
 
-The local server reads either credential from `SCRAPER_API_TOKEN` and works out which one it got.
+The local server reads `SCRAPER_API_KEY` first. `SCRAPER_API_TOKEN` also works, with either credential, for existing configs.
 
 ### Claude Desktop
 
@@ -126,7 +126,7 @@ The local server reads either credential from `SCRAPER_API_TOKEN` and works out 
       "command": "npx",
       "args": ["-y", "@decodo/mcp-server"],
       "env": {
-        "SCRAPER_API_TOKEN": "<api_key>",
+        "SCRAPER_API_KEY": "<api_key>",
         "TOOLSETS": "web,ai"
       }
     }
@@ -236,7 +236,7 @@ this:
       "command": "node",
       "args": ["/Users/your.user/projects/mcp-server/build/index.js"],
       "env": {
-        "SCRAPER_API_TOKEN": "<api_key>"
+        "SCRAPER_API_KEY": "<api_key>"
       }
     }
   }

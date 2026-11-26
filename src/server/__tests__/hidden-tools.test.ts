@@ -93,7 +93,7 @@ describe('hidden tools on a connected server', () => {
 
     fetchMock.mockRestore();
 
-    expect(crawlStatus?.inputSchema.properties).toHaveProperty('crawl_id');
+    expect(crawlStatus?.inputSchema.required).toEqual(['crawl_id']);
     expect(result.content).toEqual([
       { type: 'text', text: JSON.stringify({ crawl_id: 'crawl-1', status: 'done' }) },
     ]);

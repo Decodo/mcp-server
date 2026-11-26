@@ -156,8 +156,7 @@ const EXTENSIONS: Record<string, Extension> = {
 };
 
 // Before the tools came from the IR their inputs were camelCase, and agents with saved calls still
-// send those names. Optional inputs are renamed; a renamed required one, such as crawlId, still
-// fails validation before the call reaches this server.
+// send those names.
 const LEGACY_INPUTS: Record<string, string> = {
   crawlId: 'crawl_id',
   deliveryZip: 'delivery_zip',
@@ -240,21 +239,16 @@ const annotationsOf = (schema: FlowSchema, tool: IrSurfaceTool): ToolAnnotations
   openWorldHint: true,
 });
 
-type BuiltTool = { inputs: AnyZodObject; listed: AnyZodObject; annotations: ToolAnnotations };
+type BuiltTool = { inputs: AnyZodObject; annotations: ToolAnnotations };
 
-const LEGACY_TARGETS = new Set(Object.values(LEGACY_INPUTS));
+class LegacyInputs extends z.ZodObject<ZodRawShape> {
+  override _parse(input: z.ParseInput) {
+    const { data } = input;
+    const isArgs = typeof data === 'object' && data !== null && !Array.isArray(data);
 
-const listedInputs = (inputs: AnyZodObject): AnyZodObject =>
-  z
-    .object(
-      Object.fromEntries(
-        Object.entries(inputs.shape as ZodRawShape).map(([name, input]) => [
-          name,
-          LEGACY_TARGETS.has(name) ? input.optional() : input,
-        ])
-      )
-    )
-    .passthrough();
+    return super._parse(isArgs ? { ...input, data: fromLegacy(data as Args) } : input);
+  }
+}
 
 const builtTools = new WeakMap<FlowSchema, Map<IrSurfaceTool, BuiltTool>>();
 const reportedSkips = new WeakMap<FlowSchema, Set<string>>();
@@ -269,11 +263,13 @@ const buildTool = (schema: FlowSchema, tool: IrSurfaceTool): BuiltTool => {
     return cached;
   }
 
-  const inputs = z.object({
-    ...jsonSchemaToZodShape(buildToolInputSchema(schema, tool)),
-    ...EXTENSIONS[tool.name]?.inputs,
-  });
-  const built = { inputs, listed: listedInputs(inputs), annotations: annotationsOf(schema, tool) };
+  const inputs = new LegacyInputs(
+    z.object({
+      ...jsonSchemaToZodShape(buildToolInputSchema(schema, tool)),
+      ...EXTENSIONS[tool.name]?.inputs,
+    })._def
+  );
+  const built = { inputs, annotations: annotationsOf(schema, tool) };
   cache.set(tool, built);
 
   return built;
@@ -305,18 +301,18 @@ const registerTool = ({
 }: Omit<Context, 'args' | 'extra'> & { server: McpServer; schema: FlowSchema }) => {
   const extension = EXTENSIONS[tool.name] ?? {};
   const clientOnly = Object.keys(extension.inputs ?? {});
-  const { inputs, listed, annotations } = buildTool(schema, tool);
+  const { inputs, annotations } = buildTool(schema, tool);
 
   server.registerTool(
     tool.name,
     {
       title: tool.title,
       description: tool.description,
-      inputSchema: listed,
+      inputSchema: inputs,
       annotations,
     },
     async (received: Args, extra: ProgressExtra) => {
-      const input = inputs.parse(fromLegacy(received));
+      const input = inputs.parse(received);
 
       if (extension.run) {
         return { content: await extension.run({ sapiClient, auth, tool, args: input, extra }) };

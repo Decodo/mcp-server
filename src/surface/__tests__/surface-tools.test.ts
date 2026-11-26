@@ -161,6 +161,15 @@ describe('registerSurfaceTools', () => {
     ]);
   });
 
+  it.each([0, -100, 1.5])('rejects tokenLimit %p', async tokenLimit => {
+    const { handlers, runSurfaceTool } = register();
+
+    await expect(
+      handlers.get('scrape_as_markdown')!({ url: 'https://example.com', tokenLimit })
+    ).rejects.toThrow();
+    expect(runSurfaceTool).not.toHaveBeenCalled();
+  });
+
   it('cuts the Markdown to tokenLimit and says how long it was', async () => {
     const { handlers, runSurfaceTool } = register();
     runSurfaceTool.mockResolvedValue(`<p>${'a'.repeat(100)}</p>`);
