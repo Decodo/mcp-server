@@ -15,7 +15,7 @@ describe('hiddenToolsFromEnv', () => {
   });
 
   it('reads a comma-separated list', () => {
-    expect([...hiddenToolsFromEnv(' chatgpt, perplexity ,')]).toEqual(['chatgpt', 'perplexity']);
+    expect([...hiddenToolsFromEnv(' chatgpt, google_ads ,')]).toEqual(['chatgpt', 'google_ads']);
   });
 });
 

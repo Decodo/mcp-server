@@ -137,13 +137,12 @@ describe('Server registration', () => {
       expect(webToolNames).toContain('ScreenshotTool');
     });
 
-    it('ai toolset contains chatgpt and perplexity', () => {
+    it('ai toolset contains chatgpt', () => {
       const aiToolNames = ScraperAPIBaseServer.allTools
         .filter(t => t.toolset === TOOLSET.AI)
         .map(t => t.constructor.name);
 
       expect(aiToolNames).toContain('ChatGPTTool');
-      expect(aiToolNames).toContain('PerplexityTool');
     });
   });
 
