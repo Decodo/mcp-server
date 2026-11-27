@@ -1,47 +1,57 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { BundledSchema } from '@decodo/sdk-ts';
+import type { FlowSchema, IrSurface } from '@decodo/sdk-ts';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import type { AuthenticationErrorListener } from '../clients/scraper-api-client';
 import { PACKAGE_VERSION } from '../version';
-import {
-  AmazonSearchTool,
-  AmazonProductTool,
-  AmazonPricingTool,
-  AmazonSellersTool,
-  AmazonBestsellersTool,
-  BingSearchTool,
-  ChatGPTTool,
-  GoogleSearchTool,
-  GoogleAdsTool,
-  GoogleLensTool,
-  GoogleAiModeTool,
-  GoogleTravelHotelsTool,
-  TargetSearchTool,
-  TargetProductTool,
-  TiktokPostTool,
-  TiktokShopSearchTool,
-  TiktokShopProductTool,
-  TiktokShopUrlTool,
-  WalmartSearchTool,
-  WalmartProductTool,
-  YoutubeMetadataTool,
-  YoutubeChannelTool,
-  YoutubeSubtitlesTool,
-  YoutubeSearchTool,
-  ScrapeAsMarkdownTool,
-  ScreenshotTool,
-  SearchTool,
-  MapTool,
-  CrawlStartTool,
-  CrawlStatusTool,
-  CrawlResultsTool,
-  CrawlCancelTool,
-} from '../tools';
-import { Tool } from '../tools/tool';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { TOOLSET } from '../constants';
+import { log } from '../logger';
+import { registerSurfaceTools } from '../surface/surface-tools';
+
+const DEFAULT_SURFACE = 'mcp';
+
+const resolveSurface = (
+  schema: FlowSchema,
+  name: string
+): { schema: FlowSchema; name: string; surface: IrSurface } => {
+  for (const surfaceName of [name, DEFAULT_SURFACE]) {
+    for (const candidate of [schema, BundledSchema.shared]) {
+      const surface = candidate.getSurface(surfaceName);
+
+      if (surface) {
+        return { schema: candidate, name: surfaceName, surface };
+      }
+    }
+  }
+
+  throw new Error(`The Decodo IR has no "${DEFAULT_SURFACE}" surface to build tools from.`);
+};
+
+const loggedFallbacks = new Set<string>();
+
+const logFallback = (
+  requested: string,
+  resolved: { schema: FlowSchema; name: string },
+  loaded: FlowSchema
+) => {
+  const key = `${loaded.version}:${requested}`;
+
+  if (loggedFallbacks.has(key)) {
+    return;
+  }
+
+  loggedFallbacks.add(key);
+  log('warn', 'surface_fallback', {
+    requested,
+    surface: resolved.name,
+    ir_version: loaded.version,
+    bundled: resolved.schema !== loaded,
+  });
+};
 
 export class ScraperAPIBaseServer {
   server: McpServer;
@@ -50,13 +60,18 @@ export class ScraperAPIBaseServer {
 
   auth: AuthCredential;
 
+  schema: FlowSchema;
+
+  surface: string;
+
   constructor({
     auth,
     toolsets = [],
     hiddenTools = new Set(),
     visibleTools,
     onAuthenticationError,
-    integrationHeader,
+    integrationHeader = 'mcp',
+    schema = BundledSchema.shared,
   }: {
     auth: AuthCredential;
     toolsets: TOOLSET[];
@@ -64,12 +79,25 @@ export class ScraperAPIBaseServer {
     visibleTools?: ReadonlySet<string>;
     onAuthenticationError?: AuthenticationErrorListener;
     integrationHeader?: string;
+    schema?: FlowSchema;
   }) {
     this.server = new McpServer({
       name: 'decodo',
       version: PACKAGE_VERSION,
     });
-    this.sapiClient = new ScraperApiClient({ onAuthenticationError, integrationHeader });
+    const resolved = resolveSurface(schema, integrationHeader);
+
+    if (resolved.name !== integrationHeader || resolved.schema !== schema) {
+      logFallback(integrationHeader, resolved, schema);
+    }
+
+    this.schema = resolved.schema;
+    this.surface = resolved.name;
+    this.sapiClient = new ScraperApiClient({
+      onAuthenticationError,
+      integrationHeader,
+      schema: this.schema,
+    });
 
     this.auth = auth;
 
@@ -85,41 +113,6 @@ export class ScraperAPIBaseServer {
   connect(transport: StdioServerTransport | StreamableHTTPServerTransport) {
     this.server.connect(transport);
   }
-
-  static allTools: Tool[] = [
-    new ScrapeAsMarkdownTool(),
-    new ScreenshotTool(),
-    new MapTool(),
-    new CrawlStartTool(),
-    new CrawlStatusTool(),
-    new CrawlResultsTool(),
-    new CrawlCancelTool(),
-    new SearchTool(),
-    new GoogleSearchTool(),
-    new GoogleAdsTool(),
-    new GoogleLensTool(),
-    new GoogleAiModeTool(),
-    new GoogleTravelHotelsTool(),
-    new AmazonSearchTool(),
-    new AmazonProductTool(),
-    new AmazonPricingTool(),
-    new AmazonSellersTool(),
-    new AmazonBestsellersTool(),
-    new WalmartSearchTool(),
-    new WalmartProductTool(),
-    new TargetSearchTool(),
-    new TargetProductTool(),
-    new TiktokPostTool(),
-    new TiktokShopSearchTool(),
-    new TiktokShopProductTool(),
-    new TiktokShopUrlTool(),
-    new YoutubeMetadataTool(),
-    new YoutubeChannelTool(),
-    new YoutubeSubtitlesTool(),
-    new YoutubeSearchTool(),
-    new BingSearchTool(),
-    new ChatGPTTool(),
-  ];
 
   private disableOnRegister(isHidden: (name: string) => boolean) {
     const registerTool = this.server.registerTool.bind(this.server) as (
@@ -139,13 +132,14 @@ export class ScraperAPIBaseServer {
   }
 
   registerTools({ toolsets }: { toolsets: TOOLSET[] }) {
-    const tools = ScraperAPIBaseServer.allTools.filter(
-      tool => toolsets.length === 0 || toolsets.includes(tool.toolset)
-    );
-
-    for (const tool of tools) {
-      tool.register({ server: this.server, sapiClient: this.sapiClient, auth: this.auth });
-    }
+    registerSurfaceTools({
+      server: this.server,
+      sapiClient: this.sapiClient,
+      auth: this.auth,
+      schema: this.schema,
+      tools: this.schema.getSurface(this.surface)?.tools ?? [],
+      toolsets,
+    });
   }
 
   registerResources() {

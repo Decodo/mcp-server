@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { FlowSchema } from '@decodo/sdk-ts';
 import type { AuthCredential } from '../auth';
 import { ScraperApiClient } from '../clients/scraper-api-client';
 import type { AuthenticationErrorListener } from '../clients/scraper-api-client';
@@ -16,12 +17,14 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
     visibleTools,
     auth,
     onAuthenticationError,
+    schema,
   }: {
     toolsets: TOOLSET[];
     hiddenTools?: ReadonlySet<string>;
     visibleTools?: ReadonlySet<string>;
     auth: AuthCredential;
     onAuthenticationError?: AuthenticationErrorListener;
+    schema?: FlowSchema;
   }) {
     super({
       auth,
@@ -30,6 +33,7 @@ export class ScraperAPIHttpServer extends ScraperAPIBaseServer {
       visibleTools,
       onAuthenticationError,
       integrationHeader: 'mcp-hosted',
+      schema,
     });
   }
 }

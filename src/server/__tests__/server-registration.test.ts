@@ -1,3 +1,4 @@
+import { BundledSchema } from '@decodo/sdk-ts';
 import { AUTH_TYPE } from '../../auth';
 import type { AuthCredential } from '../../auth';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -8,8 +9,6 @@ import { PACKAGE_VERSION } from '../../version';
 const testAuth: AuthCredential = { type: AUTH_TYPE.TOKEN, value: 'test' };
 const apiKeyAuth: AuthCredential = { type: AUTH_TYPE.API_KEY, value: 'test' };
 
-const registeredToolNames = () => mockRegisterTool.mock.calls.map(([name]) => name);
-
 const mockRegisterTool = jest.fn().mockReturnThis();
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
@@ -18,146 +17,120 @@ jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   })),
 }));
 
+const registeredToolNames = () => mockRegisterTool.mock.calls.map(([name]) => name);
+
+const surfaceTools = BundledSchema.shared.getSurface('mcp')?.tools ?? [];
+
+const namesIn = (...groups: TOOLSET[]) =>
+  surfaceTools.filter(tool => groups.includes(tool.group as TOOLSET)).map(tool => tool.name);
+
 describe('Server registration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('server metadata', () => {
-    it('creates McpServer with correct name and version', () => {
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
+  it('creates McpServer with correct name and version', () => {
+    new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
 
-      expect(McpServer).toHaveBeenCalledWith({
-        name: 'decodo',
-        version: PACKAGE_VERSION,
+    expect(McpServer).toHaveBeenCalledWith({ name: 'decodo', version: PACKAGE_VERSION });
+  });
+
+  it('registers every tool of the surface when no toolsets are given', () => {
+    new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [] });
+
+    expect(registeredToolNames()).toEqual(surfaceTools.map(tool => tool.name));
+  });
+
+  it('registers only the tools of the given toolsets', () => {
+    new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [TOOLSET.WEB, TOOLSET.AI] });
+
+    expect(registeredToolNames()).toEqual(namesIn(TOOLSET.WEB, TOOLSET.AI));
+  });
+
+  it('registers the data API tools for basic tokens too, so calls can explain the API key requirement', () => {
+    new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
+
+    expect(registeredToolNames()).toEqual(
+      expect.arrayContaining([
+        'search',
+        'map',
+        'crawl_start',
+        'crawl_status',
+        'crawl_results',
+        'crawl_cancel',
+      ])
+    );
+  });
+
+  it('registers each tool with a description and a handler', () => {
+    new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
+
+    for (const [name, config, handler] of mockRegisterTool.mock.calls) {
+      expect(name).toEqual(expect.any(String));
+      expect(config.description).toEqual(expect.any(String));
+      expect(handler).toEqual(expect.any(Function));
+    }
+  });
+
+  it('builds the tools of the surface named by the integration header', () => {
+    const server = new ScraperAPIBaseServer({
+      auth: apiKeyAuth,
+      toolsets: [],
+      integrationHeader: 'mcp-hosted',
+    });
+
+    expect(server.surface).toBe('mcp-hosted');
+    expect(registeredToolNames()).toEqual(
+      BundledSchema.shared.getSurface('mcp-hosted')?.tools.map(tool => tool.name)
+    );
+  });
+
+  it('uses the default surface for a channel the IR has no surface for', () => {
+    const server = new ScraperAPIBaseServer({
+      auth: apiKeyAuth,
+      toolsets: [],
+      integrationHeader: 'mcp-smithery',
+    });
+
+    expect(server.surface).toBe('mcp');
+    expect(server.sapiClient.integrationHeader).toBe('mcp-smithery');
+    expect(registeredToolNames()).toEqual(surfaceTools.map(tool => tool.name));
+  });
+
+  it('uses the bundled IR when the loaded one has no surfaces', () => {
+    const withoutSurfaces = Object.assign(Object.create(BundledSchema.shared), {
+      getSurface: () => undefined,
+    });
+
+    const server = new ScraperAPIBaseServer({
+      auth: apiKeyAuth,
+      toolsets: [],
+      schema: withoutSurfaces,
+    });
+
+    expect(server.schema).toBe(BundledSchema.shared);
+    expect(registeredToolNames()).toEqual(surfaceTools.map(tool => tool.name));
+  });
+
+  it("keeps a channel's own surface from the bundled IR when the loaded one lacks it", () => {
+    const onlyDefault = Object.assign(Object.create(BundledSchema.shared), {
+      version: '0.0.1',
+      getSurface: (name: string) => BundledSchema.shared.getSurface(name === 'mcp' ? name : ''),
+    });
+    const write = jest.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+    for (let request = 0; request < 3; request++) {
+      new ScraperAPIBaseServer({
+        auth: apiKeyAuth,
+        toolsets: [],
+        schema: onlyDefault,
+        integrationHeader: 'mcp-hosted',
       });
-    });
+    }
+    const warnings = write.mock.calls.filter(([line]) => String(line).includes('surface_fallback'));
+    write.mockRestore();
 
-    it('server instance is accessible', () => {
-      const server = new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
-
-      expect(server.server).toBeDefined();
-    });
-  });
-
-  describe('tool registration', () => {
-    it('registers all tools when no toolsets specified', () => {
-      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [] });
-
-      const expectedToolCount = ScraperAPIBaseServer.allTools.length;
-      expect(mockRegisterTool).toHaveBeenCalledTimes(expectedToolCount);
-    });
-
-    it('registers only web toolset tools when web specified', () => {
-      mockRegisterTool.mockClear();
-
-      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [TOOLSET.WEB] });
-
-      const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
-      expect(mockRegisterTool).toHaveBeenCalledTimes(webTools.length);
-    });
-
-    it('registers the data API tools for basic tokens too, so calls can explain the API key requirement', () => {
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
-
-      expect(registeredToolNames()).toEqual(
-        expect.arrayContaining([
-          'search',
-          'map',
-          'crawl_start',
-          'crawl_status',
-          'crawl_results',
-          'crawl_cancel',
-        ])
-      );
-    });
-
-    it('registers only AI toolset tools when ai specified', () => {
-      mockRegisterTool.mockClear();
-
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [TOOLSET.AI] });
-
-      const aiTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.AI);
-      expect(mockRegisterTool).toHaveBeenCalledTimes(aiTools.length);
-    });
-
-    it('registers multiple toolsets when specified', () => {
-      mockRegisterTool.mockClear();
-
-      new ScraperAPIBaseServer({ auth: apiKeyAuth, toolsets: [TOOLSET.WEB, TOOLSET.AI] });
-
-      const webTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.WEB);
-      const aiTools = ScraperAPIBaseServer.allTools.filter(t => t.toolset === TOOLSET.AI);
-      expect(mockRegisterTool).toHaveBeenCalledTimes(webTools.length + aiTools.length);
-    });
-
-    it('each tool is registered with name and config', () => {
-      mockRegisterTool.mockClear();
-
-      new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
-
-      const calls = mockRegisterTool.mock.calls;
-      for (const call of calls) {
-        const [toolName, config, handler] = call;
-        expect(typeof toolName).toBe('string');
-        expect(toolName.length).toBeGreaterThan(0);
-        expect(config).toHaveProperty('description');
-        expect(typeof handler).toBe('function');
-      }
-    });
-  });
-
-  describe('allTools static property', () => {
-    it('contains expected number of tools', () => {
-      expect(ScraperAPIBaseServer.allTools.length).toBeGreaterThan(20);
-    });
-
-    it('all tools have a toolset assigned', () => {
-      for (const tool of ScraperAPIBaseServer.allTools) {
-        expect(Object.values(TOOLSET)).toContain(tool.toolset);
-      }
-    });
-
-    it('contains tools from each toolset', () => {
-      const toolsets = new Set(ScraperAPIBaseServer.allTools.map(t => t.toolset));
-
-      expect(toolsets.has(TOOLSET.WEB)).toBe(true);
-      expect(toolsets.has(TOOLSET.SEARCH)).toBe(true);
-      expect(toolsets.has(TOOLSET.ECOMMERCE)).toBe(true);
-      expect(toolsets.has(TOOLSET.SOCIAL_MEDIA)).toBe(true);
-      expect(toolsets.has(TOOLSET.AI)).toBe(true);
-    });
-
-    it('web toolset contains scrape_as_markdown and screenshot', () => {
-      const webToolNames = ScraperAPIBaseServer.allTools
-        .filter(t => t.toolset === TOOLSET.WEB)
-        .map(t => t.constructor.name);
-
-      expect(webToolNames).toContain('ScrapeAsMarkdownTool');
-      expect(webToolNames).toContain('ScreenshotTool');
-    });
-
-    it('ai toolset contains chatgpt', () => {
-      const aiToolNames = ScraperAPIBaseServer.allTools
-        .filter(t => t.toolset === TOOLSET.AI)
-        .map(t => t.constructor.name);
-
-      expect(aiToolNames).toContain('ChatGPTTool');
-    });
-  });
-
-  describe('tool registration arguments', () => {
-    it('passes auth to tool registration', () => {
-      const auth = 'my-secret-token';
-      const server = new ScraperAPIBaseServer({ auth, toolsets: [] });
-
-      expect(server.auth).toBe(auth);
-    });
-
-    it('creates ScraperApiClient instance', () => {
-      const server = new ScraperAPIBaseServer({ auth: testAuth, toolsets: [] });
-
-      expect(server.sapiClient).toBeDefined();
-    });
+    expect(registeredToolNames()).not.toContain('chatgpt');
+    expect(warnings).toHaveLength(1);
   });
 });

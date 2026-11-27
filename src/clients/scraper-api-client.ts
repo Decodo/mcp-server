@@ -1,19 +1,15 @@
 import {
   AuthenticationError,
+  buildToolRequest,
+  BundledSchema,
   DecodoClient,
   DecodoError,
-  Target,
+  readResult,
+  ResultError,
+  runTool,
   TimeoutError,
 } from '@decodo/sdk-ts';
-import type {
-  MapSiteRequest,
-  RunSearchRequest,
-  ScrapeRequest,
-  StartCrawlRequest,
-  SyncResponse,
-  WebScrapingApi,
-} from '@decodo/sdk-ts';
-import { ScrapingMCPParams } from 'types';
+import type { FlowSchema, IrSurfaceTool, ScrapeRequest, WebScrapingApi } from '@decodo/sdk-ts';
 import { AUTH_TYPE } from '../auth';
 import { scrapingApiHostsFromEnv } from './hosts';
 import type { ScrapingApiHosts } from './hosts';
@@ -37,12 +33,6 @@ export const API_KEY_REQUIRED_MESSAGE =
   'This tool needs a Decodo API key; Basic authentication tokens cannot use the Web Data API. ' +
   'Copy an API key from your Web Data API subscription at https://dashboard.decodo.com/web-data/playground and reconnect with it.';
 
-const API_PARAM_ALIASES = new Map([
-  ['deviceType', 'device_type'],
-  ['pageFrom', 'page_from'],
-  ['deliveryZip', 'delivery_zip'],
-]);
-
 type RequestArgs<R> = {
   auth: AuthCredential;
   target: string;
@@ -52,12 +42,29 @@ type RequestArgs<R> = {
   upstreamStatus?: (res: R) => number | null;
 };
 
-type FailedScrape = { status?: string; status_code?: number; message?: string };
+const firstStatusCode = (response: unknown): number | null => {
+  const code = (response as { results?: { status_code?: unknown }[] } | null)?.results?.[0]
+    ?.status_code;
 
-const scrapeFailure = ({ status, status_code: statusCode, message }: FailedScrape) =>
-  message && statusCode
-    ? new DecodoError(message, statusCode, status)
-    : new Error('Scraper API returned no results.');
+  return typeof code === 'number' ? code : null;
+};
+
+const readSurfaceResult = (tool: IrSurfaceTool, response: unknown): unknown => {
+  try {
+    return readResult(tool.result, response);
+  } catch (error) {
+    const siteStatus = firstStatusCode(response);
+
+    if (error instanceof ResultError && siteStatus !== null && String(siteStatus) === error.code) {
+      throw new ResultError(
+        `The target site answered with HTTP ${siteStatus}, so there is no page content to return.`,
+        error.code
+      );
+    }
+
+    throw error;
+  }
+};
 
 export type AuthenticationErrorListener = (auth: AuthCredential) => void;
 
@@ -72,62 +79,30 @@ export class ScraperApiClient {
 
   integrationHeader: string;
 
+  schema: FlowSchema;
+
   constructor({
     maxRetries = MAX_RETRIES,
     delayMs = BASE_RETRY_DELAY_MS,
     onAuthenticationError,
     hosts = scrapingApiHostsFromEnv(),
     integrationHeader = 'mcp',
+    schema = BundledSchema.shared,
   }: {
     maxRetries?: number;
     delayMs?: number;
     onAuthenticationError?: AuthenticationErrorListener;
     hosts?: ScrapingApiHosts;
     integrationHeader?: string;
+    schema?: FlowSchema;
   } = {}) {
     this.maxRetries = maxRetries;
     this.delayMs = delayMs;
     this.onAuthenticationError = onAuthenticationError;
     this.hosts = hosts;
     this.integrationHeader = integrationHeader;
+    this.schema = schema;
   }
-
-  transformScrapingParams = ({
-    scrapingParams,
-  }: {
-    scrapingParams: ScrapingMCPParams;
-  }): ScrapeRequest => {
-    const { jsRender, headless, target, ...rest } = scrapingParams;
-
-    const transformed: Record<string, unknown> = {
-      target: target ?? Target.Universal,
-      ...(headless ? { headless } : jsRender && { headless: 'html' }),
-    };
-
-    for (const [key, value] of Object.entries(rest)) {
-      if (key === 'tokenLimit') {
-        continue;
-      }
-
-      transformed[API_PARAM_ALIASES.get(key) ?? key] = value;
-    }
-
-    return transformed as unknown as ScrapeRequest;
-  };
-
-  transformResponse = <T>({ res }: { res: SyncResponse }) => {
-    if (!Array.isArray(res.results)) {
-      throw scrapeFailure(res as unknown as FailedScrape);
-    }
-
-    const [result] = res.results;
-
-    if (!result) {
-      throw new Error('Scraper API returned no results.');
-    }
-
-    return { data: result.content as T };
-  };
 
   private sdkError = ({
     error,
@@ -163,6 +138,20 @@ export class ScraperApiClient {
       });
 
       return new Error(`Scraper API request failed (${error.statusCode}): ${sdkMessage}`);
+    }
+
+    if (error instanceof ResultError) {
+      log('error', 'tool_call', {
+        outcome: 'error',
+        target,
+        auth_type: authType,
+        error_type: 'upstream_result',
+        error_code: error.code,
+        message,
+        latency_ms: latencyMs,
+      });
+
+      return new Error(`Scraper API request failed (${error.code}): ${message}`);
     }
 
     const errorCode = error instanceof TimeoutError ? 'ETIMEDOUT' : getNetworkErrorCode(error);
@@ -220,6 +209,7 @@ export class ScraperApiClient {
           integrationHeader: this.integrationHeader,
         },
         timeoutMs: REQUEST_TIMEOUT_MS,
+        schema: this.schema,
       });
 
       let lastError: unknown;
@@ -250,7 +240,9 @@ export class ScraperApiClient {
             const reason =
               error instanceof DecodoError
                 ? `status ${error.statusCode}`
-                : `network error ${getNetworkErrorCode(error) ?? 'unknown'}`;
+                : error instanceof ResultError
+                  ? `result ${error.code}`
+                  : `network error ${getNetworkErrorCode(error) ?? 'unknown'}`;
 
             log('warn', 'tool_call_retry', {
               target,
@@ -278,32 +270,6 @@ export class ScraperApiClient {
     }
   };
 
-  scrape = async <T = string>({
-    auth,
-    scrapingParams,
-    extra,
-  }: {
-    auth: AuthCredential;
-    scrapingParams: ScrapingMCPParams;
-    extra?: ProgressExtra;
-  }) => {
-    const params = this.transformScrapingParams({ scrapingParams });
-
-    const { result } = await this.request({
-      auth,
-      target: params.target,
-      extra,
-      call: async api => {
-        const res = await api.scrape(params);
-
-        return { res, result: this.transformResponse<T>({ res }) };
-      },
-      upstreamStatus: ({ res }) => res.results[0]?.status_code ?? null,
-    });
-
-    return result;
-  };
-
   private dataApiRequest = <R>(args: RequestArgs<R>): Promise<R> => {
     if (args.auth.type !== AUTH_TYPE.API_KEY) {
       return Promise.reject(new Error(API_KEY_REQUIRED_MESSAGE));
@@ -311,61 +277,6 @@ export class ScraperApiClient {
 
     return this.request(args);
   };
-
-  search = ({
-    auth,
-    params,
-    extra,
-  }: {
-    auth: AuthCredential;
-    params: RunSearchRequest;
-    extra?: ProgressExtra;
-  }) => this.dataApiRequest({ auth, target: 'search', extra, call: api => api.search(params) });
-
-  map = ({
-    auth,
-    params,
-    extra,
-  }: {
-    auth: AuthCredential;
-    params: MapSiteRequest;
-    extra?: ProgressExtra;
-  }) =>
-    this.dataApiRequest({
-      auth,
-      target: 'map',
-      extra,
-      call: api => api.map(params),
-      upstreamStatus: ({ results }) => results[0]?.status_code ?? null,
-    });
-
-  startCrawl = ({
-    auth,
-    params,
-    extra,
-  }: {
-    auth: AuthCredential;
-    params: StartCrawlRequest;
-    extra?: ProgressExtra;
-  }) =>
-    this.dataApiRequest({
-      auth,
-      target: 'crawl',
-      extra,
-      maxRetries: 0,
-      call: api => api.startCrawl(params),
-    });
-
-  getCrawlStatus = ({
-    auth,
-    crawlId,
-    extra,
-  }: {
-    auth: AuthCredential;
-    crawlId: string;
-    extra?: ProgressExtra;
-  }) =>
-    this.dataApiRequest({ auth, target: 'crawl', extra, call: api => api.getCrawlStatus(crawlId) });
 
   listCrawlPages = ({
     auth,
@@ -385,14 +296,47 @@ export class ScraperApiClient {
       call: api => api.listCrawlPages(crawlId, { cursor }),
     });
 
-  cancelCrawl = ({
+  runSurfaceTool = async ({
     auth,
-    crawlId,
+    tool,
+    args,
     extra,
   }: {
     auth: AuthCredential;
-    crawlId: string;
+    tool: IrSurfaceTool;
+    args: Record<string, unknown>;
     extra?: ProgressExtra;
-  }) =>
-    this.dataApiRequest({ auth, target: 'crawl', extra, call: api => api.cancelCrawl(crawlId) });
+  }): Promise<unknown> => {
+    const flow = this.schema.getFlow(tool.flow);
+    const isCall = !tool.step && flow?.pattern === 'call';
+    const isScrape = isCall && flow?.run === 'scrapePage';
+    const startsWork = tool.step === 'start' || flow?.pattern === 'batch';
+    const target = tool.target ?? tool.flow;
+    const common = { auth, target, extra, ...(startsWork && { maxRetries: 0 }) };
+
+    if (!isCall) {
+      return this.dataApiRequest({ ...common, call: api => runTool(api.flows, tool, args) });
+    }
+
+    if (auth.type !== AUTH_TYPE.API_KEY && !isScrape) {
+      throw new Error(API_KEY_REQUIRED_MESSAGE);
+    }
+
+    const send = (api: WebScrapingApi) =>
+      auth.type === AUTH_TYPE.API_KEY
+        ? runTool(api.flows, { ...tool, result: undefined }, args)
+        : api.scrape(buildToolRequest(tool, args) as unknown as ScrapeRequest);
+
+    const { result } = await this.request({
+      ...common,
+      call: async api => {
+        const response = await send(api);
+
+        return { response, result: readSurfaceResult(tool, response) };
+      },
+      upstreamStatus: ({ response }) => firstStatusCode(response),
+    });
+
+    return result;
+  };
 }

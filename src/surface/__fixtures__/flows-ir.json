@@ -1,0 +1,1287 @@
+{
+  "version": "2.7.0",
+  "apis": {
+    "webScrapingApi": {
+      "parameters": {},
+      "targets": {
+        "universal": {
+          "group": "Universal",
+          "response_format": "html",
+          "parameter_schema": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "const": "universal"
+              },
+              "url": {
+                "type": "string",
+                "maxLength": 2056
+              },
+              "payload": {
+                "type": "string"
+              },
+              "proxy_pool": {
+                "type": "string",
+                "enum": ["standard", "premium"]
+              },
+              "http_method": {
+                "type": "string"
+              },
+              "headless": {
+                "type": "string",
+                "enum": ["html", "png"]
+              },
+              "geo": {
+                "type": "string"
+              },
+              "locale": {
+                "type": "string"
+              },
+              "device_type": {
+                "type": "string"
+              },
+              "session_id": {
+                "type": "string"
+              },
+              "successful_status_codes": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "headers": {
+                "type": "object"
+              },
+              "cookies": {
+                "type": "object"
+              },
+              "force_headers": {
+                "type": "boolean"
+              },
+              "force_cookies": {
+                "type": "boolean"
+              },
+              "xhr": {
+                "type": "boolean"
+              },
+              "markdown": {
+                "type": "boolean"
+              },
+              "main_content": {
+                "type": "boolean"
+              },
+              "callback_url": {
+                "type": "string"
+              }
+            },
+            "required": ["target"],
+            "additionalProperties": false
+          }
+        },
+        "google_search": {
+          "group": "Google",
+          "response_format": "json",
+          "parameter_schema": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "const": "google_search"
+              },
+              "query": {
+                "type": "string",
+                "maxLength": 2048
+              },
+              "headless": {
+                "type": "string",
+                "enum": ["html", "png"]
+              },
+              "locale": {
+                "type": "string"
+              },
+              "geo": {
+                "type": "string"
+              },
+              "device_type": {
+                "type": "string"
+              },
+              "page_from": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "google_results_language": {
+                "type": "string"
+              },
+              "google_tbm": {
+                "type": "string"
+              },
+              "google_tbs": {
+                "type": "string"
+              },
+              "parse": {
+                "type": "boolean"
+              },
+              "google_nfpr": {
+                "type": "boolean"
+              },
+              "google_safe_search": {
+                "type": "boolean"
+              },
+              "session_id": {
+                "type": "string"
+              },
+              "xhr": {
+                "type": "boolean"
+              },
+              "markdown": {
+                "type": "boolean"
+              },
+              "page_count": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "callback_url": {
+                "type": "string"
+              }
+            },
+            "required": ["target"],
+            "additionalProperties": false
+          }
+        },
+        "bing_search": {
+          "group": "Bing",
+          "response_format": "json",
+          "parameter_schema": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "const": "bing_search"
+              },
+              "query": {
+                "type": "string",
+                "maxLength": 2048
+              },
+              "headless": {
+                "type": "string",
+                "enum": ["html", "png"]
+              },
+              "locale": {
+                "type": "string"
+              },
+              "geo": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "device_type": {
+                "type": "string"
+              },
+              "page_from": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "parse": {
+                "type": "boolean"
+              },
+              "page_count": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "session_id": {
+                "type": "string"
+              },
+              "markdown": {
+                "type": "boolean"
+              },
+              "xhr": {
+                "type": "boolean"
+              },
+              "callback_url": {
+                "type": "string"
+              }
+            },
+            "required": ["target"],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  },
+  "operations": {
+    "scrapePage": {
+      "method": "POST",
+      "path": "/v1/scrape",
+      "requestSchema": {
+        "description": "One page to scrape, plus the shared options.",
+        "allOf": [
+          {
+            "type": "object",
+            "description": "Scraping options shared by the single and batch task requests. Mirrored from scraper-api's unified scraping parameters. The upstream\nforwards a fixed allow-list of fields to the vendor; anything else is\naccepted and silently dropped, never sent. Five niche targets (bbb,\nautotrader, mobile, airbnb, apple_app_store) are strict instead: they\nrequire url and accept only target, url, headless, geo, xhr, markdown,\ndevice_type and callback_url.\n",
+            "additionalProperties": true,
+            "properties": {
+              "target": {
+                "type": "string",
+                "description": "One of the upstream's 74 targets. Disabled targets return 410. When\nomitted, universal is assumed for validation but nothing is sent, so\nthe effective default is the vendor's.\n"
+              },
+              "query": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Requires target to be set as well."
+              },
+              "headless": {
+                "type": "string",
+                "enum": ["html", "png"]
+              },
+              "geo": {
+                "type": "string"
+              },
+              "locale": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "device_type": {
+                "type": "string"
+              },
+              "parse": {
+                "type": "boolean"
+              },
+              "markdown": {
+                "type": "boolean"
+              },
+              "xhr": {
+                "type": "boolean",
+                "description": "Forces headless html."
+              },
+              "http_method": {
+                "type": "string",
+                "description": "GET or POST, matched case-insensitively and uppercased before forwarding."
+              },
+              "payload": {
+                "type": "string"
+              },
+              "headers": {
+                "type": "object",
+                "description": "Checked to be an object only; values are not validated.",
+                "additionalProperties": true
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["key", "value"],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "force_headers": {
+                "type": "boolean"
+              },
+              "force_cookies": {
+                "type": "boolean"
+              },
+              "session_id": {
+                "type": "string"
+              },
+              "proxy_pool": {
+                "type": "string",
+                "enum": ["standard", "premium"],
+                "description": "Only with the universal target."
+              },
+              "successful_status_codes": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "page_count": {
+                "type": "integer"
+              },
+              "browser_actions": {
+                "type": "array",
+                "description": "Requires headless html.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "custom_parsing": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "output_schema": {
+                "type": "string"
+              },
+              "callback_url": {
+                "type": "string",
+                "maxLength": 255
+              },
+              "passthrough": {
+                "type": "string",
+                "maxLength": 1024
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "maxLength": 2056
+              }
+            }
+          }
+        ]
+      }
+    },
+    "runSearch": {
+      "method": "POST",
+      "path": "/v1/search",
+      "requestSchema": {
+        "type": "object",
+        "required": ["query"],
+        "description": "Fields other than these are dropped before the upstream call.",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uule": {
+            "type": "string"
+          },
+          "gl": {
+            "type": "string"
+          },
+          "geo": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "input_encoding": {
+            "type": "string"
+          },
+          "page": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Not checked to be an integer; forwarded as given."
+          }
+        }
+      }
+    },
+    "mapSite": {
+      "method": "POST",
+      "path": "/v1/map",
+      "requestSchema": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Absolute http or https URL to map."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum links to return. Zero, negative or above 147700 all become 147700; nothing is rejected.",
+            "default": 147700
+          },
+          "sitemap": {
+            "type": "string",
+            "enum": ["include", "only", "skip"],
+            "default": "include"
+          },
+          "domain_filter": {
+            "type": "string",
+            "enum": ["domain", "subdomain", "all"],
+            "default": "domain"
+          },
+          "geo": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "JS_rendering": {
+            "type": "boolean",
+            "default": false
+          },
+          "follow_redirects": {
+            "type": "boolean",
+            "default": true
+          },
+          "select_paths": {
+            "description": "Either one pattern or a list of them. Each must compile as a Go regular expression.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "exclude_paths": {
+            "description": "Either one pattern or a list of them. Each must compile as a Go regular expression.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "queueTask": {
+      "method": "POST",
+      "path": "/v1/task",
+      "requestSchema": {
+        "description": "One page to scrape, plus the shared options.",
+        "allOf": [
+          {
+            "type": "object",
+            "description": "Scraping options shared by the single and batch task requests. Mirrored from scraper-api's unified scraping parameters. The upstream\nforwards a fixed allow-list of fields to the vendor; anything else is\naccepted and silently dropped, never sent. Five niche targets (bbb,\nautotrader, mobile, airbnb, apple_app_store) are strict instead: they\nrequire url and accept only target, url, headless, geo, xhr, markdown,\ndevice_type and callback_url.\n",
+            "additionalProperties": true,
+            "properties": {
+              "target": {
+                "type": "string",
+                "description": "One of the upstream's 74 targets. Disabled targets return 410. When\nomitted, universal is assumed for validation but nothing is sent, so\nthe effective default is the vendor's.\n"
+              },
+              "query": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Requires target to be set as well."
+              },
+              "headless": {
+                "type": "string",
+                "enum": ["html", "png"]
+              },
+              "geo": {
+                "type": "string"
+              },
+              "locale": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "device_type": {
+                "type": "string"
+              },
+              "parse": {
+                "type": "boolean"
+              },
+              "markdown": {
+                "type": "boolean"
+              },
+              "xhr": {
+                "type": "boolean",
+                "description": "Forces headless html."
+              },
+              "http_method": {
+                "type": "string",
+                "description": "GET or POST, matched case-insensitively and uppercased before forwarding."
+              },
+              "payload": {
+                "type": "string"
+              },
+              "headers": {
+                "type": "object",
+                "description": "Checked to be an object only; values are not validated.",
+                "additionalProperties": true
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["key", "value"],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "force_headers": {
+                "type": "boolean"
+              },
+              "force_cookies": {
+                "type": "boolean"
+              },
+              "session_id": {
+                "type": "string"
+              },
+              "proxy_pool": {
+                "type": "string",
+                "enum": ["standard", "premium"],
+                "description": "Only with the universal target."
+              },
+              "successful_status_codes": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "page_count": {
+                "type": "integer"
+              },
+              "browser_actions": {
+                "type": "array",
+                "description": "Requires headless html.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "custom_parsing": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "output_schema": {
+                "type": "string"
+              },
+              "callback_url": {
+                "type": "string",
+                "maxLength": 255
+              },
+              "passthrough": {
+                "type": "string",
+                "maxLength": 1024
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "maxLength": 2056
+              }
+            }
+          }
+        ]
+      }
+    },
+    "getTask": {
+      "method": "GET",
+      "path": "/v1/task/{id}"
+    },
+    "getTaskResults": {
+      "method": "GET",
+      "path": "/v1/task/{id}/results"
+    },
+    "startCrawl": {
+      "method": "POST",
+      "path": "/v1/crawl",
+      "requestSchema": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "An http or https URL with a host. URLs carrying credentials (user:pass@) are refused."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 10
+          },
+          "max_depth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 5
+          },
+          "sitemap": {
+            "type": "string",
+            "enum": ["include", "only", "skip"],
+            "default": "include"
+          },
+          "domain_filter": {
+            "type": "string",
+            "enum": ["domain", "subdomain", "all"],
+            "default": "domain"
+          },
+          "output": {
+            "type": "string",
+            "enum": ["markdown", "html"],
+            "default": "markdown"
+          },
+          "geo": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z .'-]{0,58}[A-Za-z]$",
+            "description": "Letters, spaces, dots, apostrophes and hyphens, 2 to 60 characters."
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+            "description": "BCP 47 style, for example en or de-DE."
+          },
+          "follow_redirects": {
+            "type": "boolean"
+          },
+          "JS_retry": {
+            "type": "boolean"
+          },
+          "max_duration": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 14400,
+            "description": "Seconds. 0 means the server default. Rejected above the server's ceiling, 4 hours by default; the ceiling is configurable per environment.",
+            "default": 3600
+          },
+          "callback_url": {
+            "type": "string",
+            "description": "http or https URL called when the crawl settles. Internal addresses are refused."
+          },
+          "passthrough": {
+            "type": "string",
+            "maxLength": 8192,
+            "description": "Opaque value echoed back on the callback, at most 8192 bytes. Redacted in logs."
+          },
+          "select_paths": {
+            "description": "Either one pattern or a list of them. Each must compile as a Go regular expression.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "exclude_paths": {
+            "description": "Either one pattern or a list of them. Each must compile as a Go regular expression.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "getCrawlStatus": {
+      "method": "GET",
+      "path": "/v1/crawl/{id}/status"
+    },
+    "listCrawlPages": {
+      "method": "GET",
+      "path": "/v1/crawl/{id}"
+    },
+    "cancelCrawl": {
+      "method": "POST",
+      "path": "/v1/crawl/{id}/cancel"
+    },
+    "queueTaskBatch": {
+      "method": "POST",
+      "path": "/v1/task/batch",
+      "requestSchema": {
+        "description": "Same options as ScrapeOptions but lighter validation: only url\nentries (2056 chars), callback_url (255) and geo are checked, plus the\nproxy_pool and browser_actions rules. Do not append a query string to\nthe request path /v1/task/batch; the upstream then treats the request\nas a single task.\nSend exactly one of url, query, prompt or product_id, each an array where\nScrapeOptions takes a single value. On the batch rollout, each entry\nbecomes one task and is capped at 8 KB, and a request holds at most\n5,000 tasks unless the account's limits say otherwise.\n",
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "url": {
+            "type": "array",
+            "description": "The pages to scrape. Invalid entries are skipped, not rejected, unless all are invalid.",
+            "items": {
+              "type": "string",
+              "maxLength": 2056
+            }
+          },
+          "query": {
+            "type": "array",
+            "description": "Search queries, for search targets.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prompt": {
+            "type": "array",
+            "description": "Prompts, for AI targets such as chatgpt and perplexity.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "product_id": {
+            "type": "array",
+            "description": "Product IDs, for store targets like Walmart",
+            "items": {
+              "type": "string"
+            }
+          },
+          "callback_url": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "passthrough": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "flows": {
+    "scrape": {
+      "pattern": "call",
+      "run": "scrapePage"
+    },
+    "search": {
+      "pattern": "call",
+      "run": "runSearch"
+    },
+    "map": {
+      "pattern": "call",
+      "run": "mapSite"
+    },
+    "task": {
+      "pattern": "job",
+      "start": "queueTask",
+      "status": "getTask",
+      "results": "getTaskResults",
+      "idField": "id",
+      "statusField": "status",
+      "pendingStatuses": ["pending"],
+      "failedStatuses": ["faulted"],
+      "pollSeconds": 5
+    },
+    "crawl": {
+      "pattern": "job",
+      "start": "startCrawl",
+      "status": "getCrawlStatus",
+      "results": "listCrawlPages",
+      "cancel": "cancelCrawl",
+      "idField": "crawl_id",
+      "statusField": "status",
+      "pendingStatuses": ["pending"],
+      "failedStatuses": ["faulted", "cancelled"],
+      "resultsQuery": {
+        "type": "content"
+      },
+      "pagination": {
+        "itemsField": "url",
+        "nextUrlField": "next"
+      },
+      "pollSeconds": 5
+    },
+    "task_batch": {
+      "pattern": "batch",
+      "start": "queueTaskBatch",
+      "itemsField": "queries",
+      "job": "task"
+    }
+  },
+  "keyCheck": {
+    "flow": "scrape",
+    "params": {
+      "target": "universal",
+      "url": "https://does-not-exist.decodo.com"
+    }
+  },
+  "surfaces": {
+    "mcp": {
+      "tools": [
+        {
+          "name": "scrape_as_markdown",
+          "title": "Scrape as Markdown",
+          "description": "Fetch any public web page through the Decodo Web Data API (`universal` target) and return its content as Markdown. Use it to read a specific URL when no site-specific tool fits; very long pages are truncated, and `tokenLimit` sets a lower cap. Docs: https://help.decodo.com/docs/web-data-api-markdown-response",
+          "group": "web",
+          "flow": "scrape",
+          "target": "universal",
+          "fields": ["url", "geo", "locale", "headless"],
+          "required": ["url"],
+          "fixed": {
+            "target": "universal"
+          },
+          "choices": {
+            "headless": ["html"]
+          },
+          "descriptions": {
+            "url": "URL to scrape",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request",
+            "headless": "Set to 'html' to open the page in a headless browser; leave it out otherwise"
+          },
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              },
+              {
+                "path": "results.0.status_code",
+                "atLeast": 400
+              }
+            ],
+            "from": "results.0.content"
+          },
+          "limits": {
+            "maxTextChars": 45000
+          }
+        },
+        {
+          "name": "screenshot",
+          "title": "Screenshot",
+          "description": "Capture a PNG screenshot of a web page through the Decodo Web Data API (`universal` target with PNG output). Use it when the page layout or visuals matter, not just its text. Docs: https://help.decodo.com/docs/web-data-api-screenshot-response",
+          "group": "web",
+          "flow": "scrape",
+          "target": "universal",
+          "fields": ["url", "geo"],
+          "required": ["url"],
+          "fixed": {
+            "target": "universal",
+            "headless": "png"
+          },
+          "descriptions": {
+            "url": "URL to screenshot",
+            "geo": "Geolocation of the desired request, expressed as a country name"
+          },
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              },
+              {
+                "path": "results.0.status_code",
+                "atLeast": 400
+              }
+            ],
+            "from": "results.0.content"
+          }
+        },
+        {
+          "name": "map",
+          "title": "Map Website",
+          "description": "List the URLs on a website without fetching their content. Large sites can overflow your context, so `limit` defaults to 10; narrow with select_paths or exclude_paths. For precise work, map the site, then scrape_as_markdown only the pages you need.",
+          "group": "web",
+          "flow": "map",
+          "fields": [
+            "url",
+            "limit",
+            "sitemap",
+            "domain_filter",
+            "select_paths",
+            "exclude_paths",
+            "geo",
+            "locale"
+          ],
+          "defaults": {
+            "limit": 10
+          },
+          "minimums": {
+            "limit": 1
+          },
+          "maximums": {
+            "limit": 500
+          },
+          "descriptions": {
+            "url": "Website URL to map",
+            "limit": "Maximum number of URLs to return, 10 by default and at most 500",
+            "sitemap": "Whether to use the sitemap alongside links found on pages, only the sitemap, or skip it",
+            "domain_filter": "Which links to follow: the same domain, its subdomains too, or any domain",
+            "select_paths": "Only keep URLs whose path matches one of these patterns, e.g. ^/blog",
+            "exclude_paths": "Drop URLs whose path matches one of these patterns",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request"
+          }
+        },
+        {
+          "name": "crawl_start",
+          "title": "Start Crawl",
+          "description": "Start crawling a website and return the crawl id right away, without waiting for it to finish. Check progress with crawl_status, read pages with crawl_results and stop it early with crawl_cancel. Crawled content can overflow your context, so `limit` defaults to 10 pages. For precise work, prefer map plus scrape_as_markdown on the pages you need.",
+          "group": "web",
+          "flow": "crawl",
+          "step": "start",
+          "fields": [
+            "url",
+            "limit",
+            "max_depth",
+            "sitemap",
+            "domain_filter",
+            "select_paths",
+            "exclude_paths",
+            "geo",
+            "locale"
+          ],
+          "fixed": {
+            "output": "markdown"
+          },
+          "defaults": {
+            "limit": 10
+          },
+          "maximums": {
+            "limit": 100
+          },
+          "descriptions": {
+            "url": "Website URL to start crawling from",
+            "limit": "Maximum number of pages to crawl, 10 by default and at most 100",
+            "max_depth": "How many links deep to follow from the start URL",
+            "sitemap": "Whether to use the sitemap alongside links found on pages, only the sitemap, or skip it",
+            "domain_filter": "Which links to follow: the same domain, its subdomains too, or any domain",
+            "select_paths": "Only keep URLs whose path matches one of these patterns, e.g. ^/blog",
+            "exclude_paths": "Drop URLs whose path matches one of these patterns",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request"
+          }
+        },
+        {
+          "name": "crawl_status",
+          "title": "Crawl Status",
+          "description": "Report the progress of a crawl started with crawl_start: its status and how many pages were discovered, completed and failed. The crawl is finished once status is no longer \"pending\".",
+          "group": "web",
+          "flow": "crawl",
+          "step": "status",
+          "descriptions": {
+            "crawl_id": "Crawl id returned by crawl_start"
+          }
+        },
+        {
+          "name": "crawl_results",
+          "title": "Crawl Results",
+          "description": "Return crawled pages as Markdown from a crawl started with crawl_start, a few at a time. Call it once crawl_status reports the crawl is no longer \"pending\". Crawled pages can be long and overflow your context, so each call returns at most about 50 KB and up to `limit` pages (10 by default). A page too long for one call is split across calls; each part carries contentPart with its character range. Pass nextCursor back to get the rest; when it is missing, you have every page. For precise work, prefer map plus scrape_as_markdown on the pages you need.",
+          "group": "web",
+          "flow": "crawl",
+          "step": "results",
+          "descriptions": {
+            "crawl_id": "Crawl id returned by crawl_start"
+          },
+          "limits": {
+            "maxResultChars": 49000
+          }
+        },
+        {
+          "name": "crawl_cancel",
+          "title": "Cancel Crawl",
+          "description": "Stop a crawl started with crawl_start so it crawls no more pages. Pages crawled before the cancel stay readable with crawl_results.",
+          "group": "web",
+          "flow": "crawl",
+          "step": "cancel",
+          "descriptions": {
+            "crawl_id": "Crawl id returned by crawl_start"
+          }
+        },
+        {
+          "name": "search",
+          "title": "Web Search",
+          "description": "Search the web and return ranked results with title, link and description. Results can overflow your context, so `limit` defaults to 10. To read a result, pass its link to scrape_as_markdown.",
+          "group": "search",
+          "flow": "search",
+          "fields": ["query", "geo", "locale", "page"],
+          "descriptions": {
+            "query": "Search query",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request",
+            "page": "Results page to return, 1 by default"
+          },
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "google_search",
+          "title": "Google Search",
+          "description": "Search Google through the Decodo Web Data API (`google_search` target) and return the parsed results page as JSON, including organic results. Use it for fresh web results or Google rankings for a query. Docs: https://help.decodo.com/docs/web-scraping-api-google-search",
+          "group": "search",
+          "fields": ["query", "geo", "locale", "headless"],
+          "required": ["query"],
+          "choices": {
+            "headless": ["html"]
+          },
+          "descriptions": {
+            "query": "Search query",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request",
+            "headless": "Set to 'html' to open the page in a headless browser; leave it out otherwise"
+          },
+          "flow": "scrape",
+          "target": "google_search",
+          "fixed": {
+            "target": "google_search",
+            "parse": true
+          },
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              },
+              {
+                "path": "results.0.status_code",
+                "atLeast": 400
+              }
+            ],
+            "from": "results.0.content"
+          }
+        },
+        {
+          "name": "bing_search",
+          "title": "Bing Search",
+          "description": "Search Bing through the Decodo Web Data API (`bing_search` target) and return the parsed results page as JSON. Use it when Bing results are needed specifically, or to compare them with Google. Docs: https://help.decodo.com/docs/web-scraping-api-bing-search",
+          "group": "search",
+          "fields": ["query", "geo", "locale", "headless", "domain", "device_type", "page_from"],
+          "required": ["query"],
+          "choices": {
+            "headless": ["html"],
+            "device_type": ["desktop", "mobile"]
+          },
+          "descriptions": {
+            "query": "Search query for Bing (e.g., \"laptop\")",
+            "geo": "Geolocation of the desired request, expressed as a country name",
+            "locale": "Locale of the desired request",
+            "headless": "Set to 'html' to open the page in a headless browser; leave it out otherwise",
+            "domain": "Bing domain (e.g., bing.com, bing.co.uk)",
+            "device_type": "Device type to emulate for the request",
+            "page_from": "Starting page number for pagination"
+          },
+          "flow": "scrape",
+          "target": "bing_search",
+          "fixed": {
+            "target": "bing_search",
+            "parse": true
+          },
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              },
+              {
+                "path": "results.0.status_code",
+                "atLeast": 400
+              }
+            ],
+            "from": "results.0.content"
+          }
+        }
+      ]
+    },
+    "google-adk-python": {
+      "tools": [
+        {
+          "name": "decodo_search",
+          "description": "Search the web and get ranked results with titles, links and snippets. Use it first to find pages on a topic; use decodo_scrape to read one of them.",
+          "flow": "search",
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              }
+            ],
+            "omit": ["search_parameters"]
+          },
+          "limits": {
+            "maxResultChars": 60000,
+            "maxTextChars": 40000,
+            "maxItems": 50,
+            "maxListValues": 500
+          },
+          "fields": ["query", "geo", "locale", "page"],
+          "descriptions": {
+            "query": "The search query.",
+            "geo": "Country or city to search from, for example 'United States'.",
+            "locale": "Interface language of the results, for example 'en-us'.",
+            "page": "Results page number, a whole number starting at 1."
+          }
+        },
+        {
+          "name": "decodo_scrape",
+          "description": "Read one web page and get its content as markdown. Use it when you already have the URL. To read many pages of one site, use decodo_crawl_start instead.",
+          "flow": "scrape",
+          "result": {
+            "failures": [
+              {
+                "path": "status",
+                "equals": "failed",
+                "message": "message",
+                "code": "status_code",
+                "retryable": true
+              },
+              {
+                "path": "results.0.status_code",
+                "atLeast": 400
+              }
+            ],
+            "from": "results.0",
+            "fields": {
+              "url": "url",
+              "content": "content"
+            },
+            "required": ["content"]
+          },
+          "limits": {
+            "maxResultChars": 60000,
+            "maxTextChars": 40000,
+            "maxItems": 50,
+            "maxListValues": 500
+          },
+          "target": "universal",
+          "fields": ["url", "geo", "headless"],
+          "required": ["url"],
+          "fixed": {
+            "target": "universal",
+            "markdown": true
+          },
+          "descriptions": {
+            "url": "Absolute http or https URL of the page.",
+            "geo": "Country to load the page from, for example 'Germany'.",
+            "headless": "Set to 'html' to render JavaScript when the page comes back empty without it."
+          }
+        },
+        {
+          "name": "decodo_map",
+          "description": "List the URLs of a site without reading them. Use it to see what a site contains before choosing pages to scrape or a section to crawl.",
+          "flow": "map",
+          "result": {
+            "from": "results.0",
+            "fields": {
+              "url": "url",
+              "links": "content.links.*.url",
+              "warning": "warning"
+            }
+          },
+          "limits": {
+            "maxResultChars": 60000,
+            "maxTextChars": 40000,
+            "maxItems": 50,
+            "maxListValues": 500
+          },
+          "fields": ["url", "limit", "sitemap", "domain_filter"],
+          "defaults": {
+            "limit": 100
+          },
+          "minimums": {
+            "limit": 1
+          },
+          "maximums": {
+            "limit": 500
+          },
+          "descriptions": {
+            "url": "Absolute http or https URL of the site.",
+            "limit": "How many URLs to return, 100 unless set and 500 at most.",
+            "sitemap": "'include' reads the sitemap and the pages, 'only' reads just the sitemap, 'skip' ignores it.",
+            "domain_filter": "'domain' stays on the site, 'subdomain' adds its subdomains, 'all' follows any link."
+          }
+        },
+        {
+          "name": "decodo_crawl_start",
+          "description": "Start reading many pages of one site, following its links. Returns a crawl_id at once; the pages come from decodo_crawl_results. Keep limit small: every page is billed.",
+          "flow": "crawl",
+          "step": "start",
+          "fields": ["url", "limit", "max_depth", "domain_filter"],
+          "fixed": {
+            "output": "markdown"
+          },
+          "defaults": {
+            "limit": 10
+          },
+          "maximums": {
+            "limit": 50
+          },
+          "descriptions": {
+            "url": "Absolute http or https URL to start from.",
+            "limit": "How many pages to read, 10 unless set and 50 at most. Every page is billed.",
+            "max_depth": "How many links away from the start URL the crawl may go.",
+            "domain_filter": "'domain' stays on the site, 'subdomain' adds its subdomains, 'all' follows any link."
+          }
+        },
+        {
+          "name": "decodo_crawl_results",
+          "description": "Get the pages of a crawl as markdown. It waits inside the call while the crawl runs; if the crawl is still pending when it returns, call it again right away with the same crawl_id.",
+          "flow": "crawl",
+          "step": "results",
+          "result": {
+            "fields": {
+              "url": "url",
+              "status": "status",
+              "content": "content",
+              "content_error": "content_error"
+            }
+          },
+          "limits": {
+            "maxResultChars": 60000,
+            "maxTextChars": 40000,
+            "maxItems": 50,
+            "maxListValues": 500,
+            "waitSeconds": 45
+          },
+          "descriptions": {
+            "crawl_id": "The crawl_id returned when the crawl was started."
+          }
+        },
+        {
+          "name": "decodo_crawl_cancel",
+          "description": "Stop a running crawl. Pages already read stay available from decodo_crawl_results.",
+          "flow": "crawl",
+          "step": "cancel",
+          "descriptions": {
+            "crawl_id": "The crawl_id returned when the crawl was started."
+          }
+        }
+      ]
+    }
+  }
+}
